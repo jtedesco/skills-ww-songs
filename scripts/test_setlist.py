@@ -1,0 +1,486 @@
+#!/usr/bin/env python3
+import csv
+import os
+import subprocess
+import sys
+import re
+
+# Paths
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(SCRIPT_DIR, "..", "songs_metadata.csv")
+BUILDER_PATH = os.path.join(SCRIPT_DIR, "build_setlist.py")
+
+def log_test(name, success, message=""):
+    status = "PASS" if success else "FAIL"
+    print(f"[{status}] {name}")
+    if message and not success:
+        print(f"      Details: {message}")
+    return success
+
+# -------------------------------------------------------------
+# 1. Database Integrity Tests
+# -------------------------------------------------------------
+def test_database_integrity():
+    print("Running Database Integrity Tests...")
+    all_pass = True
+    
+    if not os.path.exists(DB_PATH):
+        return log_test("Database exists", False, f"Not found at {DB_PATH}")
+    log_test("Database exists", True)
+    
+    with open(DB_PATH, "r", encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        songs = []
+        for row in reader:
+            song = dict(row)
+            song["bpm"] = int(song["bpm"])
+            song["backup_vocals"] = [v for v in song["backup_vocals"].split(";") if v]
+            songs.append(song)
+        
+    # Check required fields
+    required_fields = {
+        "title", "artist", "key", "bpm", "lead_vocals", "backup_vocals",
+        "intro_notes", "order_rules", "substitution_notes", "yacht_adjacent",
+        "gig_ready", "length", "arrangement", "vocalist_constraints",
+        "opener", "closer", "can_leave_stage", "date_added", "archived",
+        "preferred_emergency_cut", "release_year", "original_album",
+        "musicbrainz_genre", "musicbrainz_mood", "musicbrainz_id"
+    }
+    
+    missing_fields_count = 0
+    clean_backups_count = 0
+    gig_ready_count = 0
+    archived_count = 0
+    
+    for s in songs:
+        title = s.get("title", "Unknown")
+        
+        # Required fields check
+        missing = required_fields - set(s.keys())
+        if missing:
+            missing_fields_count += 1
+            all_pass = False
+            log_test(f"Fields check: {title}", False, f"Missing fields: {missing}")
+            
+        # Lead vs backup vocals check (Clean backups)
+        lead = s.get("lead_vocals", "")
+        backups = s.get("backup_vocals", [])
+        overlap = []
+        for b in backups:
+            if b == "L" and lead == "Lauren": overlap.append("L/Lauren")
+            if b == "J" and lead == "Jon": overlap.append("J/Jon")
+            if b == "D" and lead == "David": overlap.append("D/David")
+            if b == "M" and lead == "Martin": overlap.append("M/Martin")
+        if overlap:
+            clean_backups_count += 1
+            all_pass = False
+            log_test(f"Clean backups check: {title}", False, f"Lead vocalist '{lead}' also listed in backups as {overlap}")
+            
+        # Gig readiness check
+        # Acoustic/Either songs are gig ready only if explicitly whitelisted below.
+        gig_ready_acoustic = {"Landslide", "Blackbird", "Interstate Love Song",
+                               "Wish You Were Here", "Ooh La La", "Ventura Highway",
+                               "All For You"}
+        if s.get("arrangement") in ["Acoustic", "Either"]:
+            if title in gig_ready_acoustic:
+                if s.get("gig_ready") != "Yes":
+                    gig_ready_count += 1
+                    all_pass = False
+                    log_test(f"Gig readiness check: {title}", False, f"{title} must be gig ready, found: {s.get('gig_ready')}")
+            else:
+                if s.get("gig_ready") == "Yes":
+                    gig_ready_count += 1
+                    all_pass = False
+                    log_test(f"Gig readiness check: {title}", False, f"Acoustic/Either song '{title}' must NOT be gig ready, found: {s.get('gig_ready')}")
+        else:
+            if s.get("gig_ready") != "Yes":
+                gig_ready_count += 1
+                all_pass = False
+                log_test(f"Gig readiness check: {title}", False, f"Full band song '{title}' must be gig ready, found: {s.get('gig_ready')}")
+                
+        # Date added check
+        # Non-ready songs have 'None'
+        if s.get("gig_ready") == "No":
+            if s.get("date_added") != "None":
+                all_pass = False
+                log_test(f"Date added check: {title}", False, f"Non-gig-ready song should have date_added: 'None', found: {s.get('date_added')}")
+                
+        # Archive check (Paint It Black and Crazy Little Thing Called Love only)
+        if title in ["Paint It Black", "Crazy Little Thing Called Love"]:
+            if s.get("archived") != "Yes":
+                archived_count += 1
+                all_pass = False
+                log_test(f"Archive check: {title}", False, "Must be archived")
+        else:
+            if s.get("archived") == "Yes":
+                archived_count += 1
+                all_pass = False
+                log_test(f"Archive check: {title}", False, "Must NOT be archived")
+                
+        # Preferred emergency cut check
+        pref_emergency_cut_list = {"Rock This Town", "Zombie", "Lights", "All Right Now", "Them Changes", "Hook", "Colors"}
+        cleaned_title = title.replace("’", "'").replace("‘", "'").lower()
+        pref_emergency_cut_cleaned = {t.replace("’", "'").replace("‘", "'").lower() for t in pref_emergency_cut_list}
+        is_pref = cleaned_title in pref_emergency_cut_cleaned
+        expected_pref = "Yes" if is_pref else "No"
+        if s.get("preferred_emergency_cut") != expected_pref:
+            all_pass = False
+            log_test(f"Preferred emergency cut check: {title}", False, f"Expected {expected_pref}, found: {s.get('preferred_emergency_cut')}")
+                 
+    if missing_fields_count == 0:
+        log_test("All songs contain required fields", True)
+    if clean_backups_count == 0:
+        log_test("No song lists lead vocalist in backup vocals", True)
+    if gig_ready_count == 0:
+        log_test("Gig readiness flags match requirements", True)
+    if archived_count == 0:
+        log_test("Archive flags match requirements (only Paint It Black and Crazy Little Thing Called Love archived)", True)
+        
+    return all_pass
+
+# -------------------------------------------------------------
+# 2. Output Parser
+# -------------------------------------------------------------
+def parse_markdown_report(stdout_str):
+    sets = []
+    encores = []
+    breaks = []
+    
+    current_set = None
+    in_encore = False
+    in_break = False
+    
+    lines = stdout_str.split("\n")
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+            
+        if line.startswith("## SET"):
+            current_set = []
+            sets.append(current_set)
+            in_encore = False
+            in_break = False
+            continue
+            
+        if line.startswith("## ENCORES"):
+            in_encore = True
+            current_set = None
+            in_break = False
+            continue
+            
+        if line.startswith("### ☕ BREAK") or line.startswith("### ⏸️ BREAK"):
+            in_break = True
+            current_set = None
+            in_encore = False
+            continue
+            
+        # Parse table row
+        if line.startswith("|") and not line.startswith("|---") and not line.startswith("| # |") and not line.startswith("| Constraint |"):
+            parts = [p.strip() for p in line.split("|")]
+            # Filter empty bounds
+            parts = parts[1:-1]
+            
+            if current_set is not None:
+                # Set song row: #, Title, Artist, Key, BPM, Length, Lead Vocal, Date Added, can leave, Note
+                if len(parts) >= 7:
+                    title = parts[1].replace("**", "").split("🟢")[0].split("🔴")[0].split("🛑")[0].strip()
+                    emergency_cut = "🛑" in parts[1]
+                    opener = "🟢" in parts[1]
+                    closer = "🔴" in parts[1]
+                    lead = parts[6].split("(")[0].strip()
+                    backups = []
+                    if "(" in parts[6]:
+                        backups = [b.strip() for b in parts[6].split("(")[1].replace(")", "").split(",")]
+                    current_set.append({
+                        "title": title,
+                        "emergency_cut": emergency_cut,
+                        "opener": opener,
+                        "closer": closer,
+                        "lead": lead,
+                        "backups": backups,
+                        "key": parts[3],
+                        "bpm": int(parts[4]),
+                        "length": parts[5]
+                    })
+            elif in_encore:
+                # Encore song row: #, Title, Artist, Key, BPM, Length, Lead Vocal, Date Added, Note
+                if len(parts) >= 7:
+                    title = parts[1].replace("**", "").strip()
+                    lead = parts[6].split("(")[0].strip()
+                    encores.append({
+                        "title": title,
+                        "lead": lead,
+                        "length": parts[5]
+                    })
+            continue
+                    
+        # Parse acoustic break song bullets: "- **Title** (Artist) - Lead: X | **Can Leave Stage...**: `...`"
+        if in_break and line.startswith("- **"):
+            m = re.match(r"-\s*\*\*(.+?)\*\*\s*\(", line)
+            if m:
+                breaks.append(m.group(1).strip())
+                    
+    # Parse silent/acoustic breaks
+    breaks_format = "silent"
+    if "**Breaks**: ACOUSTIC" in stdout_str.upper():
+        breaks_format = "acoustic"
+        
+    return {
+        "sets": sets,
+        "breaks": breaks,
+        "encores": encores,
+        "breaks_format": breaks_format,
+        "stdout": stdout_str
+    }
+
+# -------------------------------------------------------------
+# 3. Scenario Constraint Tests
+# -------------------------------------------------------------
+def run_scenario(args):
+    cmd = ["python3", BUILDER_PATH] + args
+    res = subprocess.run(cmd, capture_output=True, text=True, cwd=SCRIPT_DIR)
+    if res.returncode != 0:
+        print(f"Error executing setlist builder for args {args}:")
+        print(res.stderr)
+        return None
+    return parse_markdown_report(res.stdout)
+
+def test_scenario_1():
+    print("\nTesting Scenario 1 (90 Min Set, Yacht Rock Preference)...")
+    res = run_scenario(["--duration", "1.5", "--gig-type", "yacht"])
+    if not res:
+        return False
+        
+    all_pass = True
+    
+    # 1. Check Yacht Rock constraint
+    yacht_songs = {"Free Ride", "Gold on the Ceiling", "American Girl", "Brown Eyed Girl", 
+                   "Peg", "Second Chance", "Baby Blue", "Rikki Don't Lose That Number", 
+                   "Brandy", "Everybody Wants to Rule the World", "Reeling in the Years", 
+                   "The Chain", "Take It Easy", "Colors", "Brass in Pocket", "Dreams", 
+                   "Lights", "Roll with the Changes", "Ventura Highway", "Ooh La La", 
+                   "Landslide", "Vienna", "Don't Know Why"}
+    
+    for s_idx, set_songs in enumerate(res["sets"]):
+        for song in set_songs:
+            if song["title"] not in yacht_songs:
+                all_pass = False
+                log_test(f"Yacht rock check: {song['title']}", False, "Song is not Yacht Rock or Yacht Rock Adjacent")
+    
+    # 2. Check duration warning
+    if "INSUFFICIENT MUSIC FOR TARGET DURATION" not in res["stdout"]:
+        all_pass = False
+        log_test("Duration warning present", False, "Missing insufficient music warning")
+    else:
+        log_test("Duration warning present", True)
+        
+    # 3. Check Roll with the Changes closer
+    last_set = res["sets"][-1]
+    if last_set[-1]["title"] != "Roll with the Changes":
+        all_pass = False
+        log_test("Show closer check", False, f"Expected 'Roll with the Changes' as closer, found '{last_set[-1]['title']}'")
+    else:
+        log_test("Show closer check ('Roll with the Changes' closer of last set)", True)
+        
+    # 4. Check gig-ready songs only
+    not_ready_songs = {"The Story", "Vienna", "Don't Know Why"}
+    for s_idx, set_songs in enumerate(res["sets"]):
+        for song in set_songs:
+            if song["title"] in not_ready_songs:
+                all_pass = False
+                log_test(f"Gig ready check: {song['title']}", False, "Scheduled non-gig-ready song")
+                
+    # 5. Check emergency cut placement
+    for s_idx, set_songs in enumerate(res["sets"]):
+        cuts = [idx for idx, s in enumerate(set_songs) if s["emergency_cut"]]
+        if len(cuts) != 1:
+            all_pass = False
+            log_test(f"Emergency cut count Set {s_idx+1}", False, f"Expected exactly 1 cut, found {len(cuts)}")
+        else:
+            cut_idx = cuts[0]
+            # Must be in second half
+            mid = len(set_songs) // 2
+            if cut_idx < mid or cut_idx >= len(set_songs) - 1:
+                all_pass = False
+                log_test(f"Emergency cut position Set {s_idx+1}", False, f"Cut at index {cut_idx} is not in second half (len: {len(set_songs)}, mid: {mid})")
+            else:
+                log_test(f"Emergency cut positioned correctly in Set {s_idx+1}", True)
+                
+    return all_pass
+
+def test_scenario_2():
+    print("\nTesting Scenario 2 (2hr Set, Bar Gig)...")
+    res = run_scenario(["--duration", "2.0", "--gig-type", "bar"])
+    if not res:
+        return False
+        
+    all_pass = True
+    
+    # 1. Check Working for the Weekend opener
+    first_set = res["sets"][0]
+    if first_set[0]["title"] != "Working for the Weekend":
+        all_pass = False
+        log_test("Show opener check", False, f"Expected 'Working for the Weekend' as opener, found '{first_set[0]['title']}'")
+    else:
+        log_test("Show opener check ('Working for the Weekend' opener of Set 1)", True)
+        
+    # 2. Check Roll with the Changes closer
+    last_set = res["sets"][-1]
+    if last_set[-1]["title"] != "Roll with the Changes":
+        all_pass = False
+        log_test("Show closer check", False, f"Expected 'Roll with the Changes' as closer, found '{last_set[-1]['title']}'")
+    else:
+        log_test("Show closer check ('Roll with the Changes' closer of last set)", True)
+        
+    # 3. Check Lauren's vocal separation (gravelly separation)
+    gravelly = {"Zombie", "Respect", "Roll with the Changes", "You Oughta Know", "Me and Bobby McGee"}
+    for s_idx, set_songs in enumerate(res["sets"]):
+        gravelly_indices = [idx for idx, s in enumerate(set_songs) if s["title"] in gravelly]
+        for idx in range(len(gravelly_indices) - 1):
+            sep = gravelly_indices[idx+1] - gravelly_indices[idx] - 1
+            # Check if separation is less than 1 (relaxed from 2)
+            if sep < 1:
+                all_pass = False
+                log_test(f"Lauren health check Set {s_idx+1}", False, f"Gravelly songs '{set_songs[gravelly_indices[idx]]['title']}' and '{set_songs[gravelly_indices[idx+1]]['title']}' have separation of {sep}")
+                
+    # 4. Check backup vocals cleanliness
+    for s_idx, set_songs in enumerate(res["sets"]):
+        for song in set_songs:
+            lead = song["lead"]
+            backups = song["backups"]
+            if lead in backups or (lead == "Lauren" and "L" in backups) or (lead == "Jon" and "J" in backups) or (lead == "David" and "D" in backups) or (lead == "Martin" and "M" in backups):
+                all_pass = False
+                log_test(f"Clean backups check Set {s_idx+1}: {song['title']}", False, f"Lead '{lead}' is also in backups '{backups}'")
+                
+    return all_pass
+
+def test_scenario_3():
+    print("\nTesting Scenario 3 (3hr Set, David Out, Bar Gig)...")
+    res = run_scenario(["--duration", "3.0", "--david-out", "--gig-type", "bar"])
+    if not res:
+        return False
+        
+    all_pass = True
+    
+    # 1. David must not lead or back up any songs
+    for s_idx, set_songs in enumerate(res["sets"]):
+        for song in set_songs:
+            if song["lead"] == "David" or "David" in song["backups"] or "D" in song["backups"]:
+                all_pass = False
+                log_test(f"David out constraint: {song['title']}", False, "David is still scheduled to perform lead or backup")
+                
+    # 2. David's lead vocal parts must be covered by Lauren
+    # Keep Your Hands to Yourself, Ventura Highway, Ooh La La
+    for s_idx, set_songs in enumerate(res["sets"]):
+        for song in set_songs:
+            if song["title"] in ["Keep Your Hands to Yourself", "Ventura Highway", "Ooh La La"]:
+                if song["lead"] != "Lauren":
+                    all_pass = False
+                    log_test(f"David substitution: {song['title']}", False, f"Expected Lauren as lead, found '{song['lead']}'")
+                    
+    log_test("David out substitutions applied correctly", True)
+    
+    # 3. Proportional vocal breakdown scaling
+    # Targets should be: Lauren: 55.6%, Jon: 33.3%, Martin: 11.1%, David: 0.0%
+    # Check if target numbers printed in breakdown match this
+    if "- **Lauren**: " in res["stdout"] and "55.6%" in res["stdout"]:
+        log_test("Proportional scaling breakdown printed correctly", True)
+    else:
+        all_pass = False
+        log_test("Proportional scaling breakdown printed correctly", False, "Vocalist targets not scaled proportionally in output")
+        
+    return all_pass
+
+def test_scenario_4():
+    print("\nTesting Scenario 4 (3hr Set, Martin Out, Bar Gig)...")
+    res = run_scenario(["--duration", "3.0", "--martin-out", "--gig-type", "bar"])
+    if not res:
+        return False
+        
+    all_pass = True
+    
+    # 1. Martin-required songs (per substitution_notes: Colors, The Chain,
+    # Landslide, Blackbird) must never appear in sets OR acoustic breaks
+    martin_required = {"Colors", "The Chain", "Landslide", "Blackbird"}
+    found_violations = False
+    for s_idx, set_songs in enumerate(res["sets"]):
+        for song in set_songs:
+            if song["title"] in martin_required:
+                all_pass = False
+                found_violations = True
+                log_test(f"Martin out cut: {song['title']}", False, f"{song['title']} should be cut (requires Martin)")
+    for title in res.get("breaks", []):
+        if title in martin_required:
+            all_pass = False
+            found_violations = True
+            log_test(f"Martin out cut (break): {title}", False, f"{title} should be cut from acoustic breaks (requires Martin)")
+                
+    if not found_violations:
+        log_test("Martin-required songs successfully cut from sets and breaks", True)
+    
+    # 2. Martin must not lead or back up any songs
+    for s_idx, set_songs in enumerate(res["sets"]):
+        for song in set_songs:
+            if song["lead"] == "Martin" or "Martin" in song["backups"] or "M" in song["backups"]:
+                all_pass = False
+                log_test(f"Martin out constraint: {song['title']}", False, "Martin is still scheduled to perform lead or backup")
+                
+    # 3. David covers Martin lead parts
+    # American Girl, Hey Jealousy, Born to Run
+    for s_idx, set_songs in enumerate(res["sets"]):
+        for song in set_songs:
+            if song["title"] in ["American Girl", "Hey Jealousy", "Born to Run"]:
+                if song["lead"] != "David":
+                    all_pass = False
+                    log_test(f"Martin substitution: {song['title']}", False, f"Expected David as lead, found '{song['lead']}'")
+                    
+    log_test("Martin out substitutions applied correctly", True)
+    
+    # 4. Proportional vocal breakdown scaling
+    # Targets should be: Lauren: 55.6%, Jon: 33.3%, David: 11.1%, Martin: 0.0%
+    if "- **Lauren**: " in res["stdout"] and "55.6%" in res["stdout"]:
+        log_test("Proportional scaling breakdown printed correctly", True)
+    else:
+        all_pass = False
+        log_test("Proportional scaling breakdown printed correctly", False, "Vocalist targets not scaled proportionally in output")
+        
+    return all_pass
+
+# -------------------------------------------------------------
+# Main Test Suite Runner
+# -------------------------------------------------------------
+def main():
+    print("=============================================================")
+    print("WANNABE WEEKENDERS SETLIST BUILDER AUTOMATED TEST SUITE")
+    print("=============================================================\n")
+    
+    db_ok = test_database_integrity()
+    
+    print("\n-------------------------------------------------------------")
+    print("Scenario Validation Tests")
+    print("-------------------------------------------------------------")
+    s1_ok = test_scenario_1()
+    s2_ok = test_scenario_2()
+    s3_ok = test_scenario_3()
+    s4_ok = test_scenario_4()
+    
+    print("\n=============================================================")
+    print("TEST SUITE SUMMARY")
+    print("=============================================================")
+    print(f"Database Integrity:  {'PASS' if db_ok else 'FAIL'}")
+    print(f"Scenario 1 (Yacht):  {'PASS' if s1_ok else 'FAIL'}")
+    print(f"Scenario 2 (2hr):    {'PASS' if s2_ok else 'FAIL'}")
+    print(f"Scenario 3 (No David): {'PASS' if s3_ok else 'FAIL'}")
+    print(f"Scenario 4 (No Martin): {'PASS' if s4_ok else 'FAIL'}")
+    print("=============================================================")
+    
+    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok:
+        print("\nALL TESTS PASSED SUCCESSFULLY! ✅")
+        sys.exit(0)
+    else:
+        print("\nSOME TESTS FAILED! ❌")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

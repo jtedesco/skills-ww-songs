@@ -1,0 +1,128 @@
+{
+  "skill_name": "ww-band-songs",
+  "description": "Evaluation suite for the Wannabe Weekenders setlist builder tool and database constraints.",
+  "test_cases": [
+    {
+      "name": "Scenario 1: 90 Min Set, Yacht Rock Preference",
+      "input_parameters": {
+        "duration": 1.5,
+        "gig_type": "yacht",
+        "martin_out": false,
+        "david_out": false,
+        "breaks": "acoustic",
+        "include_not_ready": false
+      },
+      "validation_criteria": [
+        {
+          "id": "yacht_rock_filter",
+          "assertion": "Verify that only songs marked as yacht rock or yacht rock adjacent are scheduled in the sets.",
+          "type": "song_filter"
+        },
+        {
+          "id": "duration_warning",
+          "assertion": "Verify that a warning is displayed showing that the total available music (63:30) is under the 90 min target.",
+          "type": "duration_alert"
+        },
+        {
+          "id": "show_closer_roll_with_the_changes",
+          "assertion": "Verify that 'Roll with the Changes' is scheduled as the closer of the final set (Set 2).",
+          "type": "closer_placement"
+        },
+        {
+          "id": "silent_breaks_fallback",
+          "assertion": "Verify that the break falls back to silent since only 2 acoustic songs are gig-ready and they overlap in performers.",
+          "type": "break_format"
+        },
+        {
+          "id": "emergency_cuts_placement",
+          "assertion": "Verify that each set has exactly one emergency cut, and it is located in the second half of the set (excluding openers/closers and segues).",
+          "type": "emergency_cut"
+        }
+      ]
+    },
+    {
+      "name": "Scenario 2: 2hr Set, Bar Gig",
+      "input_parameters": {
+        "duration": 2.0,
+        "gig_type": "bar",
+        "martin_out": false,
+        "david_out": false,
+        "breaks": "acoustic",
+        "include_not_ready": false
+      },
+      "validation_criteria": [
+        {
+          "id": "show_opener_working_for_the_weekend",
+          "assertion": "Verify that 'Working for the Weekend' is scheduled as the opener of Set 1.",
+          "type": "opener_placement"
+        },
+        {
+          "id": "show_closer_roll_with_the_changes",
+          "assertion": "Verify that 'Roll with the Changes' is scheduled as the closer of Set 2.",
+          "type": "closer_placement"
+        },
+        {
+          "id": "clean_backups_no_overlap",
+          "assertion": "Verify that the lead vocalist for each song is never listed as a backup vocalist.",
+          "type": "vocal_cleanliness"
+        },
+        {
+          "id": "lauren_vocal_health",
+          "assertion": "Verify that gravelly songs are separated by at least 2 non-gravelly songs (or 1 if relaxed).",
+          "type": "vocalist_health"
+        }
+      ]
+    },
+    {
+      "name": "Scenario 3: 3hr Set, David Out, Bar Gig",
+      "input_parameters": {
+        "duration": 3.0,
+        "gig_type": "bar",
+        "martin_out": false,
+        "david_out": true,
+        "breaks": "acoustic",
+        "include_not_ready": false
+      },
+      "validation_criteria": [
+        {
+          "id": "david_vocal_substitutions",
+          "assertion": "Verify that David is not scheduled for any lead vocals, and Lauren covers his lead vocal parts.",
+          "type": "member_substitution"
+        },
+        {
+          "id": "proportional_vocalist_scaling",
+          "assertion": "Verify that David's 10% target is distributed proportionally to Lauren (55.6%), Jon (33.3%), and Martin (11.1%).",
+          "type": "vocalist_distribution"
+        }
+      ]
+    },
+    {
+      "name": "Scenario 4: 3hr Set, Martin Out, Bar Gig",
+      "input_parameters": {
+        "duration": 3.0,
+        "gig_type": "bar",
+        "martin_out": true,
+        "david_out": false,
+        "breaks": "acoustic",
+        "include_not_ready": false
+      },
+      "validation_criteria": [
+        {
+          "id": "martin_guitar_cuts",
+          "assertion": "Verify that 'Colors' and 'The Chain' are excluded from the setlist.",
+          "type": "member_substitution"
+        },
+        {
+          "id": "martin_vocal_substitutions",
+          "assertion": "Verify that Martin is not scheduled for any vocals, and David covers his lead vocal parts.",
+          "type": "member_substitution"
+        },
+        {
+          "id": "proportional_vocalist_scaling",
+          "assertion": "Verify that Martin's 10% target is distributed proportionally to Lauren (55.6%), Jon (33.3%), and David (11.1%).",
+          "type": "vocalist_distribution"
+        }
+      ]
+    }
+  ]
+}
