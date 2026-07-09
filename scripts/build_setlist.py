@@ -233,6 +233,7 @@ def main():
     parser.add_argument("--duration", type=float, default=3.0, help="Total gig duration in hours (e.g. 1.0, 2.0, 3.0)")
     parser.add_argument("--martin-out", action="store_true", help="Martin is out (David covers lead/backups, Martin-required songs cut per database)")
     parser.add_argument("--david-out", action="store_true", help="David is out (Lauren covers David's lead parts, keys/marimba omitted/covered)")
+    parser.add_argument("--debo-out", action="store_true", help="Debo is out (non-vocal role — only affects the header's Missing field and acoustic-break stage lists)")
     parser.add_argument("--breaks", choices=["acoustic", "silent", "none"], default="acoustic", help="Break format: acoustic (filled with 2 acoustic songs), silent, or none")
     parser.add_argument("--include-not-ready", action="store_true", help="Include not-yet-gig-ready songs in sets and breaks")
     parser.add_argument("--skip-country-grunge", action="store_true", help="Skip country (Keep Your Hands to Yourself, Take It Easy, Me and Bobby McGee) and grunge (Zombie, You Oughta Know, Interstate Love Song) songs")
@@ -249,6 +250,7 @@ def main():
     parser.add_argument("--min-jon", type=int, default=None, help="Minimum number of lead songs for Jon")
     parser.add_argument("--date", type=str, default=None, help="Gig date (YYYY-MM-DD) used for output filename")
     parser.add_argument("--location", type=str, default=None, help="Venue/location name used for output filename")
+    parser.add_argument("--exclude", action="append", default=[], help="Song title to exclude from the pool (repeatable, e.g. --exclude \"Born to Run\")")
     
     args = parser.parse_args()
     
@@ -336,7 +338,11 @@ def main():
         }
         if args.skip_country_grunge and title.lower() in country_grunge:
             continue
-            
+
+        # Explicit per-song exclusions
+        if title.lower() in {e.lower() for e in args.exclude}:
+            continue
+
         # Gig readiness check
         if song["gig_ready"] != "Yes" and not args.include_not_ready:
             continue
@@ -823,7 +829,7 @@ def main():
         for pair in break_songs_sets:
             used_song_titles.add(pair[0]["title"])
             used_song_titles.add(pair[1]["title"])
-            
+
     remaining_songs = [s for s in available_songs if s["title"] not in used_song_titles]
     encore_options = ["All Right Now", "Crazy Little Thing Called Love"]
     for opt in encore_options:
@@ -831,11 +837,11 @@ def main():
         if match:
             encores.append(match)
             remaining_songs.remove(match)
-            
+
     while len(encores) < 2 and remaining_songs:
         remaining_songs.sort(key=lambda s: s["bpm"], reverse=True)
         encores.append(remaining_songs.pop(0))
-        
+
     sets_songs = tag_emergency_cuts(sets_songs, segue_raw_groups)
 
     # Re-order encores so that segue-linked songs appear in their canonical
@@ -921,7 +927,11 @@ def main():
     else:
         duration_field = f"{num_sets} sets (~{int(target_set_seconds / 60)} min each), {args.duration:g} hrs total"
 
-    missing_field = "Martin" if args.martin_out else ("David" if args.david_out else "None")
+    missing_names = []
+    if args.martin_out: missing_names.append("Martin")
+    if args.david_out: missing_names.append("David")
+    if args.debo_out: missing_names.append("Debo")
+    missing_field = ", ".join(missing_names) if missing_names else "None"
 
     filter_details = []
     if args.genre: filter_details.append(f"Genre: {args.genre}")
@@ -969,7 +979,15 @@ def main():
         md("> [!WARNING]")
         david_cut_str = f" and {', '.join(f'*{t}*' for t in david_cut_songs)} are cut from the sets (require David per database)" if david_cut_songs else ""
         md(f"> **Substitutions**: Keyboard/marimba parts are covered by Jon (piano) or omitted, and Lauren covers David's lead vocal parts on *Keep Your Hands to Yourself*, *Ventura Highway*, and *Ooh La La*{david_cut_str}.\n")
-        
+
+    if args.debo_out:
+        md("> [!WARNING]")
+        if args.martin_out:
+            md("> **Substitutions**: Debo is out — David switches to bass in addition to covering Martin's vocal parts.\n")
+        else:
+            md("> **Substitutions**: Debo is out — David switches to bass.\n")
+
+
     total_music_seconds = 0
     total_trans_seconds = 0
     
@@ -1019,6 +1037,9 @@ def main():
                     if args.david_out:
                         inactive.discard("David")
                         active.discard("David")
+                    if args.debo_out:
+                        inactive.discard("Debo")
+                        active.discard("Debo")
                     leave_str = ", ".join(sorted(list(inactive)))
                     md(f"- **{song['title']}** ({song['artist']}) - Lead: {song['lead_vocals']} | **Can Leave Stage (Bathroom Break)**: `{leave_str}`")
                 md("\n" + "-" * 40)
@@ -1095,7 +1116,7 @@ def main():
                 return (False, intro, f"{song['title']} {vocal_str} [{key}]{tag_str}")
         return (False, None, f"{song['title']} {vocal_str} [{key}]{tag_str}")
 
-    missing_str = "No Martin" if args.martin_out else ("No David" if args.david_out else "None Missing")
+    missing_str = "None Missing" if not missing_names else "No " + " & ".join(missing_names)
     num_sets_label = f"{num_sets}x {int(args.duration / num_sets * 60)} Min set" if num_sets == 1 else f"{num_sets}x Sets"
     txt_lines = [f"{num_sets_label} ({missing_str})", ""]
 
