@@ -114,7 +114,7 @@
       "validation_criteria": [
         {
           "id": "martin_guitar_cuts",
-          "assertion": "Verify that 'Colors', 'The Chain', 'Landslide', and 'Blackbird' are excluded from the setlist and acoustic breaks (these require Martin's acoustic guitar). Verify that 'Ooh La La', 'Wish You Were Here', and 'Ventura Highway' are NOT cut — they survive without Martin (his part is omitted or covered).",
+          "assertion": "Verify that 'The Chain', 'Landslide', and 'Blackbird' are excluded from the setlist and acoustic breaks (these require Martin's acoustic guitar). Verify that 'Ooh La La', 'Wish You Were Here', 'Ventura Highway', and 'Colors' are NOT cut — they survive without Martin (his part is omitted or covered).",
           "type": "member_substitution"
         },
         {

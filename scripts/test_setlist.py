@@ -416,10 +416,10 @@ def test_scenario_4():
     all_pass = True
     
     # 1. Songs that REQUIRE Martin (acoustic guitar) must be cut from sets AND acoustic breaks.
-    # Cut list: Colors, The Chain, Landslide, Blackbird
-    # These 3 must NOT be cut: Ooh La La, Wish You Were Here, Ventura Highway
-    martin_required = {"Colors", "The Chain", "Landslide", "Blackbird"}
-    martin_survives = {"Ooh La La", "Wish You Were Here", "Ventura Highway"}
+    # Cut list: The Chain, Landslide, Blackbird
+    # These must NOT be cut: Ooh La La, Wish You Were Here, Ventura Highway, Colors
+    martin_required = {"The Chain", "Landslide", "Blackbird"}
+    martin_survives = {"Ooh La La", "Wish You Were Here", "Ventura Highway", "Colors"}
     found_violations = False
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:
@@ -490,7 +490,7 @@ def test_scenario_4():
                      f"Brown Eyed Girl at index {beg_idx}, Hey Jealousy at {hj_idx}")
 
     # 7. Acoustic breaks must use surviving acoustic songs (not cut ones)
-    martin_cut = {"Landslide", "Blackbird", "Colors", "The Chain"}
+    martin_cut = {"Landslide", "Blackbird", "The Chain"}
     for title in res.get("breaks", []):
         if title in martin_cut:
             all_pass = False
@@ -571,7 +571,7 @@ def test_scenario_6():
                  f"Expected >= 2 break songs, found {len(res['breaks'])}")
 
     # 2. No cut songs in acoustic breaks
-    martin_cut = {"Landslide", "Blackbird", "Colors", "The Chain"}
+    martin_cut = {"Landslide", "Blackbird", "The Chain"}
     for title in res["breaks"]:
         if title in martin_cut:
             all_pass = False
