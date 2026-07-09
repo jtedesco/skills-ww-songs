@@ -462,8 +462,6 @@ def main():
         "musicbrainz_id":       mb_meta["musicbrainz_id"],
         "listenbrainz_listens": str(listens),
         "relative_popularity":  score,
-        "spotify_popularity":   "",
-        "spotify_id":           "",
         **manual
     }
 
