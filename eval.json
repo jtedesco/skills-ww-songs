@@ -90,9 +90,14 @@
           "type": "member_substitution"
         },
         {
-          "id": "proportional_vocalist_scaling",
-          "assertion": "Verify that David's 10% target is distributed proportionally to Lauren (55.6%), Jon (33.3%), and Martin (11.1%).",
-          "type": "vocalist_distribution"
+          "id": "vocalist_balance_in_summary",
+          "assertion": "Verify that the Constraints Satisfaction table shows 'Vocalist Balance' as satisfied, even though the detailed percentage breakdown is not published in the report.",
+          "type": "constraint_satisfaction"
+        },
+        {
+          "id": "vocalist_breakdown_suppressed",
+          "assertion": "Verify that the LEAD VOCALS BREAKDOWN section is NOT present in the output (it is computed internally but not published).",
+          "type": "output_suppression"
         }
       ]
     },
@@ -109,18 +114,86 @@
       "validation_criteria": [
         {
           "id": "martin_guitar_cuts",
-          "assertion": "Verify that 'Colors' and 'The Chain' are excluded from the setlist.",
+          "assertion": "Verify that 'Colors', 'The Chain', 'Landslide', and 'Blackbird' are excluded from the setlist and acoustic breaks (these require Martin's acoustic guitar). Verify that 'Ooh La La', 'Wish You Were Here', and 'Ventura Highway' are NOT cut — they survive without Martin (his part is omitted or covered).",
           "type": "member_substitution"
         },
         {
           "id": "martin_vocal_substitutions",
-          "assertion": "Verify that Martin is not scheduled for any vocals, and David covers his lead vocal parts.",
+          "assertion": "Verify that Martin is not scheduled for any lead or backup vocals, and David covers his lead vocal parts on American Girl, Hey Jealousy, and Born to Run.",
           "type": "member_substitution"
         },
         {
-          "id": "proportional_vocalist_scaling",
-          "assertion": "Verify that Martin's 10% target is distributed proportionally to Lauren (55.6%), Jon (33.3%), and David (11.1%).",
-          "type": "vocalist_distribution"
+          "id": "vocalist_breakdown_suppressed",
+          "assertion": "Verify that the LEAD VOCALS BREAKDOWN section is NOT present in the output (it is computed internally but not published).",
+          "type": "output_suppression"
+        },
+        {
+          "id": "segue_ordering_brown_hey",
+          "assertion": "Verify that whenever both 'Brown Eyed Girl' and 'Hey Jealousy' appear in any set or encore, Brown Eyed Girl comes first (per the order_rules canonical segue order).",
+          "type": "segue_ordering"
+        },
+        {
+          "id": "martin_out_acoustic_break_pool",
+          "assertion": "Verify that acoustic breaks do not contain 'Landslide' or 'Blackbird' (cut songs), and do contain Martin-out-safe acoustic songs such as 'Wish You Were Here', 'Ventura Highway', 'Ooh La La', or 'All For You'.",
+          "type": "break_content"
+        }
+      ]
+    },
+    {
+      "name": "Scenario 6: 3hr Set, Martin Out, Acoustic Breaks + File Output",
+      "input_parameters": {
+        "duration": 3.0,
+        "gig_type": "bar",
+        "martin_out": true,
+        "david_out": false,
+        "breaks": "acoustic",
+        "date": "2099-01-01",
+        "location": "Test Venue Eval",
+        "include_not_ready": false
+      },
+      "validation_criteria": [
+        {
+          "id": "martin_out_acoustic_breaks_work",
+          "assertion": "Verify that acoustic breaks are populated (not silently fallen back to silent) by using surviving acoustic songs (Wish You Were Here, Ventura Highway, Ooh La La, All For You, Interstate Love Song).",
+          "type": "break_content"
+        },
+        {
+          "id": "file_output_md_written",
+          "assertion": "Verify that a file named '2099-01-01 Test Venue Eval.md' is written to the setlists/ subdirectory.",
+          "type": "file_output"
+        },
+        {
+          "id": "file_output_txt_written",
+          "assertion": "Verify that a file named '2099-01-01 Test Venue Eval.txt' is written to the setlists/ subdirectory, containing plaintext arrow notation with 'No Martin' in the header and '->' separators between songs.",
+          "type": "file_output"
+        },
+        {
+          "id": "segue_ordering_funkytown_chain",
+          "assertion": "Verify that whenever Funkytown, Miss You, and Reeling in the Years all appear in the same set, they appear in that canonical order (per order_rules).",
+          "type": "segue_ordering"
+        }
+      ]
+    },
+    {
+      "name": "Scenario 7: Full Band — Every Present Vocalist Must Lead At Least One Song",
+      "input_parameters": {
+        "duration": 1.25,
+        "gig_type": "bar",
+        "martin_out": false,
+        "david_out": false,
+        "breaks": "none",
+        "include_not_ready": false
+      },
+      "validation_criteria": [
+        {
+          "id": "all_vocalists_lead_full_band",
+          "assertion": "Verify that Lauren, Jon, Martin, AND David each lead at least one song in the setlist (including encores). No vocalist present at the gig should have zero lead songs.",
+          "type": "vocalist_inclusion"
+        },
+        {
+          "id": "vocalist_inclusion_supersedes_streak",
+          "assertion": "Verify that even if the vocalist inclusion constraint causes a 3-in-a-row streak for one vocalist, the setlist is still accepted as valid (vocalist inclusion takes priority).",
+          "type": "constraint_priority"
         }
       ]
     }

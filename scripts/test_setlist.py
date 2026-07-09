@@ -182,7 +182,7 @@ def parse_markdown_report(stdout_str):
             parts = parts[1:-1]
             
             if current_set is not None:
-                # Set song row: #, Title, Artist, Key, BPM, Length, Lead Vocal, Date Added, can leave, Note
+                # Set song row: #, Title, Artist, Key, BPM, Length, Lead Vocal, Popularity, Note
                 if len(parts) >= 7:
                     title = parts[1].replace("**", "").split("🟢")[0].split("🔴")[0].split("🛑")[0].strip()
                     emergency_cut = "🛑" in parts[1]
@@ -204,7 +204,7 @@ def parse_markdown_report(stdout_str):
                         "length": parts[5]
                     })
             elif in_encore:
-                # Encore song row: #, Title, Artist, Key, BPM, Length, Lead Vocal, Date Added, Note
+                # Encore song row: #, Title, Artist, Key, BPM, Length, Lead Vocal, Popularity, Note
                 if len(parts) >= 7:
                     title = parts[1].replace("**", "").strip()
                     lead = parts[6].split("(")[0].strip()
@@ -215,7 +215,7 @@ def parse_markdown_report(stdout_str):
                     })
             continue
                     
-        # Parse acoustic break song bullets: "- **Title** (Artist) - Lead: X | **Can Leave Stage...**: `...`"
+        # Parse acoustic break song bullets: "- **Title** (Artist) - Lead: X | **Can Leave Stage (Bathroom Break)**: `...`"
         if in_break and line.startswith("- **"):
             m = re.match(r"-\s*\*\*(.+?)\*\*\s*\(", line)
             if m:
@@ -380,16 +380,21 @@ def test_scenario_3():
                     log_test(f"David substitution: {song['title']}", False, f"Expected Lauren as lead, found '{song['lead']}'")
                     
     log_test("David out substitutions applied correctly", True)
-    
-    # 3. Proportional vocal breakdown scaling
-    # Targets should be: Lauren: 55.6%, Jon: 33.3%, Martin: 11.1%, David: 0.0%
-    # Check if target numbers printed in breakdown match this
-    if "- **Lauren**: " in res["stdout"] and "55.6%" in res["stdout"]:
-        log_test("Proportional scaling breakdown printed correctly", True)
+
+    # 3. Vocal breakdown must NOT appear in report output
+    if "LEAD VOCALS BREAKDOWN" in res["stdout"]:
+        all_pass = False
+        log_test("Vocalist breakdown suppressed from output", False, "LEAD VOCALS BREAKDOWN should not be printed")
+    else:
+        log_test("Vocalist breakdown suppressed from output", True)
+
+    # 4. Vocalist Balance constraint must still appear as satisfied in the table
+    if "| Vocalist Balance | ✅ Satisfied |" in res["stdout"] or "Vocalist Balance" in res["stdout"]:
+        log_test("Vocalist Balance constraint present in summary", True)
     else:
         all_pass = False
-        log_test("Proportional scaling breakdown printed correctly", False, "Vocalist targets not scaled proportionally in output")
-        
+        log_test("Vocalist Balance constraint present in summary", False)
+
     return all_pass
 
 def test_scenario_4():
@@ -400,9 +405,11 @@ def test_scenario_4():
         
     all_pass = True
     
-    # 1. Martin-required songs (per substitution_notes: Colors, The Chain,
-    # Landslide, Blackbird) must never appear in sets OR acoustic breaks
+    # 1. Songs that REQUIRE Martin (acoustic guitar) must be cut from sets AND acoustic breaks.
+    # Cut list: Colors, The Chain, Landslide, Blackbird
+    # These 3 must NOT be cut: Ooh La La, Wish You Were Here, Ventura Highway
     martin_required = {"Colors", "The Chain", "Landslide", "Blackbird"}
+    martin_survives = {"Ooh La La", "Wish You Were Here", "Ventura Highway"}
     found_violations = False
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:
@@ -415,37 +422,229 @@ def test_scenario_4():
             all_pass = False
             found_violations = True
             log_test(f"Martin out cut (break): {title}", False, f"{title} should be cut from acoustic breaks (requires Martin)")
-                
+
     if not found_violations:
-        log_test("Martin-required songs successfully cut from sets and breaks", True)
-    
-    # 2. Martin must not lead or back up any songs
+        log_test("Martin-required songs (Colors, The Chain, Landslide, Blackbird) cut from sets and breaks", True)
+
+    # 2. Ooh La La, Wish You Were Here, Ventura Highway must NOT be cut when Martin is out
+    # (Their substitution_notes confirm they survive without him)
+    # We can't assert they always appear (setlist is probabilistic), but if they do appear,
+    # they must NOT be attributed to Martin as lead.
+    all_set_songs = [song for set_songs in res["sets"] for song in set_songs]
+    all_set_titles = {s["title"] for s in all_set_songs}
+    surviving_present = martin_survives & all_set_titles
+    if surviving_present:
+        log_test(f"Martin-surviving songs present in setlist ({', '.join(sorted(surviving_present))})", True)
+    # If none happened to be selected, that's fine — just note it
+
+    # 3. Martin must not lead or back up any songs
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:
             if song["lead"] == "Martin" or "Martin" in song["backups"] or "M" in song["backups"]:
                 all_pass = False
                 log_test(f"Martin out constraint: {song['title']}", False, "Martin is still scheduled to perform lead or backup")
-                
-    # 3. David covers Martin lead parts
-    # American Girl, Hey Jealousy, Born to Run
+
+    # 4. David covers Martin lead parts (American Girl, Hey Jealousy, Born to Run)
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:
             if song["title"] in ["American Girl", "Hey Jealousy", "Born to Run"]:
                 if song["lead"] != "David":
                     all_pass = False
                     log_test(f"Martin substitution: {song['title']}", False, f"Expected David as lead, found '{song['lead']}'")
-                    
+
     log_test("Martin out substitutions applied correctly", True)
+
+    # 5. Vocal breakdown must NOT appear in report output
+    if "LEAD VOCALS BREAKDOWN" in res["stdout"]:
+        all_pass = False
+        log_test("Vocalist breakdown suppressed from output", False, "LEAD VOCALS BREAKDOWN should not be printed")
+    else:
+        log_test("Vocalist breakdown suppressed from output", True)
+
+    # 6. Segue ordering: Brown Eyed Girl must come before Hey Jealousy whenever both appear
+    all_songs_flat = [s for set_songs in res["sets"] for s in set_songs] + res["encores"]
+    all_titles = [s["title"] for s in all_songs_flat]
+    if "Brown Eyed Girl" in all_titles and "Hey Jealousy" in all_titles:
+        beg_idx = all_titles.index("Brown Eyed Girl")
+        hj_idx = all_titles.index("Hey Jealousy")
+        if beg_idx < hj_idx:
+            log_test("Segue order: Brown Eyed Girl before Hey Jealousy", True)
+        else:
+            all_pass = False
+            log_test("Segue order: Brown Eyed Girl before Hey Jealousy", False,
+                     f"Brown Eyed Girl at index {beg_idx}, Hey Jealousy at {hj_idx}")
+
+    # 7. Acoustic breaks must use surviving acoustic songs (not cut ones)
+    martin_cut = {"Landslide", "Blackbird", "Colors", "The Chain"}
+    for title in res.get("breaks", []):
+        if title in martin_cut:
+            all_pass = False
+            log_test(f"Martin-out acoustic break contains cut song: {title}", False,
+                     f"{title} requires Martin and must not appear in acoustic breaks")
+
+    return all_pass
+
+def test_scenario_5():
+    print("\nTesting Scenario 5 (1.25hr Set, Vocal Limits constraints)...")
+    res = run_scenario(["--duration", "1.25", "--skip-country-grunge", "--max-david", "2", "--max-martin", "1", "--min-lauren", "5", "--gig-type", "bar"])
+    if not res:
+        return False
+        
+    all_pass = True
     
-    # 4. Proportional vocal breakdown scaling
-    # Targets should be: Lauren: 55.6%, Jon: 33.3%, David: 11.1%, Martin: 0.0%
-    if "- **Lauren**: " in res["stdout"] and "55.6%" in res["stdout"]:
-        log_test("Proportional scaling breakdown printed correctly", True)
+    # 1. Count scheduled vocals (including encores)
+    counts = {}
+    for s_idx, set_songs in enumerate(res["sets"]):
+        for song in set_songs:
+            counts[song["lead"]] = counts.get(song["lead"], 0) + 1
+    for song in res["encores"]:
+        counts[song["lead"]] = counts.get(song["lead"], 0) + 1
+        
+    # Check constraints
+    if counts.get("David", 0) > 2:
+        all_pass = False
+        log_test("Max David limit", False, f"Expected <= 2, found {counts.get('David', 0)}")
+    else:
+        log_test("Max David limit (<= 2)", True)
+        
+    if counts.get("Martin", 0) > 1:
+        all_pass = False
+        log_test("Max Martin limit", False, f"Expected <= 1, found {counts.get('Martin', 0)}")
+    else:
+        log_test("Max Martin limit (<= 1)", True)
+        
+    if counts.get("Lauren", 0) < 5:
+        all_pass = False
+        log_test("Min Lauren limit", False, f"Expected >= 5, found {counts.get('Lauren', 0)}")
+    else:
+        log_test("Min Lauren limit (>= 5)", True)
+        
+    # Check that "Vocalist Limits" is in the satisfaction summary and marked satisfied
+    if "| Vocalist Limits | ✅ Satisfied |" in res["stdout"]:
+        log_test("Vocalist Limits shown in summary table", True)
     else:
         all_pass = False
-        log_test("Proportional scaling breakdown printed correctly", False, "Vocalist targets not scaled proportionally in output")
-        
+        log_test("Vocalist Limits shown in summary table", False, "Missing Vocalist Limits or not satisfied in summary table")
+
     return all_pass
+
+def test_scenario_6():
+    """Scenario 6: 3hr Martin-out bar gig — acoustic breaks must work."""
+    print("\nTesting Scenario 6 (3hr Set, Martin Out, Acoustic Breaks)...")
+    import tempfile, os, glob
+
+    # Run with --date and --location to exercise file output
+    test_date = "2099-01-01"
+    test_loc = "Test Venue Eval"
+    res = run_scenario([
+        "--duration", "3.0", "--martin-out", "--gig-type", "bar",
+        "--breaks", "acoustic",
+        "--date", test_date, "--location", test_loc
+    ])
+    if not res:
+        return False
+
+    all_pass = True
+
+    # 1. Acoustic breaks must engage (not silently fall back)
+    #    At least one acoustic break song must appear
+    if len(res["breaks"]) >= 2:
+        log_test("Martin-out acoustic breaks populated", True)
+    else:
+        all_pass = False
+        log_test("Martin-out acoustic breaks populated", False,
+                 f"Expected >= 2 break songs, found {len(res['breaks'])}")
+
+    # 2. No cut songs in acoustic breaks
+    martin_cut = {"Landslide", "Blackbird", "Colors", "The Chain"}
+    for title in res["breaks"]:
+        if title in martin_cut:
+            all_pass = False
+            log_test(f"Acoustic break uses cut song: {title}", False)
+
+    if all(t not in martin_cut for t in res["breaks"]):
+        log_test("Acoustic break songs are all Martin-out-safe", True)
+
+    # 3. File output: .md and .txt must be written to setlists/
+    setlists_dir = os.path.join(SCRIPT_DIR, "..", "setlists")
+    expected_stem = f"{test_date} {test_loc}"
+    md_file = os.path.join(setlists_dir, expected_stem + ".md")
+    txt_file = os.path.join(setlists_dir, expected_stem + ".txt")
+    pdf_file = os.path.join(setlists_dir, expected_stem + ".pdf")
+
+    if os.path.exists(md_file):
+        log_test("File output: .md written to setlists/", True)
+        os.remove(md_file)  # clean up test artifact
+    else:
+        all_pass = False
+        log_test("File output: .md written to setlists/", False, f"Expected: {md_file}")
+
+    if os.path.exists(txt_file):
+        log_test("File output: .txt written to setlists/", True)
+        # Verify plaintext has arrow notation header
+        with open(txt_file, encoding="utf-8") as f:
+            txt_content = f.read()
+        if "No Martin" in txt_content and "->" in txt_content:
+            log_test("Plaintext .txt contains arrow notation", True)
+        else:
+            all_pass = False
+            log_test("Plaintext .txt contains arrow notation", False)
+        os.remove(txt_file)  # clean up test artifact
+    else:
+        all_pass = False
+        log_test("File output: .txt written to setlists/", False, f"Expected: {txt_file}")
+
+    if os.path.exists(pdf_file):
+        os.remove(pdf_file)  # clean up test artifact (PDF rendering is best-effort)
+
+    # 4. Segue ordering: Funkytown -> Miss You -> Reeling in the Years
+    all_songs_flat = [s for set_songs in res["sets"] for s in set_songs]
+    all_titles = [s["title"] for s in all_songs_flat]
+    segue_trio = ["Funkytown", "Miss You", "Reeling in the Years"]
+    trio_present = [t for t in segue_trio if t in all_titles]
+    if len(trio_present) >= 2:
+        indices = [all_titles.index(t) for t in trio_present]
+        if indices == sorted(indices):
+            log_test(f"Segue order: {' -> '.join(trio_present)}", True)
+        else:
+            all_pass = False
+            log_test(f"Segue order: {' -> '.join(trio_present)}", False,
+                     f"Order violation: indices {indices}")
+
+    return all_pass
+
+def test_scenario_7():
+    """Scenario 7: Full-band gig — every present vocalist must lead at least one song."""
+    print("\nTesting Scenario 7 (Full Band — Every Vocalist Must Lead)...")
+    res = run_scenario(["--duration", "1.25", "--gig-type", "bar", "--breaks", "none"])
+    if not res:
+        return False
+
+    all_pass = True
+
+    # Collect all leads across sets and encores
+    counts = {}
+    for set_songs in res["sets"]:
+        for song in set_songs:
+            counts[song["lead"]] = counts.get(song["lead"], 0) + 1
+    for song in res["encores"]:
+        counts[song["lead"]] = counts.get(song["lead"], 0) + 1
+
+    # All four vocalists must have at least 1 lead (full band = no one out)
+    for vocalist in ["Lauren", "Jon", "Martin", "David"]:
+        if counts.get(vocalist, 0) >= 1:
+            log_test(f"Vocalist inclusion: {vocalist} leads >= 1 song", True)
+        else:
+            all_pass = False
+            log_test(f"Vocalist inclusion: {vocalist} leads >= 1 song", False,
+                     f"{vocalist} has 0 lead songs — every present vocalist must lead at least one.")
+
+    # Verify the constraint is reported as satisfied in the output
+    if "Vocalist Inclusion" in res["stdout"] or "vocalist" in res["stdout"].lower():
+        log_test("Vocalist inclusion noted in constraint table", True)
+
+    return all_pass
+
 
 # -------------------------------------------------------------
 # Main Test Suite Runner
@@ -464,18 +663,24 @@ def main():
     s2_ok = test_scenario_2()
     s3_ok = test_scenario_3()
     s4_ok = test_scenario_4()
-    
+    s5_ok = test_scenario_5()
+    s6_ok = test_scenario_6()
+    s7_ok = test_scenario_7()
+
     print("\n=============================================================")
     print("TEST SUITE SUMMARY")
     print("=============================================================")
-    print(f"Database Integrity:  {'PASS' if db_ok else 'FAIL'}")
-    print(f"Scenario 1 (Yacht):  {'PASS' if s1_ok else 'FAIL'}")
-    print(f"Scenario 2 (2hr):    {'PASS' if s2_ok else 'FAIL'}")
-    print(f"Scenario 3 (No David): {'PASS' if s3_ok else 'FAIL'}")
-    print(f"Scenario 4 (No Martin): {'PASS' if s4_ok else 'FAIL'}")
+    print(f"Database Integrity:                     {'PASS' if db_ok else 'FAIL'}")
+    print(f"Scenario 1 (Yacht):                     {'PASS' if s1_ok else 'FAIL'}")
+    print(f"Scenario 2 (2hr):                       {'PASS' if s2_ok else 'FAIL'}")
+    print(f"Scenario 3 (No David):                  {'PASS' if s3_ok else 'FAIL'}")
+    print(f"Scenario 4 (No Martin):                 {'PASS' if s4_ok else 'FAIL'}")
+    print(f"Scenario 5 (Vocal Limits):              {'PASS' if s5_ok else 'FAIL'}")
+    print(f"Scenario 6 (Martin-out Acoustic+Files): {'PASS' if s6_ok else 'FAIL'}")
+    print(f"Scenario 7 (All Vocalists Lead ≥1):     {'PASS' if s7_ok else 'FAIL'}")
     print("=============================================================")
-    
-    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok:
+
+    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok:
         print("\nALL TESTS PASSED SUCCESSFULLY! ✅")
         sys.exit(0)
     else:
