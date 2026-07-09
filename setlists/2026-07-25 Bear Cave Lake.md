@@ -35,7 +35,7 @@
 | 11 | **Piano Man** | Billy Joel | C | 89 | 5:30 | Jon (L) | 8.82 | David to accordion/harmonica, Jon starts |
 | 12 | **Everybody Wants to Rule the World** | Tears for Fears | D | 112 | 4:00 | Jon (L) | 8.90 | Jon starts |
 | 13 | **All Right Now** | Free | A | 120 | 4:00 | Lauren (D, J) | 8.53 | Alex counts us in |
-| 14 | **Ventura Highway** | America | G | 125 | 3:30 | David (J, L) | 8.16 | TBD |
+| 14 | **Ventura Highway** 🛑 **[EMERGENCY CUT]** | America | G | 125 | 3:30 | David (J, L) | 8.16 | TBD |
 | 15 | **Don’t Stop Believing** | Journey | E | 118 | 4:00 | Lauren (J, D) | 5.19 | Jon starts |
 | 16 | **The Middle** | Jimmy Eat World | D | 162 | 3:00 | Martin (J, L, D) | 9.31 | Martin to dropped D, starts |
 | 17 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | C | 134 | 5:30 | Lauren (J, D) | 7.40 | Jon and Alex start |
