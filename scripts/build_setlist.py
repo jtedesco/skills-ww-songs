@@ -179,7 +179,7 @@ def clean_backups(lead_vocals, backups_list):
         cleaned.append(b)
     return cleaned
 
-def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, num_breaks, acoustic_pool, martin_out, david_out):
+def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, num_breaks, acoustic_pool, martin_out, david_out, forced_encore_songs=None):
     break_songs_sets = []
     if breaks_opt == "acoustic" and num_breaks > 0:
         used_song_titles = {s["title"] for set_songs in sets_songs for s in set_songs}
@@ -206,13 +206,13 @@ def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, nu
         if break_pairs:
             break_songs_sets = break_pairs
             
-    encores = []
+    encores = list(forced_encore_songs) if forced_encore_songs else []
     used_song_titles = {s["title"] for set_songs in sets_songs for s in set_songs}
     if break_songs_sets:
         for pair in break_songs_sets:
             used_song_titles.add(pair[0]["title"])
             used_song_titles.add(pair[1]["title"])
-            
+
     remaining_songs = [s for s in available_songs if s["title"] not in used_song_titles]
     encore_options = ["All Right Now", "Crazy Little Thing Called Love"]
     for opt in encore_options:
@@ -220,11 +220,11 @@ def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, nu
         if match:
             encores.append(match)
             remaining_songs.remove(match)
-            
+
     while len(encores) < 2 and remaining_songs:
         remaining_songs.sort(key=lambda s: s["bpm"], reverse=True)
         encores.append(remaining_songs.pop(0))
-        
+
     return [s for set_s in sets_songs for s in set_s] + encores
 
 def main():
@@ -251,7 +251,9 @@ def main():
     parser.add_argument("--date", type=str, default=None, help="Gig date (YYYY-MM-DD) used for output filename")
     parser.add_argument("--location", type=str, default=None, help="Venue/location name used for output filename")
     parser.add_argument("--exclude", action="append", default=[], help="Song title to exclude from the pool (repeatable, e.g. --exclude \"Born to Run\")")
-    
+    parser.add_argument("--include", action="append", default=[], help="Song title to force into a main set, bypassing the solver's normal scoring (repeatable, e.g. --include \"Valerie\")")
+    parser.add_argument("--encore", action="append", default=[], help="Song title to force into the encore instead of a main set (repeatable, e.g. --encore \"Born to Run\")")
+
     args = parser.parse_args()
     
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -389,6 +391,18 @@ def main():
         else:
             available_songs.append(song)
 
+    # Explicitly required (--encore) songs are pulled out of the main-set /
+    # acoustic-break pools entirely so the solver can never place them in a
+    # main set, then force-added to the encore below.
+    forced_encore_titles = {t.lower() for t in args.encore}
+    forced_encore_songs = [s for s in available_songs if s["title"].lower() in forced_encore_titles]
+    missing_encores = [t for t in args.encore if t.lower() not in {s["title"].lower() for s in forced_encore_songs}]
+    if missing_encores:
+        print(f"Error: --encore song(s) not found in filtered pool: {missing_encores}", file=sys.stderr)
+        sys.exit(1)
+    available_songs = [s for s in available_songs if s["title"].lower() not in forced_encore_titles]
+    acoustic_pool = [s for s in acoustic_pool if s["title"].lower() not in forced_encore_titles]
+
     # Calculate set structures
 
     # Keep 2 hours or less as a single set (unless specified otherwise)
@@ -489,7 +503,18 @@ def main():
             single_items.append(Item([s]))
             
     all_items = segue_items + single_items
-    
+
+    # Explicitly required (--include) songs are force-assigned into the sets
+    # before the solver's random fill, rather than left to its scoring — the
+    # solver otherwise has no way to guarantee a specific title gets picked.
+    include_titles = {t.lower() for t in args.include}
+    required_items = [it for it in all_items if include_titles & {t.lower() for t in it.titles}]
+    found_include_titles = {t.lower() for it in required_items for t in it.titles}
+    missing_includes = [t for t in args.include if t.lower() not in found_include_titles]
+    if missing_includes:
+        print(f"Error: --include song(s) not found in filtered pool: {missing_includes}", file=sys.stderr)
+        sys.exit(1)
+
     # Target lead vocals percentages (proportional distribution if out)
     base_vocal_pcts = {"Lauren": 0.5, "Jon": 0.3, "David": 0.1, "Martin": 0.1}
     remaining_vocalists = ["Lauren", "Jon"]
@@ -558,8 +583,14 @@ def main():
             random.shuffle(high_prio)
             random.shuffle(med_prio)
             random.shuffle(low_prio)
-            
-            prioritized_pool = high_prio + med_prio + low_prio
+
+            prioritized_pool = [it for it in high_prio + med_prio + low_prio if it not in required_items]
+
+            # Required items are distributed round-robin across sets and force-
+            # assigned into the middle fill below, ahead of the random pool.
+            required_by_set = [[] for _ in range(num_sets)]
+            for i, it in enumerate(required_items):
+                required_by_set[i % num_sets].append(it)
             
             sets_items = [[] for _ in range(num_sets)]
             used_item_indices = set()
@@ -638,9 +669,11 @@ def main():
                 current_opener = sets_items[s_idx][0]
                 current_closer = sets_items[s_idx][1]
                 
-                middle_items = []
+                middle_items = list(required_by_set[s_idx])
                 current_dur = current_opener.duration_seconds + current_closer.duration_seconds + 30
-                
+                for it in middle_items:
+                    current_dur += it.duration_seconds + 30
+
                 remaining_candidates = [
                     (idx, it) for idx, it in enumerate(prioritized_pool)
                     if idx not in used_item_indices
@@ -721,7 +754,7 @@ def main():
             sim_scheduled = simulate_all_scheduled(
                 candidate_sets_songs, available_songs, num_sets,
                 args.breaks, num_breaks, acoustic_pool,
-                args.martin_out, args.david_out
+                args.martin_out, args.david_out, forced_encore_songs
             )
             sim_counts = {}
             for s in sim_scheduled:
@@ -823,7 +856,7 @@ def main():
             break_songs_sets = break_pairs
             
     # Select Encores
-    encores = []
+    encores = list(forced_encore_songs)
     used_song_titles = {s["title"] for set_songs in sets_songs for s in set_songs}
     if break_songs_sets:
         for pair in break_songs_sets:
