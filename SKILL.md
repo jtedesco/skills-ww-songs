@@ -9,17 +9,14 @@ This skill provides access to the master song database of **Wannabe Weekenders c
 
 The full structured dataset containing song titles, artists, opener/closer roles, transition sequences, key/BPM details, vocal arrangements, playtimes, cleaned intro notes, song ordering rules (segue groupings), Yacht Rock classifications, gig readiness, arrangements (Acoustic / Full / Either), vocalist constraints, date added, archive status, and substitution rules is stored in [songs_metadata.csv](file:///Users/jontedesco/Documents/skills/ww-band-songs/songs_metadata.csv).
 
-## High-Level Substitution Rules
-* **Martin is Out (Rhythm Guitar / Vocals)**:
-  * David covers all of Martin's lead and backup vocals.
-  * Songs requiring Martin's acoustic guitar must be **cut**: *Colors*, *The Chain*, *Landslide*, and *Blackbird*.
-  * Songs that **survive** without Martin (Martin's part omitted or covered): *Take It Easy*, *Me and Bobby McGee*, *Crazy Little Thing Called Love*, *Ventura Highway*, **Ooh La La**, and **Wish You Were Here**.
-    * *Ooh La La*: Lauren leads (David still backs); Martin's rhythm guitar part omitted.
-    * *Wish You Were Here*: David leads acoustic; Martin's backup vocals omitted.
-    * *Ventura Highway*: David leads, Lauren backs; Martin's rhythm guitar omitted.
-* **David is Out (Aux Percussion / Keys / Vocals)**:
-  * Lauren covers David's lead vocals on *Keep Your Hands to Yourself*, *Ventura Highway*, and *Ooh La La*.
-  * Keyboard / marimba sections are omitted or covered. Jon covers main piano parts (e.g. *Piano Man*), and accordion/marimba elements are omitted.
+## Substitution Policy
+When a member is out, `build_setlist.py` applies these band-wide rules automatically:
+* **Martin is out**: David covers Martin's lead and backup vocals; rhythm guitar parts are dropped.
+* **David is out**: Lauren covers David's lead vocals; keyboard/marimba parts are covered by Jon (piano) or omitted.
+
+Per-song specifics — which songs must be **cut** vs. **survive** without a given member, who covers lead vocals on which title, and who's active on stage (and can therefore step off during an acoustic break) — live entirely in `songs_metadata.csv`'s `substitution_notes` and `can_leave_stage` columns. **Do not duplicate per-song lists here**; a hardcoded copy in this file will drift out of sync with the database as songs get added, archived, or re-arranged (this section previously listed a since-archived song as "Martin-out safe").
+
+`can_leave_stage` is the authoritative source for who's actively performing a given acoustic/either-arrangement song — it's the *complement* of the active set (everyone NOT listed is on stage for that song). A trailing `(Acoustic)` or `(Full Band)` tag disambiguates which arrangement of an "Either" song the list applies to. `build_setlist.py`'s `get_active_performers()` reads this column directly (falling back to lead+backup vocals only if a song hasn't been backfilled yet) — the full band roster it diffs against is the single `BAND_ROSTER` constant near the top of the script, kept in a fixed order so "who's attending" is always computed deterministically rather than depending on Python's per-run hash-randomized set ordering.
 
 ## Automated Setlist Builder & Tests
 The skill includes an automated setlist building script: `build_setlist.py`.
@@ -263,5 +260,5 @@ When generating setlists, consider the following programming strategies to optim
 * **Approach**:
   - Schedule 10-minute "Acoustic Sets" between main sets where only a subset of members perform.
   - The two songs in the acoustic break must use non-overlapping performer sets (max 1 overlap allowed as fallback), so that different members rotate off stage.
-  - When Martin is out, Lauren will appear in every available acoustic song — this is expected. The break overlap check excludes Lauren in that case and focuses on giving the *rest of the band* a rotation opportunity.
+  - When Martin is out, Lauren and David will appear in nearly every available acoustic song — Lauren because she's the primary vocalist, David because he's covering Martin's parts. This is expected. The break overlap check excludes both of them in that case and focuses on giving the *rest of the band* a rotation opportunity.
   - Songs that require Martin's acoustic guitar (*Landslide*, *Blackbird*) are cut from the acoustic break pool when Martin is out. Songs with a Martin-out substitution (*Wish You Were Here*, *Ventura Highway*, *Ooh La La*, *All For You*) remain in the pool.

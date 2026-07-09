@@ -29,33 +29,37 @@ def parse_length(length_str):
 def format_length(seconds):
     return f"{int(seconds // 60)}:{int(seconds % 60):02d}"
 
-# Exact acoustic set performers from user requirements
-acoustic_performers = {
-    "landslide": {"Lauren", "Martin"},
-    "blackbird": {"Lauren", "Martin", "Jon"},
-    "wish you were here": {"Lauren", "Martin", "JJ", "David"},
-    "the story": {"Lauren", "Martin", "JJ", "David"},
-    "vienna": {"Jon", "David"},
-    "interstate love song": {"Martin", "Lauren"},
-    "ooh la la": {"David", "Lauren"},
-    "don't know why": {"Lauren", "JJ", "Jon"},
-    "ventura highway": {"David", "Lauren", "Jon"},
-    "all for you": {"Jon", "Martin", "Lauren", "David"}
-}
+# Single source of truth for "who's in the band" — a fixed, deterministic
+# order (not a set) so downstream membership math never depends on Python's
+# per-process hash-randomized set iteration order.
+BAND_ROSTER = ["Lauren", "Jon", "Martin", "David", "JJ", "Debo", "Alex"]
+
+def parse_can_leave_stage(value):
+    """Parse the `can_leave_stage` CSV column into a set of member names.
+
+    Values look like "Debo, Alex, Jon (Acoustic)" — a trailing "(Acoustic)"
+    or "(Full Band)" tag disambiguates which arrangement of an "Either" song
+    the list applies to. Returns None (not an empty set) when the column has
+    no data yet, so callers can distinguish "nobody can leave" from "not
+    filled in" and fall back accordingly.
+    """
+    if not value or value == "None":
+        return None
+    cleaned = re.sub(r"\s*\((Acoustic|Full Band)\)\s*$", "", value.strip())
+    names = {n.strip() for n in cleaned.split(",") if n.strip()}
+    return names or None
 
 def get_active_performers(song, martin_out=False, david_out=False):
-    title = song["title"].lower()
-    active = set()
-    
-    # Find matching song in the acoustic performers map
-    matched_key = None
-    for key in acoustic_performers:
-        if key in title:
-            matched_key = key
-            break
-            
-    if matched_key:
-        active = set(acoustic_performers[matched_key])
+    """Determine which band members are active (on stage) for a song.
+
+    Prefers the curated `can_leave_stage` column in songs_metadata.csv — the
+    complement of the active set — so this data lives in the database, not
+    hardcoded in the skill. Falls back to lead + backup vocals for any song
+    that hasn't been backfilled with can_leave_stage data yet.
+    """
+    leaving = parse_can_leave_stage(song.get("can_leave_stage", ""))
+    if leaving is not None:
+        active = set(BAND_ROSTER) - leaving
     else:
         active = {song["lead_vocals"]}
         for backup in song.get("backup_vocals", []):
@@ -63,13 +67,13 @@ def get_active_performers(song, martin_out=False, david_out=False):
             elif backup == "J": active.add("Jon")
             elif backup == "D": active.add("David")
             elif backup == "M": active.add("Martin")
-            
+
     # Apply substitutions / member out rules
     if martin_out and "Martin" in active:
         active.remove("Martin")
     if david_out and "David" in active:
         active.remove("David")
-        
+
     return active
 
 def get_segue_groups(songs):
@@ -259,7 +263,13 @@ def main():
     martin_cut_songs = []
     david_cut_songs = []
     
-    gravelly_songs = {"Zombie", "Respect", "Roll with the Changes", "You Oughta Know", "Me and Bobby McGee"}
+    # Vocally-taxing songs are flagged per-song in the database (vocalist_constraints),
+    # not hardcoded here, so adding/removing one only requires an edit to the CSV.
+    gravelly_songs = {
+        s["title"] for s in all_songs
+        if "gravelly" in s.get("vocalist_constraints", "").lower()
+        or "taxing" in s.get("vocalist_constraints", "").lower()
+    }
     
     for s in all_songs:
         song = dict(s)
@@ -400,7 +410,7 @@ def main():
 
         # When Martin is out Lauren appears in every acoustic song, so exclude
         # her from the overlap check (she'll always be on stage during breaks).
-        always_on = {"Lauren"} if args.martin_out else set()
+        always_on = {"Lauren", "David"} if args.martin_out else set()
 
         pre_pairs = select_acoustic_breaks(acoustic_only, num_breaks, args.martin_out, args.david_out, max_intersection=0, always_on=always_on)
         if not pre_pairs:
@@ -775,7 +785,7 @@ def main():
                 and not _cut_for_lineup(s)
             ]
             
-        always_on_break = {"Lauren"} if args.martin_out else set()
+        always_on_break = {"Lauren", "David"} if args.martin_out else set()
         break_pairs = select_acoustic_breaks(available_acoustic, num_breaks, args.martin_out, args.david_out, max_intersection=0, always_on=always_on_break)
         if not break_pairs:
             break_pairs = select_acoustic_breaks(available_acoustic, num_breaks, args.martin_out, args.david_out, max_intersection=1, always_on=always_on_break)
@@ -991,7 +1001,7 @@ def main():
                 md("Everyone gets a bathroom break! No member performs in both songs.")
                 for s_num, song in enumerate(pair):
                     active = get_active_performers(song, args.martin_out, args.david_out)
-                    inactive = {"Lauren", "Jon", "Martin", "David", "JJ", "Debo", "Alex"} - active
+                    inactive = set(BAND_ROSTER) - active
                     if args.martin_out:
                         inactive.discard("Martin")
                         active.discard("Martin")

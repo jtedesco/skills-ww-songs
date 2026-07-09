@@ -47,7 +47,7 @@
 ### ☕ BREAK 1 (Acoustic Set - 10 mins)
 Everyone gets a bathroom break! No member performs in both songs.
 - **Ventura Highway** (America) - Lead: David | **Can Leave Stage (Bathroom Break)**: `Alex, Debo, JJ`
-- **Ooh La La** (Faces) - Lead: David | **Can Leave Stage (Bathroom Break)**: `Alex, Debo, JJ, Jon`
+- **Ooh La La** (Faces) - Lead: David | **Can Leave Stage (Bathroom Break)**: `Alex, Debo`
 
 ----------------------------------------
 ## SET 2
@@ -72,7 +72,7 @@ Everyone gets a bathroom break! No member performs in both songs.
 ### ☕ BREAK 2 (Acoustic Set - 10 mins)
 Everyone gets a bathroom break! No member performs in both songs.
 - **Wish You Were Here** (Pink Floyd) - Lead: David | **Can Leave Stage (Bathroom Break)**: `Alex, Debo, Jon`
-- **Interstate Love Song** (Stone Temple Pilots) - Lead: David | **Can Leave Stage (Bathroom Break)**: `Alex, David, Debo, JJ, Jon`
+- **Interstate Love Song** (Stone Temple Pilots) - Lead: David | **Can Leave Stage (Bathroom Break)**: `Alex, Debo`
 
 ----------------------------------------
 ## SET 3
