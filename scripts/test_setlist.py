@@ -586,6 +586,7 @@ def test_scenario_6():
     md_file = os.path.join(setlists_dir, expected_stem + ".md")
     txt_file = os.path.join(setlists_dir, expected_stem + ".txt")
     pdf_file = os.path.join(setlists_dir, expected_stem + ".pdf")
+    rtf_file = os.path.join(setlists_dir, expected_stem + ".rtf")
 
     if os.path.exists(md_file):
         log_test("File output: .md written to setlists/", True)
@@ -612,11 +613,14 @@ def test_scenario_6():
     if os.path.exists(pdf_file):
         os.remove(pdf_file)  # clean up test artifact (PDF rendering is best-effort)
 
-    shared_drive_pdf = os.path.expanduser(
-        f"~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists/{expected_stem}.pdf"
-    )
-    if os.path.exists(shared_drive_pdf):
-        os.remove(shared_drive_pdf)  # clean up Drive sync test artifact
+    if os.path.exists(rtf_file):
+        os.remove(rtf_file)  # clean up test artifact (RTF rendering is best-effort)
+
+    shared_drive_dir = os.path.expanduser("~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists")
+    for ext in (".pdf", ".rtf"):
+        shared_drive_file = os.path.join(shared_drive_dir, expected_stem + ext)
+        if os.path.exists(shared_drive_file):
+            os.remove(shared_drive_file)  # clean up Drive sync test artifact
 
     # 4. Segue ordering: Funkytown -> Miss You -> Reeling in the Years
     all_songs_flat = [s for set_songs in res["sets"] for s in set_songs]

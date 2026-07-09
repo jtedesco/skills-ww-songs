@@ -54,16 +54,18 @@ Refer to the script's help menu (`--help`) for all options.
     - `<YYYY-MM-DD Location>.md` — the full Rich Metadata Table report.
     - `<YYYY-MM-DD Location>.txt` — the Plaintext Arrow Notation performance script.
     - `<YYYY-MM-DD Location>.pdf` — a styled PDF rendering of the `.md` report, generated automatically (see below). If PDF rendering fails (e.g. no Chromium-based browser installed), the script prints a warning and continues — the `.md`/`.txt` files are still written.
+    - `<YYYY-MM-DD Location>.rtf` — a rich-text rendering of the `.md` report with no fixed page breaks (see RTF Export below), also generated automatically and also best-effort.
   - Pass `--date` and `--location` to control the filename, e.g. `--date 2026-07-18 --location "Local Bar & Grill"`.
-  - If `--date`/`--location` are omitted the files are named `setlist_<timestamp>.md/.txt/.pdf`.
+  - If `--date`/`--location` are omitted the files are named `setlist_<timestamp>.md/.txt/.pdf/.rtf`.
 
 * **Local Setlist File Storage**:
   - Every generated setlist must be saved to the `setlists/` subdirectory of this skill (i.e., `skills-ww-songs/setlists/`).
-  - Save **three files** per setlist, all named `YYYY-MM-DD Location` (e.g., `2026-07-25 Local Bar and Grill Wooddale`):
+  - Save **four files** per setlist, all named `YYYY-MM-DD Location` (e.g., `2026-07-25 Local Bar and Grill Wooddale`):
     - `YYYY-MM-DD Location.md` — the rich metadata table format (Format 1).
     - `YYYY-MM-DD Location.txt` — the plaintext arrow notation format (Format 2).
     - `YYYY-MM-DD Location.pdf` — styled PDF of the `.md` report (written automatically by `build_setlist.py`; see PDF Export below).
-  - If no venue is known at generation time, use only the date: `YYYY-MM-DD.md` / `.txt` / `.pdf`.
+    - `YYYY-MM-DD Location.rtf` — rich-text rendering with no page breaks (written automatically; see RTF Export below).
+  - If no venue is known at generation time, use only the date: `YYYY-MM-DD.md` / `.txt` / `.pdf` / `.rtf`.
   - Do **not** overwrite an existing file; create a new one or confirm with the user first.
 
 ### PDF Export
@@ -78,14 +80,27 @@ python3 scripts/render_pdf.py --all
 ```
 Requires the `markdown` Python package (`pip3 install --user markdown`) and a Chromium-based browser installed locally.
 
-### Syncing PDFs to Shared Google Drive
-After rendering, `build_setlist.py` also copies the `.pdf` (best-effort — failures just print a warning) to the local Google Drive Desktop mount for the band's shared drive:
+### RTF Export (no page breaks / Google Doc-ready)
+PDF has fixed page sizes, which means hard page breaks — annoying to scroll through on a phone mid-gig. `scripts/render_rtf.py` renders the same `.md` report as an `.rtf` file instead: a continuously-flowing rich-text document with no pagination, generated automatically alongside the PDF. It's a small purpose-built markdown→RTF converter (not a generic one — it understands exactly the subset of markdown `build_setlist.py` emits: headings, bullet lists, tables, GitHub-style alert callouts, and inline bold/italic/code) with no external dependencies (pure Python stdlib).
+
+RTF opens natively in Word, Pages, and TextEdit. To get it as an actual **Google Doc**: once the `.rtf` is in the synced Drive folder (see below), open it from drive.google.com and choose "Open with → Google Docs" — Drive converts it to a native editable Doc in place, no separate export step needed. (Uploading through the Google Drive MCP connector was tried for this and explicitly ruled out — see the note below — so this manual "open with" step, or dragging the file in via Finder/Drive Desktop, is the supported path.)
+
+To (re-)render RTF for an existing setlist `.md` file:
+```bash
+python3 scripts/render_rtf.py "setlists/2026-07-25 Bear Cave Lake.md"
+
+# Re-render every .md file in setlists/
+python3 scripts/render_rtf.py --all
+```
+
+### Syncing PDFs and RTFs to Shared Google Drive
+After rendering, `build_setlist.py` also copies the `.pdf` and `.rtf` (both best-effort — failures just print a warning) to the local Google Drive Desktop mount for the band's shared drive:
 ```
 ~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists/
 ```
-This is a plain filesystem copy (`shutil.copy2`) into the folder synced by the Google Drive Desktop app — **do not** use the Google Drive MCP connector for this. That connector was tried and ruled out: it has no chunked/resumable upload, so pushing a several-hundred-KB PDF through it requires base64-encoding the whole file into a single tool call, which blows past any single-call token budget (a ~300KB PDF is ~400K base64 characters ≈ ~400K tokens). It also has no permission-write tool, so "anyone with the link" sharing can't be automated either way. The local-copy approach sidesteps both problems entirely.
+This is a plain filesystem copy (`shutil.copy2`) into the folder synced by the Google Drive Desktop app — **never use the Google Drive MCP connector for this, for any file type, even small ones.** This was tried and explicitly ruled out by the user ("forget the MCP approach altogether"), for good reason: the connector has no chunked/resumable upload, so pushing even a moderate-size binary (like a PDF) through it means base64-encoding the whole thing into a single tool call, which blows past any single-call token budget (a ~300KB PDF is ~400K base64 characters ≈ ~400K tokens). It also has no permission-write tool, so "anyone with the link" sharing can't be automated either way. The local-copy approach sidesteps all of this. Even though small text/HTML content (like an RTF's source) would technically fit through the connector's `create_file` tool, don't use it for anything Drive-related — stick to the local-copy pattern for consistency and because the user was explicit about this.
 
-To manually re-sync an existing PDF: `cp "setlists/<file>.pdf" ~/Google\ Drive/Shared\ Drives/Wannabe\ Weekenders/Setlists/`.
+To manually re-sync existing files: `cp "setlists/<file>.pdf" "setlists/<file>.rtf" ~/Google\ Drive/Shared\ Drives/Wannabe\ Weekenders/Setlists/`.
 
 ### Adding a New Song
 To add a new song to the repertoire, run the onboarding script:
