@@ -77,10 +77,14 @@ def test_database_integrity():
             log_test(f"Clean backups check: {title}", False, f"Lead vocalist '{lead}' also listed in backups as {overlap}")
             
         # Gig readiness check
-        # Acoustic/Either songs are gig ready only if explicitly whitelisted below.
+        # Songs are gig ready only if explicitly whitelisted below — being
+        # "not ready" is a legitimate state for any arrangement (a full-band
+        # song can be mid-rehearsal just as easily as an acoustic one), not
+        # something limited to Acoustic/Either songs.
         gig_ready_acoustic = {"Landslide", "Blackbird", "Interstate Love Song",
                                "Wish You Were Here", "Ooh La La", "Ventura Highway",
                                "All For You"}
+        not_ready_full_band = {"Kid Charlemagne"}
         if s.get("arrangement") in ["Acoustic", "Either"]:
             if title in gig_ready_acoustic:
                 if s.get("gig_ready") != "Yes":
@@ -93,10 +97,16 @@ def test_database_integrity():
                     all_pass = False
                     log_test(f"Gig readiness check: {title}", False, f"Acoustic/Either song '{title}' must NOT be gig ready, found: {s.get('gig_ready')}")
         else:
-            if s.get("gig_ready") != "Yes":
-                gig_ready_count += 1
-                all_pass = False
-                log_test(f"Gig readiness check: {title}", False, f"Full band song '{title}' must be gig ready, found: {s.get('gig_ready')}")
+            if title in not_ready_full_band:
+                if s.get("gig_ready") == "Yes":
+                    gig_ready_count += 1
+                    all_pass = False
+                    log_test(f"Gig readiness check: {title}", False, f"Full band song '{title}' must NOT be gig ready, found: {s.get('gig_ready')}")
+            else:
+                if s.get("gig_ready") != "Yes":
+                    gig_ready_count += 1
+                    all_pass = False
+                    log_test(f"Gig readiness check: {title}", False, f"Full band song '{title}' must be gig ready, found: {s.get('gig_ready')}")
                 
         # Date added check
         # Non-ready songs have 'None'
@@ -444,13 +454,18 @@ def test_scenario_4():
                 all_pass = False
                 log_test(f"Martin out constraint: {song['title']}", False, "Martin is still scheduled to perform lead or backup")
 
-    # 4. David covers Martin lead parts (American Girl, Hey Jealousy, Born to Run)
+    # 4. David covers most of Martin's lead parts (American Girl, Hey Jealousy),
+    #    but Born to Run has a per-song override sending it to Lauren instead.
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:
-            if song["title"] in ["American Girl", "Hey Jealousy", "Born to Run"]:
+            if song["title"] in ["American Girl", "Hey Jealousy"]:
                 if song["lead"] != "David":
                     all_pass = False
                     log_test(f"Martin substitution: {song['title']}", False, f"Expected David as lead, found '{song['lead']}'")
+            if song["title"] == "Born to Run":
+                if song["lead"] != "Lauren":
+                    all_pass = False
+                    log_test(f"Martin substitution: {song['title']}", False, f"Expected Lauren as lead (per-song override), found '{song['lead']}'")
 
     log_test("Martin out substitutions applied correctly", True)
 

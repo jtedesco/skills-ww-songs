@@ -49,6 +49,17 @@ def parse_can_leave_stage(value):
     names = {n.strip() for n in cleaned.split(",") if n.strip()}
     return names or None
 
+def parse_covering_vocalist(notes, default):
+    """Extract the per-song covering lead vocalist from substitution_notes.
+
+    Notes like "If Martin is out: Lauren sings lead vocals." let a specific
+    song override the band's default covering singer (e.g. Born to Run goes
+    to Lauren instead of the usual David-covers-Martin rule) without any
+    per-title logic in this script — just an edit to the CSV.
+    """
+    m = re.search(r"(\w+) sings lead vocals", notes)
+    return m.group(1) if m else default
+
 def get_active_performers(song, martin_out=False, david_out=False):
     """Determine which band members are active (on stage) for a song.
 
@@ -340,10 +351,10 @@ def main():
                 martin_cut_songs.append(title)
                 continue
             if song["lead_vocals"] == "Martin":
-                song["lead_vocals"] = "David"
+                song["lead_vocals"] = parse_covering_vocalist(notes, "David")
             if "M" in song.get("backup_vocals", []):
                 song["backup_vocals"] = [b for b in song["backup_vocals"] if b != "M"]
-                
+
         # David Out rules
         if args.david_out:
             notes = song.get("substitution_notes", "")
@@ -351,7 +362,7 @@ def main():
                 david_cut_songs.append(title)
                 continue
             if song["lead_vocals"] == "David":
-                song["lead_vocals"] = "Lauren"
+                song["lead_vocals"] = parse_covering_vocalist(notes, "Lauren")
             if "D" in song.get("backup_vocals", []):
                 song["backup_vocals"] = [b for b in song["backup_vocals"] if b != "D"]
                 

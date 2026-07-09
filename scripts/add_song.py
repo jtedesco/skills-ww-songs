@@ -143,9 +143,10 @@ def fetch_musicbrainz_metadata(title: str, artist: str) -> dict:
     print(f"\n🔍 Querying MusicBrainz for '{title}' by '{artist_c}'...")
 
     # Release group → year + album
+    rg_query = f'releasegroup:"{title}" AND artist:"{artist_c}"'
     rg_url = (
         "https://musicbrainz.org/ws/2/release-group/"
-        f"?query={urllib.parse.quote(f'releasegroup:\"{title}\" AND artist:\"{artist_c}\"')}"
+        f"?query={urllib.parse.quote(rg_query)}"
         "&fmt=json"
     )
     rg_data = mb_request(rg_url)
@@ -169,9 +170,10 @@ def fetch_musicbrainz_metadata(title: str, artist: str) -> dict:
             result["release_year"] = m.group(0)
 
     # Recording → MBID, genres, moods
+    rec_query = f'recording:"{title}" AND artist:"{artist_c}"'
     rec_url = (
         "https://musicbrainz.org/ws/2/recording/"
-        f"?query={urllib.parse.quote(f'recording:\"{title}\" AND artist:\"{artist_c}\"')}"
+        f"?query={urllib.parse.quote(rec_query)}"
         "&fmt=json"
     )
     rec_data = mb_request(rec_url)
@@ -449,11 +451,13 @@ def main():
     manual = gather_manual_fields(title, artist)
 
     # 5. Assemble row
-    today = datetime.now().strftime("%Y-%m")
+    # Non-gig-ready songs use the literal "None" for date_added, matching
+    # the rest of the database (date_added tracks when a song went live).
+    date_added = datetime.now().strftime("%Y-%m") if manual["gig_ready"] == "Yes" else "None"
     new_song = {
         "title":                title,
         "artist":               artist,
-        "date_added":           today,
+        "date_added":           date_added,
         "archived":             "No",
         "release_year":         mb_meta["release_year"],
         "original_album":       mb_meta["original_album"],

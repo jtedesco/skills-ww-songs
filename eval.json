@@ -119,7 +119,7 @@
         },
         {
           "id": "martin_vocal_substitutions",
-          "assertion": "Verify that Martin is not scheduled for any lead or backup vocals, and David covers his lead vocal parts on American Girl, Hey Jealousy, and Born to Run.",
+          "assertion": "Verify that Martin is not scheduled for any lead or backup vocals, David covers his lead vocal parts on American Girl and Hey Jealousy, and Lauren covers his lead vocal part on Born to Run (a per-song override in substitution_notes).",
           "type": "member_substitution"
         },
         {
