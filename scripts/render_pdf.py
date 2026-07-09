@@ -42,6 +42,7 @@ CSS = """
   tr:nth-child(even) td { background: #fafafa; }
   strong { font-weight: 600; }
   code { background: #f2f2f2; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
+  .icon { width: 0.95em; height: 0.95em; vertical-align: -0.12em; margin-right: 2px; }
   .callout { border-left: 4px solid #d4a017; background: #fff8e6; padding: 10px 14px; margin: 12px 0; border-radius: 3px; }
   .callout-title { font-weight: 700; margin-bottom: 4px; }
   .callout p { margin: 4px 0; }
@@ -51,6 +52,40 @@ CSS = """
   .callout-important { border-left-color: #8250df; background: #f6f0ff; }
   .callout-caution { border-left-color: #cf222e; background: #fff0f0; }
 """
+
+# Chrome embeds the full-color Apple Color Emoji font (100s of KB) just to
+# render a handful of glyphs. Swap the semantic ones for tiny inline SVGs and
+# drop the purely decorative ones — cuts rendered PDFs down by ~10-20x.
+_ICON_SVG = {
+    "✅": '<svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" fill="#1a7f37"/>'
+          '<path d="M4.5 8.3l2.3 2.3 4.7-5.1" fill="none" stroke="#fff" stroke-width="1.8" '
+          'stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    "❌": '<svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" fill="#cf222e"/>'
+          '<path d="M5 5l6 6M11 5l-6 6" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></svg>',
+    "🟢": '<svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#1a7f37"/></svg>',
+    "🔴": '<svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="7" fill="#cf222e"/></svg>',
+    "🛑": '<svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" fill="#cf222e"/>'
+          '<rect x="4.5" y="7" width="7" height="2" fill="#fff"/></svg>',
+    "⚠️": '<svg class="icon" viewBox="0 0 16 16"><path d="M8 1.5 L15 14.5 L1 14.5 Z" fill="#d4a017"/>'
+          '<rect x="7.2" y="5.5" width="1.6" height="5" fill="#1a1a1a"/>'
+          '<rect x="7.2" y="11.2" width="1.6" height="1.6" fill="#1a1a1a"/></svg>',
+    "ℹ️": '<svg class="icon" viewBox="0 0 16 16"><circle cx="8" cy="8" r="8" fill="#0969da"/>'
+          '<rect x="7.2" y="6.5" width="1.6" height="6" fill="#fff"/>'
+          '<rect x="7.2" y="3.5" width="1.6" height="1.6" fill="#fff"/></svg>',
+}
+_ICON_SVG["⚠"] = _ICON_SVG["⚠️"]
+_ICON_SVG["ℹ"] = _ICON_SVG["ℹ️"]
+
+_DECORATIVE_EMOJI = ["📋", "⏱️", "⏱", "📊", "☕", "⏸️", "⏸", "🎵", "📝", "💡", "❗"]
+
+
+def slim_emoji(html):
+    """Replace color-emoji glyphs with tiny inline SVGs / drop purely decorative ones."""
+    for e in _DECORATIVE_EMOJI:
+        html = html.replace(e + " ", "").replace(e, "")
+    for e, svg in _ICON_SVG.items():
+        html = html.replace(e, svg)
+    return html
 
 
 def convert_alerts(md_text):
@@ -95,6 +130,7 @@ def render(md_path, pdf_path=None):
         convert_alerts(md_text),
         extensions=["tables", "fenced_code", "sane_lists", "nl2br"],
     )
+    body_html = slim_emoji(body_html)
     html = f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></head><body>{body_html}</body></html>"
 
     if pdf_path is None:

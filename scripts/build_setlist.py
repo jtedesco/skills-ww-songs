@@ -6,6 +6,7 @@ import random
 import re
 import argparse
 import io
+import shutil
 from datetime import datetime
 from math import ceil
 
@@ -1150,12 +1151,23 @@ def main():
     print(f"\n✅ Saved markdown  → {os.path.abspath(md_path)}", file=sys.stderr)
     print(f"✅ Saved plaintext → {os.path.abspath(txt_path)}", file=sys.stderr)
 
+    pdf_path = None
     try:
         import render_pdf
         pdf_path = render_pdf.render(md_path)
         print(f"✅ Saved PDF       → {pdf_path}", file=sys.stderr)
     except Exception as e:
         print(f"⚠️  PDF generation skipped ({e})", file=sys.stderr)
+
+    # Only sync real gigs (named via --date/--location) to the shared Drive folder —
+    # ad-hoc/test runs fall back to a setlist_<timestamp> stem and shouldn't clutter it.
+    if pdf_path and (args.date or args.location):
+        shared_drive_dir = os.path.expanduser("~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists")
+        try:
+            shutil.copy2(pdf_path, shared_drive_dir)
+            print(f"✅ Synced to Drive → {os.path.join(shared_drive_dir, os.path.basename(pdf_path))}", file=sys.stderr)
+        except Exception as e:
+            print(f"⚠️  Drive sync skipped ({e})", file=sys.stderr)
 
 def tag_emergency_cuts(sets_songs, segue_groups):
     segue_titles = {title.lower() for group in segue_groups for title in group}

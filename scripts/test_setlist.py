@@ -597,6 +597,12 @@ def test_scenario_6():
     if os.path.exists(pdf_file):
         os.remove(pdf_file)  # clean up test artifact (PDF rendering is best-effort)
 
+    shared_drive_pdf = os.path.expanduser(
+        f"~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists/{expected_stem}.pdf"
+    )
+    if os.path.exists(shared_drive_pdf):
+        os.remove(shared_drive_pdf)  # clean up Drive sync test artifact
+
     # 4. Segue ordering: Funkytown -> Miss You -> Reeling in the Years
     all_songs_flat = [s for set_songs in res["sets"] for s in set_songs]
     all_titles = [s["title"] for s in all_songs_flat]

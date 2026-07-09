@@ -81,6 +81,15 @@ python3 scripts/render_pdf.py --all
 ```
 Requires the `markdown` Python package (`pip3 install --user markdown`) and a Chromium-based browser installed locally.
 
+### Syncing PDFs to Shared Google Drive
+After rendering, `build_setlist.py` also copies the `.pdf` (best-effort — failures just print a warning) to the local Google Drive Desktop mount for the band's shared drive:
+```
+~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists/
+```
+This is a plain filesystem copy (`shutil.copy2`) into the folder synced by the Google Drive Desktop app — **do not** use the Google Drive MCP connector for this. That connector was tried and ruled out: it has no chunked/resumable upload, so pushing a several-hundred-KB PDF through it requires base64-encoding the whole file into a single tool call, which blows past any single-call token budget (a ~300KB PDF is ~400K base64 characters ≈ ~400K tokens). It also has no permission-write tool, so "anyone with the link" sharing can't be automated either way. The local-copy approach sidesteps both problems entirely.
+
+To manually re-sync an existing PDF: `cp "setlists/<file>.pdf" ~/Google\ Drive/Shared\ Drives/Wannabe\ Weekenders/Setlists/`.
+
 ### Adding a New Song
 To add a new song to the repertoire, run the onboarding script:
 ```bash
