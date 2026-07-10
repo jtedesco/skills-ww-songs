@@ -16,6 +16,11 @@ Usage:
         --swap "Lights" "Don't Stop Believing" \\
         --remove "Ooh La La"
 
+--add "Title" "Before Title" inserts a brand-new song immediately before an
+existing one (e.g. building out a medley); --set-length "Title" "M:SS"
+overrides a song's performed length for this instance only, without
+touching songs_metadata.csv (e.g. a trimmed intro when segued into a medley).
+
 Re-renders the .md and .txt in place, then the .pdf/.rtf, and syncs the
 .pdf/.rtf to the shared Drive folder (same as build_setlist.py).
 """
@@ -176,12 +181,12 @@ def build_new_song(by_title, title, martin_out, david_out):
     return song
 
 
-def apply_ops(sections, swaps, removes, by_title, martin_out, david_out):
-    """Mutate each section's row list in place per --swap/--remove.
+def apply_ops(sections, swaps, removes, adds, by_title, martin_out, david_out):
+    """Mutate each section's row list in place per --swap/--remove/--add.
     Existing (untouched) rows keep whatever lead/backup vocals are already
-    printed (already lineup-correct); a --swap's replacement is looked up
-    fresh from the database and lineup-substituted. Errors out if a
-    requested title isn't found anywhere in the setlist."""
+    printed (already lineup-correct); a --swap's replacement and a --add
+    are looked up fresh from the database and lineup-substituted. Errors
+    out if a requested title isn't found anywhere in the setlist."""
     # Removes run before swaps so "move a song" (--remove it from its old
     # slot, --swap it into a new one) works in a single invocation instead
     # of the swap's fresh lookup colliding with the song's still-present
@@ -212,6 +217,42 @@ def apply_ops(sections, swaps, removes, by_title, martin_out, david_out):
                 break
         if not found:
             print(f"Error: --swap song not found in setlist: {old!r}", file=sys.stderr)
+            sys.exit(1)
+
+    for title, before in adds:
+        found = False
+        for sec in sections:
+            for i, row in enumerate(sec["rows"]):
+                if normalize_title(row["title"]) == normalize_title(before):
+                    sec["rows"].insert(i, build_new_song(by_title, title, martin_out, david_out))
+                    found = True
+                    break
+            if found:
+                break
+        if not found:
+            print(f"Error: --add anchor song not found in setlist: {before!r}", file=sys.stderr)
+            sys.exit(1)
+
+
+def apply_length_overrides(sections, overrides):
+    """Override a song's *performed* length for this instance only (e.g. a
+    medley where a song is trimmed to a shorter segue-in). Doesn't touch
+    songs_metadata.csv — this is specific to how this gig plays the song."""
+    for title, length in overrides:
+        if not re.match(r"^\d{1,2}:\d{2}$", length.strip()):
+            print(f"Error: --set-length value {length!r} isn't M:SS / MM:SS format", file=sys.stderr)
+            sys.exit(1)
+        found = False
+        for sec in sections:
+            for row in sec["rows"]:
+                if normalize_title(row["title"]) == normalize_title(title):
+                    row["length"] = length
+                    found = True
+                    break
+            if found:
+                break
+        if not found:
+            print(f"Error: --set-length song not found in setlist: {title!r}", file=sys.stderr)
             sys.exit(1)
 
 
@@ -394,10 +435,14 @@ def main():
                          help="Replace OLD with NEW in place (repeatable)")
     parser.add_argument("--remove", action="append", default=[],
                          help="Remove a song with no replacement (repeatable)")
+    parser.add_argument("--add", nargs=2, action="append", default=[], metavar=("TITLE", "BEFORE"),
+                         help="Insert TITLE immediately before an existing song BEFORE (repeatable)")
+    parser.add_argument("--set-length", nargs=2, action="append", default=[], metavar=("TITLE", "LENGTH"),
+                         help="Override a song's performed length (M:SS) for this instance only, e.g. a trimmed medley segue-in (repeatable)")
     args = parser.parse_args()
 
-    if not args.swap and not args.remove:
-        print("Error: nothing to do — pass at least one --swap or --remove", file=sys.stderr)
+    if not args.swap and not args.remove and not args.add:
+        print("Error: nothing to do — pass at least one --swap, --remove, or --add", file=sys.stderr)
         sys.exit(1)
 
     md_path = args.md_path
@@ -408,9 +453,11 @@ def main():
     header_lines, sections = parse_md(md_path)
     martin_out, david_out = parse_missing(header_lines)
 
-    apply_ops(sections, [tuple(s) for s in args.swap], args.remove, by_title, martin_out, david_out)
+    apply_ops(sections, [tuple(s) for s in args.swap], args.remove, [tuple(a) for a in args.add],
+              by_title, martin_out, david_out)
     check_no_duplicates(sections)
     enrich_static_fields(sections, by_title)
+    apply_length_overrides(sections, [tuple(s) for s in args.set_length])
 
     songs_by_section = [sec["rows"] for sec in sections]
 
