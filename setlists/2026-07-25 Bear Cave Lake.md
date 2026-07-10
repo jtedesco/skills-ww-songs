@@ -37,23 +37,22 @@
 | 13 | **All Right Now** | Free | A | 120 | 4:00 | Lauren (D, J) | 8.53 | Alex counts us in |
 | 14 | **Ventura Highway** 🛑 **[EMERGENCY CUT]** | America | G | 125 | 3:30 | David (J, L) | 8.16 | TBD |
 | 15 | **Don’t Stop Believing** | Journey | E | 118 | 4:00 | Lauren (J, D) | 5.19 | Jon starts |
-| 16 | **The Middle** | Jimmy Eat World | D | 162 | 3:00 | Martin (J, L, D) | 9.31 | Martin to dropped D, starts |
+| 16 | **Born to Run** | Bruce Springsteen | E | 147 | 4:30 | Martin (L) | 3.90 | Alex starts |
 | 17 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | C | 134 | 5:30 | Lauren (J, D) | 7.40 | Jon and Alex start |
 
-**Set 1 Music Duration**: 67:00 | **Transitions**: 8:00 | **Total**: 75:00
+**Set 1 Music Duration**: 68:30 | **Transitions**: 8:00 | **Total**: 76:30
 ----------------------------------------
 ## ENCORES
 | # | Title | Artist | Key | BPM | Length | Lead Vocal | Popularity | Note |
 |---|---|---|---|---|---|---|---|---|
 | 1 | **The Chain** | Fleetwood Mac | Em | 152 | 4:30 | Lauren (J) | 8.88 | Martin starts acoustic riff. |
-| 2 | **Born to Run** | Bruce Springsteen | E | 147 | 4:30 | Martin (L) | 3.90 | Alex starts |
 
-**Encore Music Duration**: 9:00 | **Transitions**: 0:30 | **Total**: 9:30
+**Encore Music Duration**: 4:30 | **Transitions**: 0:00 | **Total**: 4:30
 ----------------------------------------
 
 ### 📊 GIG SUMMARY STATS
-- **Total Songs Scheduled**: 19
-- **Pure Music Playtime**: 76:00
-- **Transition Buffers (30s/song)**: 8:30
+- **Total Songs Scheduled**: 18
+- **Pure Music Playtime**: 73:00
+- **Transition Buffers (30s/song)**: 8:00
 - **Break Time**: 0:00
-- **Grand Total Duration**: 84:30 (Target: 75:00)
+- **Grand Total Duration**: 81:00 (Target: 75:00)

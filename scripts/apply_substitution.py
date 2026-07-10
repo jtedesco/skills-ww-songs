@@ -182,20 +182,10 @@ def apply_ops(sections, swaps, removes, by_title, martin_out, david_out):
     printed (already lineup-correct); a --swap's replacement is looked up
     fresh from the database and lineup-substituted. Errors out if a
     requested title isn't found anywhere in the setlist."""
-    for old, new in swaps:
-        found = False
-        for sec in sections:
-            for i, row in enumerate(sec["rows"]):
-                if normalize_title(row["title"]) == normalize_title(old):
-                    sec["rows"][i] = build_new_song(by_title, new, martin_out, david_out)
-                    found = True
-                    break
-            if found:
-                break
-        if not found:
-            print(f"Error: --swap song not found in setlist: {old!r}", file=sys.stderr)
-            sys.exit(1)
-
+    # Removes run before swaps so "move a song" (--remove it from its old
+    # slot, --swap it into a new one) works in a single invocation instead
+    # of the swap's fresh lookup colliding with the song's still-present
+    # original occurrence and tripping the duplicate check.
     for title in removes:
         found = False
         for sec in sections:
@@ -208,6 +198,20 @@ def apply_ops(sections, swaps, removes, by_title, martin_out, david_out):
                 break
         if not found:
             print(f"Error: --remove song not found in setlist: {title!r}", file=sys.stderr)
+            sys.exit(1)
+
+    for old, new in swaps:
+        found = False
+        for sec in sections:
+            for i, row in enumerate(sec["rows"]):
+                if normalize_title(row["title"]) == normalize_title(old):
+                    sec["rows"][i] = build_new_song(by_title, new, martin_out, david_out)
+                    found = True
+                    break
+            if found:
+                break
+        if not found:
+            print(f"Error: --swap song not found in setlist: {old!r}", file=sys.stderr)
             sys.exit(1)
 
 
