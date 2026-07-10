@@ -68,6 +68,25 @@ Refer to the script's help menu (`--help`) for all options.
   - If no venue is known at generation time, use only the date: `YYYY-MM-DD.md` / `.txt` / `.pdf` / `.rtf`.
   - Do **not** overwrite an existing file; create a new one or confirm with the user first.
 
+### Revising an Existing Setlist (Band Feedback)
+When the band gives feedback on a setlist that's **already been generated and shared** — "swap X for Y", "drop Z", "add W" — do **not** re-run `build_setlist.py`. It's a from-scratch randomized solver: every run re-optimizes the *entire* setlist, so even a two-song request can silently reshuffle unrelated songs, drop others, and change the emergency-cut pick. The band asked for specific changes, not a new setlist — only make the changes they named.
+
+Use `scripts/apply_substitution.py` instead. It edits the existing `.md`/`.txt` in place — only the named songs change, everything else (order, unrelated songs, breaks) stays byte-identical — then re-renders the `.pdf`/`.rtf` and re-syncs to Drive, same as `build_setlist.py`:
+```bash
+python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake.md" \
+    --swap "Rock This Town" "Valerie" \
+    --swap "Brown Eyed Girl" "Reeling in the Years" \
+    --remove "Ooh La La"
+```
+- `--swap "Old" "New"` replaces a song in place (same slot in the running order); `--remove "Title"` drops a song with no replacement. Both are repeatable and can target a song in any set or the encore.
+- It still enforces the same constraints `build_setlist.py` does, even though it isn't re-solving the whole setlist:
+  - **EMERGENCY CUT marker**: recomputed after every edit using the same selection logic as `build_setlist.py` (`tag_emergency_cuts`). If a swap/removal takes out the song currently marked as the cut candidate (like replacing an EMERGENCY CUT song with a new one), a new eligible song is picked automatically — the setlist is never left without a cut candidate. Don't hand-pick a replacement cut candidate yourself; let the tool recompute it.
+  - **Lineup substitutions**: reads the `Missing:` line already in the file's header, so a brand-new song added via `--swap` gets the same Martin/David-out vocal reassignment already baked into the rest of the setlist — and refuses to add a song that requires a missing member per the database (`substitution_notes` says to cut it).
+  - **No duplicates**: refuses to introduce a song that's already scheduled elsewhere in the setlist.
+  - **Durations**: per-section and grand-total stats are recomputed from the new song list.
+- If the requested substitutions leave a real ambiguity the tool can't resolve on its own — e.g. the band's feedback doesn't specify which of several plausible songs to cut, or conflicts with an existing constraint in a way that has more than one reasonable fix — ask the band/user rather than guessing.
+- Constraints not mentioned above (vocalist balance, pacing flow, bathroom-break overlap) are **not** re-validated by this script, since they depend on the whole setlist, not just the edited slots — eyeball the result for anything glaring, but don't run the full solver just to re-check them.
+
 ### PDF Export
 `build_setlist.py` automatically renders the `.md` report to a styled `.pdf` in the same call — no manual conversion needed. It shells out to a local headless Chromium-based browser (Google Chrome / Chromium / Edge, whichever is found first) to print styled HTML to PDF, so no paid API or internet-dependent service is involved.
 

@@ -179,6 +179,67 @@ def clean_backups(lead_vocals, backups_list):
         cleaned.append(b)
     return cleaned
 
+def vocal_display_string(song):
+    """'Lead (Backup, Backup)' string used in the .md table's Lead Vocal column."""
+    lead_v = song["lead_vocals"]
+    song["backup_vocals"] = clean_backups(lead_v, song.get("backup_vocals", []))
+    backups = ", ".join(song["backup_vocals"])
+    return lead_v + (f" ({backups})" if backups else "")
+
+def format_md_row(song, idx, marker=""):
+    """Render one .md setlist table row. `marker` is the caller-computed
+    opener/closer/emergency-cut annotation (e.g. ' 🛑 **[EMERGENCY CUT]**')."""
+    v_string = vocal_display_string(song)
+    pop_score = song.get("relative_popularity", "") or "-"
+    return f"| {idx+1} | **{song['title']}**{marker} | {song['artist']} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {pop_score} | {song['intro_notes']} |"
+
+def backup_initials(song):
+    """Return +XYZ initials string for backup vocals (after martin/david substitution)."""
+    backups = clean_backups(song["lead_vocals"], song.get("backup_vocals", []))
+    mapping = {"L": "L", "J": "J", "D": "D", "M": "M"}
+    initials = "".join(mapping[b] for b in backups if b in mapping)
+    if len(initials) == 3:
+        return "+3"
+    return ("+" + initials) if initials else ""
+
+def song_line(song, is_first=False):
+    """Format a single song's plaintext arrow-notation pieces.
+
+    Returns (is_segue, extra, body) where `extra` is the intro/segue note
+    text (or None) and `body` is the "Title (Vocal) [Key] [tags]" string.
+    """
+    lead = song["lead_vocals"]
+    bi = backup_initials(song)
+    vocal_str = f"({lead} {bi})".strip() if bi else f"({lead})"
+    key = song["key"]
+    tags = []
+    if song["opener"] == "Yes" and is_first:
+        tags.append("[OPENER]")
+    if song["closer"] == "Yes":
+        tags.append("[CLOSER]")
+    if song.get("emergency_cut", False):
+        tags.append("[EMERGENCY CUT]")
+    tag_str = (" " + " ".join(tags)) if tags else ""
+    intro = song.get("intro_notes", "").strip()
+    if intro and intro != "TBD":
+        if intro.upper().startswith("SEGUE"):
+            return (True, intro[5:].strip(), f"{song['title']} {vocal_str} [{key}]{tag_str}")
+        else:
+            return (False, intro, f"{song['title']} {vocal_str} [{key}]{tag_str}")
+    return (False, None, f"{song['title']} {vocal_str} [{key}]{tag_str}")
+
+def format_txt_line(song, is_first=False):
+    """Format one song as a full plaintext arrow-notation line (no trailing blank line)."""
+    is_segue, extra, body = song_line(song, is_first=is_first)
+    if is_first:
+        return f"{extra} {body}" if extra else body
+    if is_segue:
+        return f"-> SEGUE {extra} {body}"
+    elif extra:
+        return f"-> {extra} {body}"
+    else:
+        return f"-> {body}"
+
 def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, num_breaks, acoustic_pool, martin_out, david_out, forced_encore_songs=None):
     break_songs_sets = []
     if breaks_opt == "acoustic" and num_breaks > 0:
@@ -1039,15 +1100,8 @@ def main():
             elif song["closer"] == "Yes" and idx == len(set_songs) - 1:
                 marker = " 🔴 *[Closer]*"
                 
-            lead_v = song["lead_vocals"]
-            song["backup_vocals"] = clean_backups(lead_v, song.get("backup_vocals", []))
-            backups = ", ".join(song["backup_vocals"])
-            v_string = lead_v + (f" ({backups})" if backups else "")
+            md(format_md_row(song, idx, marker))
 
-            pop_score = song.get("relative_popularity", "") or "-"
-                
-            md(f"| {idx+1} | **{song['title']}**{marker} | {song['artist']} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {pop_score} | {song['intro_notes']} |")
-            
         set_dur = sum(parse_length(s["length"]) for s in set_songs)
         set_trans = (len(set_songs) - 1) * 30
         total_music_seconds += set_dur
@@ -1085,13 +1139,8 @@ def main():
         md("| # | Title | Artist | Key | BPM | Length | Lead Vocal | Popularity | Note |")
         md("|---|---|---|---|---|---|---|---|---|")
         for idx, song in enumerate(encores):
-            lead_v = song["lead_vocals"]
-            song["backup_vocals"] = clean_backups(lead_v, song.get("backup_vocals", []))
-            backups = ", ".join(song["backup_vocals"])
-            v_string = lead_v + (f" ({backups})" if backups else "")
-            pop_score = song.get("relative_popularity", "") or "-"
-            md(f"| {idx+1} | **{song['title']}** | {song['artist']} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {pop_score} | {song['intro_notes']} |")
-            
+            md(format_md_row(song, idx))
+
         encore_dur = sum(parse_length(s["length"]) for s in encores)
         encore_trans = (len(encores) - 1) * 30
         total_music_seconds += encore_dur
@@ -1118,37 +1167,6 @@ def main():
     # ---------------------------------------------------------------
     # Build plaintext arrow-notation (Format 2)
     # ---------------------------------------------------------------
-    def backup_initials(song):
-        """Return +XYZ initials string for backup vocals (after martin/david substitution)."""
-        backups = clean_backups(song["lead_vocals"], song.get("backup_vocals", []))
-        mapping = {"L": "L", "J": "J", "D": "D", "M": "M"}
-        initials = "".join(mapping[b] for b in backups if b in mapping)
-        if len(initials) == 3:
-            return "+3"
-        return ("+" + initials) if initials else ""
-
-    def song_line(song, is_first=False):
-        """Format a single song line in plaintext arrow notation."""
-        lead = song["lead_vocals"]
-        bi = backup_initials(song)
-        vocal_str = f"({lead} {bi})".strip() if bi else f"({lead})"
-        key = song["key"]
-        tags = []
-        if song["opener"] == "Yes" and is_first:
-            tags.append("[OPENER]")
-        if song["closer"] == "Yes":
-            tags.append("[CLOSER]")
-        if song.get("emergency_cut", False):
-            tags.append("[EMERGENCY CUT]")
-        tag_str = (" " + " ".join(tags)) if tags else ""
-        intro = song.get("intro_notes", "").strip()
-        if intro and intro != "TBD":
-            if intro.upper().startswith("SEGUE"):
-                return (True, intro[5:].strip(), f"{song['title']} {vocal_str} [{key}]{tag_str}")
-            else:
-                return (False, intro, f"{song['title']} {vocal_str} [{key}]{tag_str}")
-        return (False, None, f"{song['title']} {vocal_str} [{key}]{tag_str}")
-
     missing_str = "None Missing" if not missing_names else "No " + " & ".join(missing_names)
     num_sets_label = f"{num_sets}x {int(args.duration / num_sets * 60)} Min set" if num_sets == 1 else f"{num_sets}x Sets"
     txt_lines = [f"{num_sets_label} ({missing_str})", ""]

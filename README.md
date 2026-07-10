@@ -12,6 +12,7 @@ This repo is the skill itself: [SKILL.md](SKILL.md) is the instruction set Claud
 | [songs_metadata.csv](songs_metadata.csv) | Master song database (title, artist, key/BPM, vocalists, genre/mood tags, popularity, gig-readiness, etc.) |
 | [eval.json](eval.json) | Test scenarios used to evaluate the skill's setlist-building behavior |
 | `scripts/build_setlist.py` | Generates a setlist (`.md`, `.txt`, `.pdf`) from the database given constraints |
+| `scripts/apply_substitution.py` | Applies targeted song swaps/removals to an *existing* setlist in place, without re-running the solver |
 | `scripts/render_pdf.py` | Re-renders a styled PDF from an existing setlist `.md` file |
 | `scripts/add_song.py` | Onboards a new song: checks for duplicates, fetches MusicBrainz/ListenBrainz data, prompts for manual fields, appends to the CSV |
 | `scripts/enrich_metadata.py` | Backfills missing MusicBrainz metadata (release year, album, genre, mood) for existing songs |
@@ -39,6 +40,18 @@ python3 scripts/build_setlist.py --duration 2 --david-out
 ```
 
 The script applies the substitution rules documented in [SKILL.md](SKILL.md) — cutting songs that can't survive without that member, and reassigning vocals for the ones that can.
+
+### Revising an existing setlist
+
+Got band feedback naming specific songs to swap or cut on a setlist that's already been shared? Don't re-run `build_setlist.py` — it re-optimizes the whole setlist from scratch and will reshuffle songs nobody asked to change. Use `apply_substitution.py` instead:
+
+```bash
+python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake.md" \
+    --swap "Rock This Town" "Valerie" \
+    --remove "Ooh La La"
+```
+
+Edits the `.md`/`.txt` in place (only the named songs change — order and everything else stays untouched), recomputes durations and the EMERGENCY CUT marker, and re-renders `.pdf`/`.rtf`. See "Revising an Existing Setlist" in [SKILL.md](SKILL.md) for details.
 
 ### Adding a song
 
