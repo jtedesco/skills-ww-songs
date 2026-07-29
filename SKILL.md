@@ -9,6 +9,16 @@ This skill provides access to the master song database of **Wannabe Weekenders c
 
 The full structured dataset containing song titles, artists, opener/closer roles, transition sequences, key/BPM details, vocal arrangements, playtimes, cleaned intro notes, song ordering rules (segue groupings), Yacht Rock classifications, gig readiness, arrangements (Acoustic / Full / Either), vocalist constraints, date added, archive status, and substitution rules is stored in [songs_metadata.csv](file:///Users/jontedesco/Documents/skills/ww-band-songs/songs_metadata.csv).
 
+## Instrumentation Columns (Who Plays What)
+
+To catch cases where a mid-song instrument switch would collide with a performer's next cue (e.g. someone still swapping guitars when they're supposed to be starting the next song), `songs_metadata.csv` has one column per stage part: `electric_guitar`, `acoustic_guitar` (both semicolon-separated — more than one person can be on the same part), `keys_1`, `keys_2`, `drums`, `bass`, `percussion`, `harmonica`, `accordion`, `sax`. A blank cell means nobody's on that part for that song (either it's unused, or — for the acoustic/either-arrangement break songs — that performer is off stage per `can_leave_stage`).
+
+Fixed, never-switching assignments: Jon is always `keys_1` + vocals, Alex is always `drums`, Debo is always `bass`, JJ is always `electric_guitar`, Lauren is always vocals-only (no instrument column). None of these needs cross-checking against a song's notes — they're constant whenever that person is active on the song (per `can_leave_stage`).
+
+Martin switches between `electric_guitar` (his default) and `acoustic_guitar` on a fixed per-song list — currently: *Take It Easy*, *Me and Bobby McGee*, *Brown Eyed Girl*, *Baby Blue*, *Crazy Little Thing Called Love*, *The Chain*, *Colors* — plus every Acoustic/Either-arrangement break song where he's active (those are inherently acoustic performances). Check this list (or the per-song `intro_notes`/`substitution_notes`, which sometimes call out "Martin acoustic" explicitly) before adding a new song or changing Martin's part on an existing one — don't just default him to electric.
+
+`keys_2`, `percussion`, `harmonica`, and `accordion` are David's remaining parts (he also covers `electric_guitar`/`acoustic_guitar` and vocals per-song) and `sax` has no assigned player yet — all left blank for now, to be backfilled per-song rather than guessed.
+
 ## Substitution Policy
 When a member is out, `build_setlist.py` applies these band-wide rules automatically:
 * **Martin is out**: David covers Martin's lead and backup vocals; rhythm guitar parts are dropped.
