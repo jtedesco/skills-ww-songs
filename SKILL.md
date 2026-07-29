@@ -19,6 +19,10 @@ Martin switches between `electric_guitar` (his default) and `acoustic_guitar` on
 
 `keys_2`, `percussion`, `harmonica`, and `accordion` are David's remaining parts (he also covers `electric_guitar`/`acoustic_guitar` and vocals per-song) and `sax` has no assigned player yet — all left blank for now, to be backfilled per-song rather than guessed.
 
+## Energy Arc Columns
+
+`songs_metadata.csv` has `start_energy` and `end_energy` columns (`Low` / `Medium` / `High`) capturing how a song feels at its first and last bar — for building the set's energy arc (e.g. start and end each set high, use a Low→High "build" song to come out of an acoustic break or recover after a mellow mid-set stretch). Most songs hold one energy level throughout (`start_energy` == `end_energy`); only songs that noticeably build or wind down have different start/end values (e.g. *Me and Bobby McGee*: Low→High). This data isn't wired into `build_setlist.py`'s pacing logic yet (which currently paces by BPM only via `make_v_shape()`) — that's a natural next step if arc-aware set-building is wanted.
+
 ## Substitution Policy
 When a member is out, `build_setlist.py` applies these band-wide rules automatically:
 * **Martin is out**: David covers Martin's lead and backup vocals; rhythm guitar parts are dropped.
