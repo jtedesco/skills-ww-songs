@@ -11,9 +11,9 @@ The full structured dataset containing song titles, artists, opener/closer roles
 
 ## Instrumentation Columns (Who Plays What)
 
-To catch cases where a mid-song instrument switch would collide with a performer's next cue (e.g. someone still swapping guitars when they're supposed to be starting the next song), `songs_metadata.csv` has one column per stage part: `electric_guitar`, `acoustic_guitar` (both semicolon-separated — more than one person can be on the same part), `keys_1`, `keys_2`, `drums`, `bass`, `percussion`, `harmonica`, `accordion`, `sax`. A blank cell means nobody's on that part for that song (either it's unused, or — for the acoustic/either-arrangement break songs — that performer is off stage per `can_leave_stage`).
+To catch cases where a mid-song instrument switch would collide with a performer's next cue (e.g. someone still swapping guitars when they're supposed to be starting the next song), `songs_metadata.csv` has one column per stage part: `electric_guitar`, `acoustic_guitar` (both semicolon-separated — more than one person can be on the same part), `keys_1`, `keys_2`, `drums`, `bass`, `percussion`, `harmonica`, `accordion`, `sax`. A blank cell means nobody's on that part for that song — either it's unused, or that performer isn't active on the song (e.g. the acoustic/either-arrangement break songs, which only use a small subset of the band).
 
-Fixed, never-switching assignments: Jon is always `keys_1` + vocals, Alex is always `drums`, Debo is always `bass`, JJ is always `electric_guitar`, Lauren is always vocals-only (no instrument column). None of these needs cross-checking against a song's notes — they're constant whenever that person is active on the song (per `can_leave_stage`).
+Fixed, never-switching assignments: Jon is always `keys_1` + vocals, Alex is always `drums`, Debo is always `bass`, JJ is always `electric_guitar`, Lauren is always vocals-only (no instrument column). None of these needs cross-checking against a song's notes — they're constant whenever that person is active on the song.
 
 Martin switches between `electric_guitar` (his default) and `acoustic_guitar` on a fixed per-song list — currently: *Take It Easy*, *Me and Bobby McGee*, *Brown Eyed Girl*, *Baby Blue*, *Crazy Little Thing Called Love*, *The Chain*, *Colors* — plus every Acoustic/Either-arrangement break song where he's active (those are inherently acoustic performances). Check this list (or the per-song `intro_notes`/`substitution_notes`, which sometimes call out "Martin acoustic" explicitly) before adding a new song or changing Martin's part on an existing one — don't just default him to electric.
 
@@ -24,9 +24,7 @@ When a member is out, `build_setlist.py` applies these band-wide rules automatic
 * **Martin is out**: David covers Martin's lead and backup vocals; rhythm guitar parts are dropped.
 * **David is out**: Lauren covers David's lead vocals; keyboard/marimba parts are covered by Jon (piano) or omitted.
 
-Per-song specifics — which songs must be **cut** vs. **survive** without a given member, who covers lead vocals on which title, and who's active on stage (and can therefore step off during an acoustic break) — live entirely in `songs_metadata.csv`'s `substitution_notes` and `can_leave_stage` columns. **Do not duplicate per-song lists here**; a hardcoded copy in this file will drift out of sync with the database as songs get added, archived, or re-arranged (this section previously listed a since-archived song as "Martin-out safe").
-
-`can_leave_stage` is the authoritative source for who's actively performing a given acoustic/either-arrangement song — it's the *complement* of the active set (everyone NOT listed is on stage for that song). A trailing `(Acoustic)` or `(Full Band)` tag disambiguates which arrangement of an "Either" song the list applies to. `build_setlist.py`'s `get_active_performers()` reads this column directly (falling back to lead+backup vocals only if a song hasn't been backfilled yet) — the full band roster it diffs against is the single `BAND_ROSTER` constant near the top of the script, kept in a fixed order so "who's attending" is always computed deterministically rather than depending on Python's per-run hash-randomized set ordering.
+Per-song specifics — which songs must be **cut** vs. **survive** without a given member, and who covers lead vocals on which title — live entirely in `songs_metadata.csv`'s `substitution_notes` column. **Do not duplicate per-song lists here**; a hardcoded copy in this file will drift out of sync with the database as songs get added, archived, or re-arranged (this section previously listed a since-archived song as "Martin-out safe").
 
 ## Automated Setlist Builder & Tests
 The skill includes an automated setlist building script: `build_setlist.py`.
@@ -94,8 +92,9 @@ python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake.md" \
   - **Lineup substitutions**: reads the `Missing:` line already in the file's header, so a brand-new song added via `--swap` gets the same Martin/David-out vocal reassignment already baked into the rest of the setlist — and refuses to add a song that requires a missing member per the database (`substitution_notes` says to cut it).
   - **No duplicates**: refuses to introduce a song that's already scheduled elsewhere in the setlist.
   - **Durations**: per-section and grand-total stats are recomputed from the new song list.
+  - **Songs Not Selected**: the trailing section is always fully regenerated from the final scheduled songs (see Format 1 above), so a swap correctly moves songs between "in the setlist" and "not selected."
 - If the requested substitutions leave a real ambiguity the tool can't resolve on its own — e.g. the band's feedback doesn't specify which of several plausible songs to cut, or conflicts with an existing constraint in a way that has more than one reasonable fix — ask the band/user rather than guessing.
-- Constraints not mentioned above (vocalist balance, pacing flow, bathroom-break overlap) are **not** re-validated by this script, since they depend on the whole setlist, not just the edited slots — eyeball the result for anything glaring, but don't run the full solver just to re-check them.
+- Constraints not mentioned above (vocalist balance, pacing flow, acoustic vocalist coverage) are **not** re-validated by this script, since they depend on the whole setlist, not just the edited slots — eyeball the result for anything glaring, but don't run the full solver just to re-check them.
 
 ### PDF Export
 `build_setlist.py` automatically renders the `.md` report to a styled `.pdf` in the same call — no manual conversion needed. It shells out to a local headless Chromium-based browser (Google Chrome / Chromium / Edge, whichever is found first) to print styled HTML to PDF, so no paid API or internet-dependent service is involved.
@@ -197,6 +196,7 @@ All "who's missing" and event-detail info lives here — do not restate it in th
 - **Constraints satisfaction table**: One row per constraint (✅/❌), with pass/fail
 - **Song table** with columns: `#`, `Song`, `Artist`, `Lead`, `Backups`, `Key`, `BPM`, `Length`, `Popularity`, `Notes`
 - **Duration summary**: Music time, transitions, breaks, grand total
+- **Songs Not Selected**: A trailing `## SONGS NOT SELECTED` section, after the gig summary stats, listing everything in the repertoire that didn't make this setlist (any set, break, or encore) — split into `### Full Band` and `### Acoustic` (which also covers `Either`-arrangement songs), each song tagged `*(Archived)*` if applicable. Built by `render_not_selected_lines()` in `build_setlist.py`, shared with `apply_substitution.py` — every substitution run fully regenerates this section from the final scheduled songs (dropping whatever was there before), so it's never stale after a swap/remove/add, unlike the acoustic breaks (which that script leaves untouched).
 
 > **Note**: Vocalist target percentages are used internally by the solver but are **not** published in the report.
 
@@ -301,10 +301,9 @@ When generating setlists, consider the following programming strategies to optim
   - Rotate lead vocalists (Lauren, Jon, Martin, David) to prevent any one singer from leading more than 3 songs in a row (secondary to the rule above).
   - Separate vocally taxing/gravelly songs (such as *Zombie* or *Respect* for Lauren) by at least 2 non-taxing songs to allow recovery.
 
-### 4. Acoustic Bathroom Breaks (Mid-Gig Downtime)
-* **Goal**: Give band members restroom breaks without stopping the music.
+### 4. Acoustic Breaks (Mid-Gig Downtime)
+* **Goal**: Give the full band a musical breather between main sets, with vocal variety.
 * **Approach**:
-  - Schedule 10-minute "Acoustic Sets" between main sets where only a subset of members perform.
-  - The two songs in the acoustic break must use non-overlapping performer sets (max 1 overlap allowed as fallback), so that different members rotate off stage.
-  - When Martin is out, Lauren and David will appear in nearly every available acoustic song — Lauren because she's the primary vocalist, David because he's covering Martin's parts. This is expected. The break overlap check excludes both of them in that case and focuses on giving the *rest of the band* a rotation opportunity.
+  - Schedule 10-minute "Acoustic Sets" between main sets, filled with acoustic/either-arrangement songs.
+  - **Acoustic Vocalist Coverage**: `select_acoustic_pool_songs()` in `build_setlist.py` tries to have every present vocalist (with at least one eligible acoustic-pool song) lead at least one acoustic-break song, picking the highest-`relative_popularity` option per vocalist first, then filling any remaining slots by popularity. This is a best-effort goal, not a hard constraint — reported in the report's constraints table as "Acoustic Vocalist Coverage" (✅ full coverage / ⚠️ partial, naming who missed out / ❌ no acoustic songs available at all, silent breaks used instead).
   - Songs that require Martin's acoustic guitar (*Landslide*, *Blackbird*) are cut from the acoustic break pool when Martin is out. Songs with a Martin-out substitution (*Wish You Were Here*, *Ventura Highway*, *Ooh La La*, *All For You*) remain in the pool.

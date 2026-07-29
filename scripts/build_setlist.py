@@ -29,26 +29,6 @@ def parse_length(length_str):
 def format_length(seconds):
     return f"{int(seconds // 60)}:{int(seconds % 60):02d}"
 
-# Single source of truth for "who's in the band" — a fixed, deterministic
-# order (not a set) so downstream membership math never depends on Python's
-# per-process hash-randomized set iteration order.
-BAND_ROSTER = ["Lauren", "Jon", "Martin", "David", "JJ", "Debo", "Alex"]
-
-def parse_can_leave_stage(value):
-    """Parse the `can_leave_stage` CSV column into a set of member names.
-
-    Values look like "Debo, Alex, Jon (Acoustic)" — a trailing "(Acoustic)"
-    or "(Full Band)" tag disambiguates which arrangement of an "Either" song
-    the list applies to. Returns None (not an empty set) when the column has
-    no data yet, so callers can distinguish "nobody can leave" from "not
-    filled in" and fall back accordingly.
-    """
-    if not value or value == "None":
-        return None
-    cleaned = re.sub(r"\s*\((Acoustic|Full Band)\)\s*$", "", value.strip())
-    names = {n.strip() for n in cleaned.split(",") if n.strip()}
-    return names or None
-
 def parse_covering_vocalist(notes, default):
     """Extract the per-song covering lead vocalist from substitution_notes.
 
@@ -59,33 +39,6 @@ def parse_covering_vocalist(notes, default):
     """
     m = re.search(r"(\w+) sings lead vocals", notes)
     return m.group(1) if m else default
-
-def get_active_performers(song, martin_out=False, david_out=False):
-    """Determine which band members are active (on stage) for a song.
-
-    Prefers the curated `can_leave_stage` column in songs_metadata.csv — the
-    complement of the active set — so this data lives in the database, not
-    hardcoded in the skill. Falls back to lead + backup vocals for any song
-    that hasn't been backfilled with can_leave_stage data yet.
-    """
-    leaving = parse_can_leave_stage(song.get("can_leave_stage", ""))
-    if leaving is not None:
-        active = set(BAND_ROSTER) - leaving
-    else:
-        active = {song["lead_vocals"]}
-        for backup in song.get("backup_vocals", []):
-            if backup == "L": active.add("Lauren")
-            elif backup == "J": active.add("Jon")
-            elif backup == "D": active.add("David")
-            elif backup == "M": active.add("Martin")
-
-    # Apply substitutions / member out rules
-    if martin_out and "Martin" in active:
-        active.remove("Martin")
-    if david_out and "David" in active:
-        active.remove("David")
-
-    return active
 
 def get_segue_groups(songs):
     groups = []
@@ -135,38 +88,80 @@ def make_v_shape(items):
             right.append(item)
     return left + list(reversed(right))
 
-def select_acoustic_breaks(acoustic_pool, num_breaks, martin_out=False, david_out=False, max_intersection=0, always_on=None):
-    """Find num_breaks pairs of acoustic songs for bathroom breaks.
+def select_acoustic_pool_songs(candidates, count, target_vocalists):
+    """Pick `count` songs from the acoustic-eligible `candidates` for the
+    gig's acoustic breaks.
 
-    'always_on' is a set of performer names to EXCLUDE from the overlap check —
-    typically Lauren when Martin is out, since she appears in every acoustic song.
-    The constraint is still useful: we want at least some band members to rotate.
+    Goal: cover as many distinct `target_vocalists` (present vocalists with
+    at least one eligible acoustic-pool lead song) as possible, so each
+    singer gets a moment in the acoustic set — rather than the old
+    stage-overlap-avoidance approach. Remaining slots are filled by highest
+    relative_popularity. Returns (chosen_songs, covered_vocalists).
     """
-    if always_on is None:
-        always_on = set()
-    valid_pairs = []
-    for i in range(len(acoustic_pool)):
-        for j in range(i + 1, len(acoustic_pool)):
-            song_a = acoustic_pool[i]
-            song_b = acoustic_pool[j]
-            active_a = get_active_performers(song_a, martin_out, david_out) - always_on
-            active_b = get_active_performers(song_b, martin_out, david_out) - always_on
+    if count <= 0 or not candidates:
+        return [], set()
 
-            if len(active_a.intersection(active_b)) <= max_intersection:
-                valid_pairs.append((song_a, song_b))
+    chosen = []
+    chosen_titles = set()
+    covered = set()
 
-    def find_unique_combination(pairs, count, chosen=[]):
-        if len(chosen) == count:
-            return chosen
-        for p in pairs:
-            used_songs = {s["title"] for pair in chosen for s in pair}
-            if p[0]["title"] not in used_songs and p[1]["title"] not in used_songs:
-                res = find_unique_combination(pairs, count, chosen + [p])
-                if res is not None:
-                    return res
-        return None
+    def popularity(s):
+        try:
+            return float(s.get("relative_popularity") or 0)
+        except ValueError:
+            return 0.0
 
-    return find_unique_combination(valid_pairs, num_breaks)
+    for vocalist in target_vocalists:
+        if len(chosen) >= count:
+            break
+        options = [s for s in candidates if s["lead_vocals"] == vocalist and s["title"] not in chosen_titles]
+        if not options:
+            continue
+        options.sort(key=popularity, reverse=True)
+        pick = options[0]
+        chosen.append(pick)
+        chosen_titles.add(pick["title"])
+        covered.add(vocalist)
+
+    remaining = sorted((s for s in candidates if s["title"] not in chosen_titles), key=popularity, reverse=True)
+    for s in remaining:
+        if len(chosen) >= count:
+            break
+        chosen.append(s)
+        chosen_titles.add(s["title"])
+
+    random.shuffle(chosen)
+    return chosen[:count], covered
+
+
+def pair_up(songs):
+    """Group a flat song list into consecutive pairs, dropping a trailing
+    unpaired song (e.g. only 3 acoustic candidates were available for a
+    2-break gig that needs 4) rather than crashing on it downstream."""
+    return [songs[i:i + 2] for i in range(0, len(songs) - len(songs) % 2, 2)]
+
+
+def render_not_selected_lines(all_songs, scheduled_titles):
+    """Build the trailing '## SONGS NOT SELECTED' section: everything else in
+    the repertoire that didn't make this setlist, split into Full Band vs.
+    Acoustic ('Either'-arrangement songs count as acoustic here, matching how
+    they're pooled for breaks), each tagged with its archived status."""
+    scheduled_lower = {t.lower() for t in scheduled_titles}
+    remaining = [s for s in all_songs if s["title"].lower() not in scheduled_lower]
+    full_band = sorted((s for s in remaining if s["arrangement"] == "Full Band"), key=lambda s: s["title"])
+    acoustic = sorted((s for s in remaining if s["arrangement"] in ("Acoustic", "Either")), key=lambda s: s["title"])
+
+    def bullet(s):
+        archived_tag = " *(Archived)*" if s.get("archived") == "Yes" else ""
+        return f"- **{s['title']}** ({s['artist']}){archived_tag}"
+
+    lines = ["## SONGS NOT SELECTED", "Everything else in the repertoire that didn't make this setlist.", ""]
+    lines.append("### Full Band")
+    lines.extend([bullet(s) for s in full_band] if full_band else ["*None — every full-band song made the cut.*"])
+    lines.append("")
+    lines.append("### Acoustic")
+    lines.extend([bullet(s) for s in acoustic] if acoustic else ["*None — every acoustic song made the cut.*"])
+    return lines
 
 
 def clean_backups(lead_vocals, backups_list):
@@ -261,11 +256,10 @@ def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, nu
                 and not _cut_for_lineup(s)
             ]
             
-        break_pairs = select_acoustic_breaks(available_acoustic, num_breaks, martin_out, david_out, max_intersection=0)
-        if not break_pairs:
-            break_pairs = select_acoustic_breaks(available_acoustic, num_breaks, martin_out, david_out, max_intersection=1)
-        if break_pairs:
-            break_songs_sets = break_pairs
+        target_vocalists = [v for v in (["Lauren", "Jon"] + ([] if martin_out else ["Martin"]) + ([] if david_out else ["David"]))
+                             if v in {s["lead_vocals"] for s in available_acoustic}]
+        chosen, _ = select_acoustic_pool_songs(available_acoustic, num_breaks * 2, target_vocalists)
+        break_songs_sets = pair_up(chosen)
             
     encores = list(forced_encore_songs) if forced_encore_songs else []
     used_song_titles = {s["title"] for set_songs in sets_songs for s in set_songs}
@@ -496,19 +490,10 @@ def main():
             and not _is_hard_cut(s)
         ]
 
-        # Try to find valid pairs among Acoustic-only songs first
-        acoustic_only = [s for s in candidate_acoustics if s["arrangement"] == "Acoustic"]
-        either_acoustics = [s for s in candidate_acoustics if s["arrangement"] == "Either"]
-
-        # When Martin is out Lauren appears in every acoustic song, so exclude
-        # her from the overlap check (she'll always be on stage during breaks).
-        always_on = {"Lauren", "David"} if args.martin_out else set()
-
-        pre_pairs = select_acoustic_breaks(acoustic_only, num_breaks, args.martin_out, args.david_out, max_intersection=0, always_on=always_on)
-        if not pre_pairs:
-            pre_pairs = select_acoustic_breaks(candidate_acoustics, num_breaks, args.martin_out, args.david_out, max_intersection=0, always_on=always_on)
-        if not pre_pairs:
-            pre_pairs = select_acoustic_breaks(candidate_acoustics, num_breaks, args.martin_out, args.david_out, max_intersection=1, always_on=always_on)
+        pre_target_vocalists = [v for v in (["Lauren", "Jon"] + ([] if args.martin_out else ["Martin"]) + ([] if args.david_out else ["David"]))
+                                 if v in {s["lead_vocals"] for s in candidate_acoustics}]
+        pre_chosen, _ = select_acoustic_pool_songs(candidate_acoustics, num_breaks * 2, pre_target_vocalists)
+        pre_pairs = pair_up(pre_chosen)
 
         if pre_pairs:
             for pair in pre_pairs:
@@ -612,7 +597,7 @@ def main():
         "Vocalist Balance": "✅ Satisfied",
         "Lauren Vocal Health": "✅ Satisfied",
         "Pacing Flow": "✅ Satisfied",
-        "Bathroom Breaks": "✅ Satisfied",
+        "Acoustic Vocalist Coverage": "✅ Satisfied",
         "Target Duration": "✅ Satisfied",
         "Vocalist Inclusion": "✅ Satisfied"
     }
@@ -869,9 +854,8 @@ def main():
     
     # Select Acoustic Breaks
     break_songs_sets = []
-    overworked_performers = set()
-    break_overlap_warning = False
-    
+    acoustic_covered_vocalists = set()
+
     if args.breaks == "acoustic" and num_breaks > 0:
         used_song_titles = {s["title"] for set_songs in sets_songs for s in set_songs}
         available_acoustic = [s for s in acoustic_pool if s["title"] not in used_song_titles]
@@ -895,24 +879,21 @@ def main():
                 and (s["gig_ready"] == "Yes" or args.include_not_ready)
                 and not _cut_for_lineup(s)
             ]
-            
-        always_on_break = {"Lauren", "David"} if args.martin_out else set()
-        break_pairs = select_acoustic_breaks(available_acoustic, num_breaks, args.martin_out, args.david_out, max_intersection=0, always_on=always_on_break)
+
+        acoustic_target_vocalists = [v for v in (["Lauren", "Jon"] + ([] if args.martin_out else ["Martin"]) + ([] if args.david_out else ["David"]))
+                                      if v in {s["lead_vocals"] for s in available_acoustic}]
+        chosen, acoustic_covered_vocalists = select_acoustic_pool_songs(available_acoustic, num_breaks * 2, acoustic_target_vocalists)
+        break_pairs = pair_up(chosen)
+
         if not break_pairs:
-            break_pairs = select_acoustic_breaks(available_acoustic, num_breaks, args.martin_out, args.david_out, max_intersection=1, always_on=always_on_break)
-            if break_pairs:
-                break_overlap_warning = True
-                constraints_satisfied_summary["Bathroom Breaks"] = "⚠️ Partially Satisfied (Acoustic overlap)"
-                for pair in break_pairs:
-                    act_a = get_active_performers(pair[0], args.martin_out, args.david_out)
-                    act_b = get_active_performers(pair[1], args.martin_out, args.david_out)
-                    overworked_performers.update(act_a.intersection(act_b) - always_on_break)
-            else:
-                constraints_satisfied_summary["Bathroom Breaks"] = "❌ Not Satisfied (Acoustic failed - silent breaks used)"
-                args.breaks = "silent"
+            constraints_satisfied_summary["Acoustic Vocalist Coverage"] = "❌ Not Satisfied (No acoustic songs available - silent breaks used)"
+            args.breaks = "silent"
+        elif acoustic_target_vocalists and acoustic_covered_vocalists < set(acoustic_target_vocalists):
+            missing = ", ".join(sorted(set(acoustic_target_vocalists) - acoustic_covered_vocalists))
+            constraints_satisfied_summary["Acoustic Vocalist Coverage"] = f"⚠️ Partially Satisfied ({missing} didn't get an acoustic lead)"
         else:
-            constraints_satisfied_summary["Bathroom Breaks"] = "✅ Satisfied (All members get breaks)"
-            
+            constraints_satisfied_summary["Acoustic Vocalist Coverage"] = "✅ Satisfied (Every present vocalist leads an acoustic song)"
+
         if break_pairs:
             break_songs_sets = break_pairs
             
@@ -1058,13 +1039,6 @@ def main():
         md("> [!WARNING]")
         md(f"> **INSUFFICIENT MUSIC FOR TARGET DURATION**: The total available playtime of matching songs is only **{format_length(total_available_seconds)}**, which is less than the target set playtime of **{format_length(total_set_music_seconds + total_break_seconds + encore_duration_seconds)}** (including breaks/encores). The setlist has been filled with all matching songs but is under target.\n")
 
-    if break_overlap_warning:
-        overworked_str = ", ".join(sorted(list(overworked_performers)))
-        md("> [!WARNING]")
-        md("> **PERFORMER BREAK OVERLAP**: It is mathematically impossible to give everyone a bathroom break using the available acoustic songs.")
-        md(f"> * **Option A (Silent Break)**: Play no acoustic music during the breaks to allow everyone to rest.")
-        md(f"> * **Option B (Acoustic Break)**: Play the set below, but note that **{overworked_str}** will not get a bathroom break.\n")
-
     if args.martin_out:
         md("> [!WARNING]")
         cut_str = ", ".join(f"*{t}*" for t in martin_cut_songs) if martin_cut_songs else "none"
@@ -1114,21 +1088,8 @@ def main():
             if args.breaks == "acoustic" and s_idx < len(break_songs_sets):
                 pair = break_songs_sets[s_idx]
                 md(f"\n### ☕ BREAK {s_idx + 1} (Acoustic Set - 10 mins)")
-                md("Everyone gets a bathroom break! No member performs in both songs.")
-                for s_num, song in enumerate(pair):
-                    active = get_active_performers(song, args.martin_out, args.david_out)
-                    inactive = set(BAND_ROSTER) - active
-                    if args.martin_out:
-                        inactive.discard("Martin")
-                        active.discard("Martin")
-                    if args.david_out:
-                        inactive.discard("David")
-                        active.discard("David")
-                    if args.debo_out:
-                        inactive.discard("Debo")
-                        active.discard("Debo")
-                    leave_str = ", ".join(sorted(list(inactive)))
-                    md(f"- **{song['title']}** ({song['artist']}) - Lead: {song['lead_vocals']} | **Can Leave Stage (Bathroom Break)**: `{leave_str}`")
+                for song in pair:
+                    md(f"- **{song['title']}** ({song['artist']}) - Lead: {song['lead_vocals']}")
                 md("\n" + "-" * 40)
             else:
                 md(f"\n### ⏸️ BREAK {s_idx + 1} (Silent Break - 10 mins)\n")
@@ -1156,7 +1117,15 @@ def main():
     md(f"- **Transition Buffers (30s/song)**: {format_length(total_trans_seconds)}")
     md(f"- **Break Time**: {format_length(total_breaks_sec)}")
     md(f"- **Grand Total Duration**: {format_length(grand_total_sec)} (Target: {format_length(total_gig_seconds)})")
-    
+
+    scheduled_titles = {s["title"] for set_s in sets_songs for s in set_s}
+    scheduled_titles |= {s["title"] for s in encores}
+    for pair in break_songs_sets:
+        scheduled_titles |= {s["title"] for s in pair}
+    md()
+    for line in render_not_selected_lines(all_songs, scheduled_titles):
+        md(line)
+
     all_scheduled = [s for set_s in sets_songs for s in set_s] + encores
     vocal_counts = {}
     for s in all_scheduled:

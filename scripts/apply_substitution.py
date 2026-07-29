@@ -4,10 +4,12 @@
 Unlike build_setlist.py (a from-scratch randomized solver that re-optimizes
 the entire setlist on every run), this script edits an existing .md/.txt
 setlist in place: only the named songs change, everything else — song
-order, unrelated songs, breaks — is preserved exactly. Duration stats and
-the EMERGENCY CUT marker are recomputed for the sections that changed, using
-the same logic build_setlist.py uses, so a substitution can't silently leave
-the setlist without a cut candidate or wrong totals.
+order, unrelated songs, which acoustic songs fill the breaks — is preserved
+exactly. Duration stats and the EMERGENCY CUT marker are recomputed for the
+sections that changed, using the same logic build_setlist.py uses, so a
+substitution can't silently leave the setlist without a cut candidate or
+wrong totals. The trailing "Songs Not Selected" section is always fully
+regenerated from the final scheduled songs, so it never goes stale.
 
 Usage:
     python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake.md" \\
@@ -36,7 +38,11 @@ sys.path.insert(0, SCRIPT_DIR)
 from build_setlist import (
     parse_length, format_length, get_segue_groups, tag_emergency_cuts,
     format_md_row, format_txt_line, clean_backups, parse_covering_vocalist,
+    render_not_selected_lines,
 )
+
+NOT_SELECTED_HEADING = "## SONGS NOT SELECTED"
+BREAK_BULLET_RE = re.compile(r"^-\s*\*\*(.+?)\*\*\s*\(")
 
 
 def normalize_title(t):
@@ -104,6 +110,14 @@ def parse_md(md_path):
     """
     with open(md_path, "r", encoding="utf-8") as f:
         lines = f.read().split("\n")
+
+    # The 'Songs Not Selected' section depends on the final scheduled songs
+    # (not just the edited slots), so it's always fully regenerated rather
+    # than preserved — drop whatever's already there so it isn't parsed as a
+    # normal SET/ENCORES section or duplicated when a fresh one is appended.
+    not_selected_idx = next((i for i, l in enumerate(lines) if l.strip() == NOT_SELECTED_HEADING), None)
+    if not_selected_idx is not None:
+        lines = lines[:not_selected_idx]
 
     heading_idxs = [i for i, l in enumerate(lines) if l.startswith("## ")]
     if not heading_idxs:
@@ -289,22 +303,27 @@ def enrich_static_fields(sections, by_title):
             row["preferred_emergency_cut"] = csv_row.get("preferred_emergency_cut")
 
 
-def count_break_songs(sections):
+def extract_break_titles(sections):
     """Break-pair songs live in each section's preserved extra_after text as
-    '- **Title** (Artist) - Lead: X | **Can Leave Stage ...** bullets — count
-    them so the summary's Total Songs Scheduled still matches (breaks aren't
-    touched by this script). Matched on the "Can Leave Stage" phrase, unique
-    to break bullets, since extra_after for the final section also picks up
-    the trailing GIG SUMMARY STATS block (no heading follows it to bound it)."""
-    count = 0
+    '- **Title** (Artist) - Lead: X' bullets (breaks aren't touched by this
+    script, so this just reads back what's already there) — used both to
+    keep the summary's Total Songs Scheduled accurate and to exclude break
+    songs from the regenerated 'Songs Not Selected' section. Matched on the
+    bold-title-then-open-paren shape, which GIG SUMMARY STATS bullets
+    ('- **Label**: value') don't have, since extra_after for the final
+    section also picks up that trailing block (no heading follows it)."""
+    titles = []
     for sec in sections:
         for line in sec["extra_after"]:
-            if "**Can Leave Stage" in line:
-                count += 1
-    return count
+            m = BREAK_BULLET_RE.match(line.strip())
+            if m:
+                titles.append(m.group(1).strip())
+    return titles
 
 
-def render_md(header_lines, sections, songs_by_section, break_song_count=0):
+def render_md(header_lines, sections, songs_by_section, all_songs, break_titles=None):
+    break_titles = break_titles or []
+    break_song_count = len(break_titles)
     out = list(header_lines)
     for sec, songs in zip(sections, songs_by_section):
         out.append(f"## {sec['heading']}")
@@ -373,6 +392,10 @@ def render_md(header_lines, sections, songs_by_section, break_song_count=0):
                 skip_old_summary = False
                 continue
         rebuilt.append(line)
+
+    scheduled_titles = {s["title"] for songs in songs_by_section for s in songs} | set(break_titles)
+    rebuilt.append("")
+    rebuilt.extend(render_not_selected_lines(all_songs, scheduled_titles))
 
     return "\n".join(rebuilt).rstrip("\n") + "\n"
 
@@ -473,8 +496,8 @@ def main():
     for i, tagged_songs in zip(main_set_indices, tagged):
         songs_by_section[i] = tagged_songs
 
-    break_song_count = count_break_songs(sections)
-    md_content = render_md(header_lines, sections, songs_by_section, break_song_count)
+    break_titles = extract_break_titles(sections)
+    md_content = render_md(header_lines, sections, songs_by_section, all_songs, break_titles)
     txt_content = render_txt(txt_path, sections, songs_by_section)
 
     with open(md_path, "w", encoding="utf-8") as f:

@@ -320,7 +320,6 @@ def gather_manual_fields(title: str, artist: str) -> dict:
     order_rules = prompt_optional("Order/segue rules")
     sub_notes   = prompt_optional("Substitution notes (if a member is out)")
     constraints = prompt_optional("Vocalist constraints")
-    can_leave   = prompt_optional("Can leave stage notes")
     emergency   = prompt("Preferred emergency cut?", choices=["Yes", "No"], default="No")
 
     return {
@@ -331,7 +330,7 @@ def gather_manual_fields(title: str, artist: str) -> dict:
         "yacht_adjacent": yacht,
         "intro_notes": intro_notes, "order_rules": order_rules,
         "substitution_notes": sub_notes, "vocalist_constraints": constraints,
-        "can_leave_stage": can_leave, "preferred_emergency_cut": emergency,
+        "preferred_emergency_cut": emergency,
     }
 
 # ---------------------------------------------------------------------------

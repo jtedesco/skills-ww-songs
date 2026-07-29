@@ -42,7 +42,7 @@ def test_database_integrity():
         "title", "artist", "key", "bpm", "lead_vocals", "backup_vocals",
         "intro_notes", "order_rules", "substitution_notes", "yacht_adjacent",
         "gig_ready", "length", "arrangement", "vocalist_constraints",
-        "opener", "closer", "can_leave_stage", "date_added", "archived",
+        "opener", "closer", "date_added", "archived",
         "preferred_emergency_cut", "release_year", "original_album",
         "musicbrainz_genre", "musicbrainz_mood", "musicbrainz_id"
     }
@@ -225,7 +225,7 @@ def parse_markdown_report(stdout_str):
                     })
             continue
                     
-        # Parse acoustic break song bullets: "- **Title** (Artist) - Lead: X | **Can Leave Stage (Bathroom Break)**: `...`"
+        # Parse acoustic break song bullets: "- **Title** (Artist) - Lead: X"
         if in_break and line.startswith("- **"):
             m = re.match(r"-\s*\*\*(.+?)\*\*\s*\(", line)
             if m:
@@ -671,6 +671,54 @@ def test_scenario_7():
     return all_pass
 
 
+def test_scenario_8():
+    """Scenario 8: Acoustic Vocalist Coverage goal + Songs Not Selected section."""
+    print("\nTesting Scenario 8 (Acoustic Vocalist Coverage + Songs Not Selected)...")
+    res = run_scenario(["--duration", "3.0", "--gig-type", "bar", "--breaks", "acoustic"])
+    if not res:
+        return False
+
+    all_pass = True
+    stdout = res["stdout"]
+
+    if "Acoustic Vocalist Coverage" in stdout:
+        log_test("Acoustic Vocalist Coverage constraint present in summary", True)
+    else:
+        all_pass = False
+        log_test("Acoustic Vocalist Coverage constraint present in summary", False)
+
+    if "## SONGS NOT SELECTED" in stdout and "### Full Band" in stdout and "### Acoustic" in stdout:
+        log_test("Songs Not Selected section present with Full Band/Acoustic split", True)
+    else:
+        all_pass = False
+        log_test("Songs Not Selected section present with Full Band/Acoustic split", False)
+
+    # No song scheduled in a set, break, or encore should also show up as "not selected"
+    scheduled_titles = {s["title"] for set_songs in res["sets"] for s in set_songs}
+    scheduled_titles |= {s["title"] for s in res["encores"]}
+    scheduled_titles |= set(res["breaks"])
+
+    not_selected_block = stdout.split("## SONGS NOT SELECTED", 1)[-1] if "## SONGS NOT SELECTED" in stdout else ""
+    not_selected_titles = set(re.findall(r"^-\s*\*\*(.+?)\*\*\s*\(", not_selected_block, re.MULTILINE))
+
+    overlap = scheduled_titles & not_selected_titles
+    if overlap:
+        all_pass = False
+        log_test("No scheduled song appears in Songs Not Selected", False, f"Overlap: {overlap}")
+    else:
+        log_test("No scheduled song appears in Songs Not Selected", True)
+
+    # The removed can_leave_stage / Bathroom Breaks / Can Leave Stage language
+    # should be gone entirely, not just renamed.
+    if "can_leave_stage" in stdout.lower() or "Bathroom Breaks" in stdout or "Can Leave Stage" in stdout:
+        all_pass = False
+        log_test("No leftover can_leave_stage/Bathroom Breaks language in output", False)
+    else:
+        log_test("No leftover can_leave_stage/Bathroom Breaks language in output", True)
+
+    return all_pass
+
+
 # -------------------------------------------------------------
 # Main Test Suite Runner
 # -------------------------------------------------------------
@@ -691,6 +739,7 @@ def main():
     s5_ok = test_scenario_5()
     s6_ok = test_scenario_6()
     s7_ok = test_scenario_7()
+    s8_ok = test_scenario_8()
 
     print("\n=============================================================")
     print("TEST SUITE SUMMARY")
@@ -703,9 +752,10 @@ def main():
     print(f"Scenario 5 (Vocal Limits):              {'PASS' if s5_ok else 'FAIL'}")
     print(f"Scenario 6 (Martin-out Acoustic+Files): {'PASS' if s6_ok else 'FAIL'}")
     print(f"Scenario 7 (All Vocalists Lead ≥1):     {'PASS' if s7_ok else 'FAIL'}")
+    print(f"Scenario 8 (Acoustic Coverage+NotSel):  {'PASS' if s8_ok else 'FAIL'}")
     print("=============================================================")
 
-    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok:
+    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok and s8_ok:
         print("\nALL TESTS PASSED SUCCESSFULLY! ✅")
         sys.exit(0)
     else:
