@@ -115,8 +115,8 @@ def test_database_integrity():
                 all_pass = False
                 log_test(f"Date added check: {title}", False, f"Non-gig-ready song should have date_added: 'None', found: {s.get('date_added')}")
                 
-        # Archive check (Paint It Black and Crazy Little Thing Called Love only)
-        if title in ["Paint It Black", "Crazy Little Thing Called Love"]:
+        # Archive check (Paint It Black, Crazy Little Thing Called Love, and Them Changes only)
+        if title in ["Paint It Black", "Crazy Little Thing Called Love", "Them Changes"]:
             if s.get("archived") != "Yes":
                 archived_count += 1
                 all_pass = False
@@ -128,7 +128,7 @@ def test_database_integrity():
                 log_test(f"Archive check: {title}", False, "Must NOT be archived")
                 
         # Preferred emergency cut check
-        pref_emergency_cut_list = {"Rock This Town", "Zombie", "Lights", "All Right Now", "Them Changes", "Hook", "Colors"}
+        pref_emergency_cut_list = {"Rock This Town", "Zombie", "Lights", "All Right Now", "Them Changes", "Hook", "Colors", "Keep Your Hands to Yourself"}
         cleaned_title = title.replace("’", "'").replace("‘", "'").lower()
         pref_emergency_cut_cleaned = {t.replace("’", "'").replace("‘", "'").lower() for t in pref_emergency_cut_list}
         is_pref = cleaned_title in pref_emergency_cut_cleaned
@@ -144,7 +144,7 @@ def test_database_integrity():
     if gig_ready_count == 0:
         log_test("Gig readiness flags match requirements", True)
     if archived_count == 0:
-        log_test("Archive flags match requirements (only Paint It Black and Crazy Little Thing Called Love archived)", True)
+        log_test("Archive flags match requirements (only Paint It Black, Crazy Little Thing Called Love, and Them Changes archived)", True)
         
     return all_pass
 

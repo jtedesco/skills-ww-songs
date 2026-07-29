@@ -32,12 +32,13 @@ CSS = """
          color: #1a1a1a; font-size: 10.5pt; line-height: 1.45; }
   h1 { font-size: 21pt; margin: 0 0 10px 0; border-bottom: 2px solid #222; padding-bottom: 8px; }
   h2 { font-size: 13.5pt; margin: 20px 0 8px; }
-  h3 { font-size: 11.5pt; margin: 16px 0 6px; }
-  ul { margin: 4px 0 14px; padding-left: 20px; }
+  .set-block { break-before: page; page-break-before: always; }
+  h3 { font-size: 11.5pt; margin: 10px 0 4px; }
+  ul { margin: 4px 0 8px; padding-left: 20px; }
   li { margin: 2px 0; }
-  hr { border: none; border-top: 1px solid #ddd; margin: 16px 0; }
-  table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; font-size: 9.5pt; }
-  th, td { border: 1px solid #ddd; padding: 5px 8px; text-align: left; vertical-align: top; }
+  hr { border: none; border-top: 1px solid #ddd; margin: 8px 0; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 10px; font-size: 9.5pt; }
+  th, td { border: 1px solid #ddd; padding: 4px 6px; text-align: left; vertical-align: top; }
   th { background: #f2f2f2; font-weight: 600; }
   tr:nth-child(even) td { background: #fafafa; }
   strong { font-weight: 600; }
@@ -88,6 +89,23 @@ def slim_emoji(html):
     return html
 
 
+def prevent_setext_headings(md_text):
+    """A line of 3+ dashes immediately following non-blank text is CommonMark
+    setext-heading syntax — it turns the *previous* line into an <h2>. The
+    '----...' section separators in these setlists are meant as plain
+    thematic breaks (<hr>), so force that reading by inserting a blank line
+    wherever one is missing (e.g. right after the '**Set N Music
+    Duration**...' line), instead of letting it silently swallow that line
+    into a heading."""
+    lines = md_text.split("\n")
+    out = []
+    for line in lines:
+        if re.match(r"^-{3,}\s*$", line) and out and out[-1].strip() != "":
+            out.append("")
+        out.append(line)
+    return "\n".join(out)
+
+
 def convert_alerts(md_text):
     """Turn GitHub-style '> [!WARNING] ...' blockquotes into styled callout divs."""
     lines = md_text.split("\n")
@@ -114,6 +132,21 @@ def convert_alerts(md_text):
     return "\n".join(out)
 
 
+def wrap_set_blocks(html):
+    """Wrap each '## SET N' heading and everything up to the next h2 (its
+    table, duration line, and following acoustic break) in a single div so
+    the whole thing moves together to a fresh page instead of splitting."""
+    parts = re.split(r"(<h2[^>]*>.*?</h2>)", html, flags=re.S)
+    if len(parts) <= 1:
+        return html
+    out = [parts[0]]
+    for i in range(1, len(parts), 2):
+        heading = parts[i]
+        content = parts[i + 1] if i + 1 < len(parts) else ""
+        out.append(f'<div class="set-block">{heading}{content}</div>')
+    return "".join(out)
+
+
 def find_chrome():
     for p in CHROME_PATHS:
         if os.path.exists(p):
@@ -127,10 +160,11 @@ def render(md_path, pdf_path=None):
         md_text = f.read()
 
     body_html = markdown.markdown(
-        convert_alerts(md_text),
+        convert_alerts(prevent_setext_headings(md_text)),
         extensions=["tables", "fenced_code", "sane_lists", "nl2br"],
     )
     body_html = slim_emoji(body_html)
+    body_html = wrap_set_blocks(body_html)
     html = f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></head><body>{body_html}</body></html>"
 
     if pdf_path is None:

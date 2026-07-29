@@ -90,6 +90,8 @@ python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake.md" \
 ### PDF Export
 `build_setlist.py` automatically renders the `.md` report to a styled `.pdf` in the same call — no manual conversion needed. It shells out to a local headless Chromium-based browser (Google Chrome / Chromium / Edge, whichever is found first) to print styled HTML to PDF, so no paid API or internet-dependent service is involved.
 
+**One printable page per set**: each `## SET N` (and `## ENCORES`) heading starts a fresh page, with that section's table, duration line, and following acoustic break all kept together on it — so a printed copy never has one set's tail bleeding onto the page that starts the next set. A set with enough songs to overflow a single page (e.g. an 18-song set with no intermission) still spans multiple pages as needed; the browser repeats the table header row on the continuation page. This relies on a `prevent_setext_headings()` preprocessing step in `render_pdf.py`: CommonMark treats a line of `----` immediately following non-blank text (no blank line between) as *Setext heading* syntax, which was silently turning the `**Set N Music Duration**...` line into its own `<h2>` and confusing the per-set pagination — the same trap would also make that line render as a giant heading on GitHub or any other CommonMark viewer, so it's worth knowing about beyond just the PDF path.
+
 To (re-)render a PDF for an existing setlist `.md` file without regenerating the setlist itself:
 ```bash
 python3 scripts/render_pdf.py "setlists/2026-07-25 Bear Cave Lake.md"
