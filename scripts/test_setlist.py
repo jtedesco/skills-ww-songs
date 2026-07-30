@@ -81,10 +81,21 @@ def test_database_integrity():
         # "not ready" is a legitimate state for any arrangement (a full-band
         # song can be mid-rehearsal just as easily as an acoustic one), not
         # something limited to Acoustic/Either songs.
+        #
+        # ⚠️ MANUAL MAINTENANCE REQUIRED whenever a song's gig_ready status
+        # changes (including adding a brand-new song via add_song.py, whose
+        # own default is gig_ready="No"):
+        #   - Acoustic/Either song, gig_ready="Yes"  → add its title to gig_ready_acoustic below,
+        #     or this check fails expecting it to stay not-ready.
+        #   - Full Band song, gig_ready="No"         → add its title to not_ready_full_band below —
+        #     this is the one most likely to bite: add_song.py defaults new songs to gig_ready="No",
+        #     and the default assumption for every OTHER full-band song here is gig_ready="Yes".
+        #   - Removing a title from either set (because the song became ready, or was retired)
+        #     also requires an edit here — these lists are never derived from the CSV automatically.
         gig_ready_acoustic = {"Landslide", "Blackbird", "Interstate Love Song",
                                "Wish You Were Here", "Ooh La La", "Ventura Highway",
                                "All For You"}
-        not_ready_full_band = {"Kid Charlemagne"}
+        not_ready_full_band = {"Kid Charlemagne", "Ride Like the Wind", "Listen to the Music"}
         if s.get("arrangement") in ["Acoustic", "Either"]:
             if title in gig_ready_acoustic:
                 if s.get("gig_ready") != "Yes":

@@ -128,9 +128,17 @@ This script will automatically:
 1. **Check for duplicates** — exits early if the song already exists.
 2. **Fetch MusicBrainz metadata** — release year, original album, genre tags, mood tags, and recording MBID.
 3. **Fetch ListenBrainz popularity** — aggregates listens across all recording versions and computes a global 1–10 score.
-4. **Prompt for manual fields** — key, BPM, length, lead vocalist, backup vocals, arrangement, gig readiness, opener/closer, intro notes, substitution notes, etc.
+4. **Prompt for manual fields** — key, BPM, length, lead vocalist, backup vocals, arrangement, gig readiness, opener/closer, intro notes, substitution notes, instrumentation (electric/acoustic guitar, keys, drums, bass, percussion, harmonica, accordion, sax — defaults are pre-filled per the Instrumentation Columns rules above, e.g. Jon always on `keys_1`, Martin defaulting to acoustic on the fixed song list), and `start_energy`/`end_energy`, etc.
 5. **Append the new row** to `songs_metadata.csv` with `date_added` set to the current month.
 6. **Audit the full repertoire** and print a summary of: missing critical fields, not-gig-ready songs, songs without ListenBrainz data, and archived songs.
+
+**One field the script can't decide for you**: lead vocalist is a real editorial call, not something to infer from genre/style — ask the band/user rather than guessing.
+
+**Test suite maintenance — do this every time, not just when it's convenient**: `test_setlist.py`'s `test_database_integrity()` has two hardcoded whitelists that don't derive from the CSV automatically and silently start failing if you forget them:
+- New song is **Acoustic/Either** and marked `gig_ready: Yes` → add its title to `gig_ready_acoustic`.
+- New song is **Full Band** and marked `gig_ready: No` (the script's own default!) → add its title to `not_ready_full_band`, or the integrity check will fail expecting every full-band song to be ready.
+
+Run `python3 scripts/test_setlist.py` after adding a song and before considering it done — this is the mechanical "did I miss a step" check.
 
 ### Database Enrichment (MusicBrainz API)
 To update or enrich the song database metadata with the latest details (original release year, album, genre, and recording ID) from the MusicBrainz API, run the enrichment script:

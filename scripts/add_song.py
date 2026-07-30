@@ -13,6 +13,7 @@ Steps:
   5. Append the new row to songs_metadata.csv.
   6. Audit the full song list and print a summary.
 """
+from __future__ import annotations  # this machine runs Python 3.9; PEP 604's `str | None` (used below) is 3.10+ syntax and would fail at import time without deferring annotation evaluation
 import csv
 import json
 import math
@@ -299,8 +300,18 @@ def prompt(label: str, default: str = "", choices: list[str] | None = None) -> s
         return raw
 
 def prompt_optional(label: str, default: str = "None") -> str:
-    raw = input(f"  {label} (press Enter to skip, default '{default}'): ").strip()
+    hint = f"default '{default}'" if default else "leaves it blank"
+    raw = input(f"  {label} (press Enter to skip, {hint}): ").strip()
     return raw if raw else default
+
+# Full-Band songs where Martin plays acoustic instead of his electric
+# default (see SKILL.md's Instrumentation Columns section) — kept here as
+# a real constant, not just documentation, so add_song.py can compute a
+# sensible instrumentation default instead of silently leaving it blank.
+MARTIN_ACOUSTIC_SONGS = {
+    "take it easy", "me and bobby mcgee", "brown eyed girl", "baby blue",
+    "crazy little thing called love", "the chain", "colors",
+}
 
 def gather_manual_fields(title: str, artist: str) -> dict:
     print(f"\n📝 Manual fields for '{title}' by '{artist}'")
@@ -310,17 +321,63 @@ def gather_manual_fields(title: str, artist: str) -> dict:
     bpm         = prompt("BPM (e.g. 120)")
     length      = prompt("Song length (mm:ss, e.g. 3:45)")
     lead        = prompt("Lead vocalist", choices=["Lauren", "Jon", "David", "Martin"])
-    backup      = prompt_optional("Backup vocals (semicolon-separated initials, e.g. L;J;D)", default="None")
+    # Blank (not the literal text "None") is the CSV convention for "no
+    # backup vocalists" — every other optional field below uses "None" as
+    # its literal placeholder text and that matches convention for those
+    # fields, but backup_vocals is the one exception (it's parsed by
+    # splitting on ";", and a literal "None" would survive that split as a
+    # bogus backup-initial entry instead of an empty list).
+    backup      = prompt_optional("Backup vocals (semicolon-separated initials, e.g. L;J;D)", default="")
     arrangement = prompt("Arrangement", choices=["Full Band", "Acoustic", "Either"])
     gig_ready   = prompt("Gig ready?", choices=["Yes", "No"], default="No")
     opener      = prompt("Can open a set?", choices=["Yes", "No"], default="No")
     closer      = prompt("Can close a set?", choices=["Yes", "No"], default="No")
     yacht       = prompt("Yacht Rock adjacent?", choices=["Yes", "No", "Adjacent"], default="No")
-    intro_notes = prompt_optional("Intro notes (who starts, e.g. 'Jon starts')")
+    # "TBD" (not "None") is the established convention for an undetermined
+    # starter cue — 11 existing not-yet-ready songs use it.
+    intro_notes = prompt_optional("Intro notes (who starts, e.g. 'Jon starts')", default="TBD")
     order_rules = prompt_optional("Order/segue rules")
     sub_notes   = prompt_optional("Substitution notes (if a member is out)")
     constraints = prompt_optional("Vocalist constraints")
     emergency   = prompt("Preferred emergency cut?", choices=["Yes", "No"], default="No")
+
+    # --- Instrumentation (who plays what) ---
+    # Fixed, never-switching assignments (Jon=keys_1, Alex=drums, Debo=bass,
+    # JJ=electric_guitar) default in for Full Band songs, where everyone's
+    # assumed active; Acoustic/Either songs vary per song, so no default.
+    print("\n🎸 Instrumentation (press Enter to accept the suggested default)")
+    is_full_band = arrangement == "Full Band"
+    martin_acoustic = title.strip().lower() in MARTIN_ACOUSTIC_SONGS or not is_full_band
+
+    jj_electric = "JJ" if is_full_band else ""
+    martin_default_electric = "" if martin_acoustic else "Martin"
+    electric_default = ";".join(x for x in [jj_electric, martin_default_electric] if x)
+    acoustic_default = "Martin" if martin_acoustic else ""
+
+    electric_guitar = prompt_optional("Electric guitar (semicolon-separated, e.g. JJ;Martin)", default=electric_default or "None")
+    acoustic_guitar = prompt_optional("Acoustic guitar", default=acoustic_default or "None")
+    keys_1          = prompt_optional("Keys 1 (Jon's part)", default="Jon" if is_full_band else "None")
+    keys_2          = prompt_optional("Keys 2 (David's second keys part, if any)", default="None")
+    drums           = prompt_optional("Drums", default="Alex" if is_full_band else "None")
+    bass            = prompt_optional("Bass", default="Debo" if is_full_band else "None")
+    percussion      = prompt_optional("Percussion (David, if used)", default="None")
+    harmonica       = prompt_optional("Harmonica (David, if used)", default="None")
+    accordion       = prompt_optional("Accordion (David, if used)", default="None")
+    sax             = prompt_optional("Sax (if used — no assigned player yet)", default="None")
+
+    # "None" here means "nobody on this part" — store as blank, matching
+    # the rest of the CSV's convention for unused instrumentation cells.
+    instrumentation = {
+        "electric_guitar": electric_guitar, "acoustic_guitar": acoustic_guitar,
+        "keys_1": keys_1, "keys_2": keys_2, "drums": drums, "bass": bass,
+        "percussion": percussion, "harmonica": harmonica, "accordion": accordion, "sax": sax,
+    }
+    instrumentation = {k: ("" if v == "None" else v) for k, v in instrumentation.items()}
+
+    # --- Energy arc (start/end feel, for set-arc pacing) ---
+    print("\n📈 Energy arc")
+    start_energy = prompt("Start energy", choices=["Low", "Medium", "High"])
+    end_energy   = prompt(f"End energy (press Enter for '{start_energy}' if it holds steady)", default=start_energy, choices=["Low", "Medium", "High"])
 
     return {
         "key": key, "bpm": bpm, "length": length,
@@ -331,6 +388,8 @@ def gather_manual_fields(title: str, artist: str) -> dict:
         "intro_notes": intro_notes, "order_rules": order_rules,
         "substitution_notes": sub_notes, "vocalist_constraints": constraints,
         "preferred_emergency_cut": emergency,
+        "start_energy": start_energy, "end_energy": end_energy,
+        **instrumentation,
     }
 
 # ---------------------------------------------------------------------------
