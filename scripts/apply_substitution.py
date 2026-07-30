@@ -38,7 +38,7 @@ sys.path.insert(0, SCRIPT_DIR)
 from build_setlist import (
     parse_length, format_length, get_segue_groups, tag_emergency_cuts,
     format_md_row, format_txt_line, clean_backups, parse_covering_vocalist,
-    render_not_selected_lines,
+    render_not_selected_lines, render_archived_lines, render_in_progress_lines,
 )
 
 NOT_SELECTED_HEADING = "## SONGS NOT SELECTED"
@@ -72,6 +72,15 @@ def strip_row_title(cell):
     if start == -1 or end == -1:
         return cell.strip()
     return cell[start + 2:end].strip()
+
+
+def parse_energy_cell(cell):
+    """'Low' -> ('Low', 'Low'); 'Low→High' -> ('Low', 'High')."""
+    cell = cell.strip()
+    if "→" in cell:
+        start, end = cell.split("→", 1)
+        return start.strip(), end.strip()
+    return cell, cell
 
 
 VOCAL_CELL_RE = re.compile(r"^([A-Za-z]+)(?:\s*\(([^)]*)\))?$")
@@ -143,14 +152,15 @@ def parse_md(md_path):
             if in_table:
                 if l.startswith("|"):
                     cells = [c.strip() for c in l.split("|")[1:-1]]
-                    # | # | Title | Artist | Key | BPM | Length | Lead Vocal | Popularity | Note |
+                    # | # | Title | Artist | Key | BPM | Length | Lead Vocal | Energy | Intro |
                     title = strip_row_title(cells[1])
                     lead, backups = parse_vocal_cell(cells[6])
+                    start_energy, end_energy = parse_energy_cell(cells[7])
                     rows.append({
                         "title": title, "artist": cells[2], "key": cells[3],
                         "bpm": int(cells[4]), "length": cells[5],
                         "lead_vocals": lead, "backup_vocals": backups,
-                        "relative_popularity": None if cells[7] == "-" else cells[7],
+                        "start_energy": start_energy, "end_energy": end_energy,
                         "intro_notes": cells[8],
                     })
                 else:
@@ -286,11 +296,14 @@ def check_no_duplicates(sections):
 
 
 def enrich_static_fields(sections, by_title):
-    """Merge in the lineup-independent fields (opener/closer/preferred_emergency_cut)
-    that the .md table doesn't print but tag_emergency_cuts() and the row/tag
-    formatters need — without touching lead_vocals/backup_vocals, which must
-    stay whatever they already are (existing rows keep their already-applied
-    lineup substitution; new rows already got it via build_new_song)."""
+    """Merge in the lineup-independent fields (opener/closer/preferred_emergency_cut,
+    start_energy/end_energy) that tag_emergency_cuts() and the row/tag formatters
+    need — without touching lead_vocals/backup_vocals, which must stay whatever
+    they already are (existing rows keep their already-applied lineup
+    substitution; new rows already got it via build_new_song). Unlike vocals,
+    energy is always refreshed from the database rather than preserved from
+    the printed cell, since it's a static per-song fact, not a per-instance
+    lineup customization."""
     for sec in sections:
         for row in sec["rows"]:
             key = normalize_title(row["title"])
@@ -301,6 +314,8 @@ def enrich_static_fields(sections, by_title):
             row["opener"] = csv_row["opener"]
             row["closer"] = csv_row["closer"]
             row["preferred_emergency_cut"] = csv_row.get("preferred_emergency_cut")
+            row["start_energy"] = csv_row.get("start_energy", "")
+            row["end_energy"] = csv_row.get("end_energy", "")
 
 
 def extract_break_titles(sections):
@@ -327,7 +342,7 @@ def render_md(header_lines, sections, songs_by_section, all_songs, break_titles=
     out = list(header_lines)
     for sec, songs in zip(sections, songs_by_section):
         out.append(f"## {sec['heading']}")
-        out.append("| # | Title | Artist | Key | BPM | Length | Lead Vocal | Popularity | Note |")
+        out.append("| # | Title | Artist | Key | BPM | Length | Lead Vocal | Energy | Intro |")
         out.append("|---|---|---|---|---|---|---|---|---|")
 
         is_main_set = sec["heading"].upper().startswith("SET")
@@ -396,6 +411,10 @@ def render_md(header_lines, sections, songs_by_section, all_songs, break_titles=
     scheduled_titles = {s["title"] for songs in songs_by_section for s in songs} | set(break_titles)
     rebuilt.append("")
     rebuilt.extend(render_not_selected_lines(all_songs, scheduled_titles))
+    rebuilt.append("")
+    rebuilt.extend(render_archived_lines(all_songs))
+    rebuilt.append("")
+    rebuilt.extend(render_in_progress_lines(all_songs))
 
     return "\n".join(rebuilt).rstrip("\n") + "\n"
 
@@ -434,8 +453,8 @@ def render_txt(txt_path, sections, songs_by_section):
             if encore_songs is not None:
                 # Encore songs always get the "-> " arrow prefix, even the
                 # first one — only the show's true opener omits it.
-                for song in encore_songs:
-                    out_blocks.append(format_txt_line(song, is_first=False))
+                for idx, song in enumerate(encore_songs):
+                    out_blocks.append(format_txt_line(song, is_first=False, is_last=(idx == len(encore_songs) - 1)))
             # Skip past the original encore run
             while i < n and blocks[i].strip() not in ("(break)", "(encore)"):
                 i += 1
@@ -444,8 +463,9 @@ def render_txt(txt_path, sections, songs_by_section):
         while i < n and blocks[i].strip() not in ("(break)", "(encore)"):
             i += 1
         if set_cursor < len(main_set_songs):
-            for idx, song in enumerate(main_set_songs[set_cursor]):
-                out_blocks.append(format_txt_line(song, is_first=(idx == 0)))
+            cur_songs = main_set_songs[set_cursor]
+            for idx, song in enumerate(cur_songs):
+                out_blocks.append(format_txt_line(song, is_first=(idx == 0), is_last=(idx == len(cur_songs) - 1)))
             set_cursor += 1
 
     return "\n\n".join(out_blocks) + "\n"

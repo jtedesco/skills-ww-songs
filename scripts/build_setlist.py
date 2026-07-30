@@ -141,26 +141,57 @@ def pair_up(songs):
     return [songs[i:i + 2] for i in range(0, len(songs) - len(songs) % 2, 2)]
 
 
+def _song_bullet(s):
+    return f"- **{s['title']}** ({s['artist']})"
+
+
 def render_not_selected_lines(all_songs, scheduled_titles):
-    """Build the trailing '## SONGS NOT SELECTED' section: everything else in
-    the repertoire that didn't make this setlist, split into Full Band vs.
-    Acoustic ('Either'-arrangement songs count as acoustic here, matching how
-    they're pooled for breaks), each tagged with its archived status."""
+    """Build the trailing '## SONGS NOT SELECTED' section: gig-ready, non-archived
+    songs that didn't make this setlist, split into Full Band vs. Acoustic
+    ('Either'-arrangement songs count as acoustic here, matching how they're
+    pooled for breaks). Archived and in-progress songs are excluded here —
+    they get their own dedicated reference pages instead (see
+    render_archived_lines / render_in_progress_lines below)."""
     scheduled_lower = {t.lower() for t in scheduled_titles}
-    remaining = [s for s in all_songs if s["title"].lower() not in scheduled_lower]
+    remaining = [
+        s for s in all_songs
+        if s["title"].lower() not in scheduled_lower
+        and s.get("archived") != "Yes"
+        and s.get("gig_ready") == "Yes"
+    ]
     full_band = sorted((s for s in remaining if s["arrangement"] == "Full Band"), key=lambda s: s["title"])
     acoustic = sorted((s for s in remaining if s["arrangement"] in ("Acoustic", "Either")), key=lambda s: s["title"])
 
-    def bullet(s):
-        archived_tag = " *(Archived)*" if s.get("archived") == "Yes" else ""
-        return f"- **{s['title']}** ({s['artist']}){archived_tag}"
-
     lines = ["## SONGS NOT SELECTED", "Everything else in the repertoire that didn't make this setlist.", ""]
     lines.append("### Full Band")
-    lines.extend([bullet(s) for s in full_band] if full_band else ["*None — every full-band song made the cut.*"])
+    lines.extend([_song_bullet(s) for s in full_band] if full_band else ["*None — every full-band song made the cut.*"])
     lines.append("")
     lines.append("### Acoustic")
-    lines.extend([bullet(s) for s in acoustic] if acoustic else ["*None — every acoustic song made the cut.*"])
+    lines.extend([_song_bullet(s) for s in acoustic] if acoustic else ["*None — every acoustic song made the cut.*"])
+    return lines
+
+
+def render_archived_lines(all_songs):
+    """A standing reference page listing every archived song — always the
+    same regardless of which setlist this is, since archived songs are never
+    eligible for selection in the first place."""
+    archived = sorted((s for s in all_songs if s.get("archived") == "Yes"), key=lambda s: s["title"])
+    lines = ["## ARCHIVED SONGS", "Retired from the repertoire — never selected by the solver.", ""]
+    lines.extend([_song_bullet(s) for s in archived] if archived else ["*Nothing currently archived.*"])
+    return lines
+
+
+def render_in_progress_lines(all_songs):
+    """A standing reference page listing every not-yet-gig-ready song — same
+    caveat as render_archived_lines: constant across setlists, since these
+    are excluded from the solver by default (only included with
+    --include-not-ready)."""
+    in_progress = sorted(
+        (s for s in all_songs if s.get("gig_ready") != "Yes" and s.get("archived") != "Yes"),
+        key=lambda s: s["title"],
+    )
+    lines = ["## SONGS IN PROGRESS", "Not yet gig-ready — excluded from the solver unless --include-not-ready is passed.", ""]
+    lines.extend([_song_bullet(s) for s in in_progress] if in_progress else ["*Nothing currently in progress.*"])
     return lines
 
 
@@ -181,12 +212,21 @@ def vocal_display_string(song):
     backups = ", ".join(song["backup_vocals"])
     return lead_v + (f" ({backups})" if backups else "")
 
+def energy_display_string(song):
+    """'Low' (constant) or 'Low→High' (build/wind-down) for the table's
+    Energy column, from the start_energy/end_energy CSV columns."""
+    start = song.get("start_energy", "") or "-"
+    end = song.get("end_energy", "") or "-"
+    if start == end:
+        return start
+    return f"{start}→{end}"
+
 def format_md_row(song, idx, marker=""):
     """Render one .md setlist table row. `marker` is the caller-computed
     opener/closer/emergency-cut annotation (e.g. ' 🛑 **[EMERGENCY CUT]**')."""
     v_string = vocal_display_string(song)
-    pop_score = song.get("relative_popularity", "") or "-"
-    return f"| {idx+1} | **{song['title']}**{marker} | {song['artist']} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {pop_score} | {song['intro_notes']} |"
+    energy = energy_display_string(song)
+    return f"| {idx+1} | **{song['title']}**{marker} | {song['artist']} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {song['intro_notes']} |"
 
 def backup_initials(song):
     """Return +XYZ initials string for backup vocals (after martin/david substitution)."""
@@ -197,7 +237,7 @@ def backup_initials(song):
         return "+3"
     return ("+" + initials) if initials else ""
 
-def song_line(song, is_first=False):
+def song_line(song, is_first=False, is_last=False):
     """Format a single song's plaintext arrow-notation pieces.
 
     Returns (is_segue, extra, body) where `extra` is the intro/segue note
@@ -210,7 +250,7 @@ def song_line(song, is_first=False):
     tags = []
     if song["opener"] == "Yes" and is_first:
         tags.append("[OPENER]")
-    if song["closer"] == "Yes":
+    if song["closer"] == "Yes" and is_last:
         tags.append("[CLOSER]")
     if song.get("emergency_cut", False):
         tags.append("[EMERGENCY CUT]")
@@ -223,9 +263,9 @@ def song_line(song, is_first=False):
             return (False, intro, f"{song['title']} {vocal_str} [{key}]{tag_str}")
     return (False, None, f"{song['title']} {vocal_str} [{key}]{tag_str}")
 
-def format_txt_line(song, is_first=False):
+def format_txt_line(song, is_first=False, is_last=False):
     """Format one song as a full plaintext arrow-notation line (no trailing blank line)."""
-    is_segue, extra, body = song_line(song, is_first=is_first)
+    is_segue, extra, body = song_line(song, is_first=is_first, is_last=is_last)
     if is_first:
         return f"{extra} {body}" if extra else body
     if is_segue:
@@ -288,7 +328,8 @@ def main():
     parser.add_argument("--duration", type=float, default=3.0, help="Total gig duration in hours (e.g. 1.0, 2.0, 3.0)")
     parser.add_argument("--martin-out", action="store_true", help="Martin is out (David covers lead/backups, Martin-required songs cut per database)")
     parser.add_argument("--david-out", action="store_true", help="David is out (Lauren covers David's lead parts, keys/marimba omitted/covered)")
-    parser.add_argument("--debo-out", action="store_true", help="Debo is out (non-vocal role — only affects the header's Missing field and acoustic-break stage lists)")
+    parser.add_argument("--debo-out", action="store_true", help="Debo is out (non-vocal role — only affects the header's Missing field and the bass-coverage note)")
+    parser.add_argument("--bass-sub", type=str, default=None, help="Name of a substitute bass player covering for Debo (e.g. --bass-sub Paul). Only meaningful with --debo-out; overrides the default 'David switches to bass' note.")
     parser.add_argument("--breaks", choices=["acoustic", "silent", "none"], default="acoustic", help="Break format: acoustic (filled with 2 acoustic songs), silent, or none")
     parser.add_argument("--include-not-ready", action="store_true", help="Include not-yet-gig-ready songs in sets and breaks")
     parser.add_argument("--skip-country-grunge", action="store_true", help="Skip country (Keep Your Hands to Yourself, Take It Easy, Me and Bobby McGee) and grunge (Zombie, You Oughta Know, Interstate Love Song) songs")
@@ -310,7 +351,11 @@ def main():
     parser.add_argument("--encore", action="append", default=[], help="Song title to force into the encore instead of a main set (repeatable, e.g. --encore \"Born to Run\")")
 
     args = parser.parse_args()
-    
+
+    if args.bass_sub and not args.debo_out:
+        print("Error: --bass-sub only makes sense with --debo-out (there's nothing to substitute for otherwise)", file=sys.stderr)
+        sys.exit(1)
+
     script_dir = os.path.dirname(os.path.abspath(__file__))
     db_path = os.path.join(script_dir, "..", "songs_metadata.csv")
     
@@ -1007,6 +1052,8 @@ def main():
     if args.david_out: missing_names.append("David")
     if args.debo_out: missing_names.append("Debo")
     missing_field = ", ".join(missing_names) if missing_names else "None"
+    if args.debo_out and args.bass_sub:
+        missing_field += f" ({args.bass_sub} subbing on bass)"
 
     filter_details = []
     if args.genre: filter_details.append(f"Genre: {args.genre}")
@@ -1050,7 +1097,11 @@ def main():
 
     if args.debo_out:
         md("> [!WARNING]")
-        if args.martin_out:
+        if args.bass_sub:
+            md(f"> **Substitutions**: Debo is out — {args.bass_sub} is subbing on bass.\n")
+        elif args.david_out:
+            md("> **Substitutions**: Debo is out and David is also out, so no one is covering bass — pass --bass-sub NAME if a substitute is playing.\n")
+        elif args.martin_out:
             md("> **Substitutions**: Debo is out — David switches to bass in addition to covering Martin's vocal parts.\n")
         else:
             md("> **Substitutions**: Debo is out — David switches to bass.\n")
@@ -1061,7 +1112,7 @@ def main():
     
     for s_idx in range(num_sets):
         md(f"## SET {s_idx + 1}")
-        md("| # | Title | Artist | Key | BPM | Length | Lead Vocal | Popularity | Note |")
+        md("| # | Title | Artist | Key | BPM | Length | Lead Vocal | Energy | Intro |")
         md("|---|---|---|---|---|---|---|---|---|")
         
         set_songs = sets_songs[s_idx]
@@ -1097,7 +1148,7 @@ def main():
                 
     if encores:
         md("## ENCORES")
-        md("| # | Title | Artist | Key | BPM | Length | Lead Vocal | Popularity | Note |")
+        md("| # | Title | Artist | Key | BPM | Length | Lead Vocal | Energy | Intro |")
         md("|---|---|---|---|---|---|---|---|---|")
         for idx, song in enumerate(encores):
             md(format_md_row(song, idx))
@@ -1125,6 +1176,12 @@ def main():
     md()
     for line in render_not_selected_lines(all_songs, scheduled_titles):
         md(line)
+    md()
+    for line in render_archived_lines(all_songs):
+        md(line)
+    md()
+    for line in render_in_progress_lines(all_songs):
+        md(line)
 
     all_scheduled = [s for set_s in sets_songs for s in set_s] + encores
     vocal_counts = {}
@@ -1142,7 +1199,7 @@ def main():
 
     for s_idx, set_songs in enumerate(sets_songs):
         for i, song in enumerate(set_songs):
-            is_segue, extra, body = song_line(song, is_first=(i == 0))
+            is_segue, extra, body = song_line(song, is_first=(i == 0), is_last=(i == len(set_songs) - 1))
             if i == 0:
                 if extra:
                     txt_lines.append(f"{extra} {body}")
@@ -1163,7 +1220,7 @@ def main():
                 txt_lines.append("(break)")
                 txt_lines.append("")
                 for b_idx, bsong in enumerate(pair):
-                    b_is_segue, b_extra, b_body = song_line(bsong, is_first=(b_idx == 0))
+                    b_is_segue, b_extra, b_body = song_line(bsong, is_first=(b_idx == 0), is_last=(b_idx == len(pair) - 1))
                     if b_idx == 0:
                         line = f"{b_extra} {b_body}".strip() if b_extra else b_body
                     elif b_is_segue:
@@ -1182,7 +1239,7 @@ def main():
         txt_lines.append("(encore)")
         txt_lines.append("")
         for i, song in enumerate(encores):
-            is_segue, extra, body = song_line(song)
+            is_segue, extra, body = song_line(song, is_last=(i == len(encores) - 1))
             if is_segue:
                 txt_lines.append(f"-> SEGUE {extra} {body}")
             elif extra:

@@ -192,7 +192,7 @@ def parse_markdown_report(stdout_str):
             parts = parts[1:-1]
             
             if current_set is not None:
-                # Set song row: #, Title, Artist, Key, BPM, Length, Lead Vocal, Popularity, Note
+                # Set song row: #, Title, Artist, Key, BPM, Length, Lead Vocal, Popularity, Intro
                 if len(parts) >= 7:
                     title = parts[1].replace("**", "").split("🟢")[0].split("🔴")[0].split("🛑")[0].strip()
                     emergency_cut = "🛑" in parts[1]
@@ -214,7 +214,7 @@ def parse_markdown_report(stdout_str):
                         "length": parts[5]
                     })
             elif in_encore:
-                # Encore song row: #, Title, Artist, Key, BPM, Length, Lead Vocal, Popularity, Note
+                # Encore song row: #, Title, Artist, Key, BPM, Length, Lead Vocal, Popularity, Intro
                 if len(parts) >= 7:
                     title = parts[1].replace("**", "").strip()
                     lead = parts[6].split("(")[0].strip()
