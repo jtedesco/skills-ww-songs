@@ -62,28 +62,24 @@ Refer to the script's help menu (`--help`) for all options.
   ```
 
 * **File Output**:
-  - The script writes three output files to the `setlists/` subdirectory (created automatically):
+  - The script writes output files to the `setlists/` subdirectory (created automatically):
     - `<YYYY-MM-DD Location>.md` — the full Rich Metadata Table report.
-    - `<YYYY-MM-DD Location>.txt` — the Plaintext Arrow Notation performance script.
-    - `<YYYY-MM-DD Location>.pdf` — a styled PDF rendering of the `.md` report, generated automatically (see below). If PDF rendering fails (e.g. no Chromium-based browser installed), the script prints a warning and continues — the `.md`/`.txt` files are still written.
-    - `<YYYY-MM-DD Location>.rtf` — a rich-text rendering of the `.md` report with no fixed page breaks (see RTF Export below), also generated automatically and also best-effort.
+    - `<YYYY-MM-DD Location>.pdf` — a styled PDF rendering of the `.md` report, generated automatically (see below). If PDF rendering fails (e.g. no Chromium-based browser installed), the script prints a warning and continues — the `.md` file is still written.
   - Pass `--date` and `--location` to control the filename, e.g. `--date 2026-07-18 --location "Local Bar & Grill"`.
-  - If `--date`/`--location` are omitted the files are named `setlist_<timestamp>.md/.txt/.pdf/.rtf`.
+  - If `--date`/`--location` are omitted the files are named `setlist_<timestamp>.md/.pdf`.
 
 * **Local Setlist File Storage**:
   - Every generated setlist must be saved to the `setlists/` subdirectory of this skill (i.e., `skills-ww-songs/setlists/`).
-  - Save **four files** per setlist, all named `YYYY-MM-DD Location` (e.g., `2026-07-25 Local Bar and Grill Wooddale`):
-    - `YYYY-MM-DD Location.md` — the rich metadata table format (Format 1).
-    - `YYYY-MM-DD Location.txt` — the plaintext arrow notation format (Format 2).
+  - Save **two files** per setlist, both named `YYYY-MM-DD Location` (e.g., `2026-07-25 Local Bar and Grill Wooddale`):
+    - `YYYY-MM-DD Location.md` — the rich metadata table format.
     - `YYYY-MM-DD Location.pdf` — styled PDF of the `.md` report (written automatically by `build_setlist.py`; see PDF Export below).
-    - `YYYY-MM-DD Location.rtf` — rich-text rendering with no page breaks (written automatically; see RTF Export below).
-  - If no venue is known at generation time, use only the date: `YYYY-MM-DD.md` / `.txt` / `.pdf` / `.rtf`.
+  - If no venue is known at generation time, use only the date: `YYYY-MM-DD.md` / `.pdf`.
   - Do **not** overwrite an existing file; create a new one or confirm with the user first.
 
 ### Revising an Existing Setlist (Band Feedback)
 When the band gives feedback on a setlist that's **already been generated and shared** — "swap X for Y", "drop Z", "add W" — do **not** re-run `build_setlist.py`. It's a from-scratch randomized solver: every run re-optimizes the *entire* setlist, so even a two-song request can silently reshuffle unrelated songs, drop others, and change the emergency-cut pick. The band asked for specific changes, not a new setlist — only make the changes they named.
 
-Use `scripts/apply_substitution.py` instead. It edits the existing `.md`/`.txt` in place — only the named songs change, everything else (order, unrelated songs, breaks) stays byte-identical — then re-renders the `.pdf`/`.rtf` and re-syncs to Drive, same as `build_setlist.py`:
+Use `scripts/apply_substitution.py` instead. It edits the existing `.md` in place — only the named songs change, everything else (order, unrelated songs, breaks) stays byte-identical — then re-renders the `.pdf` and re-syncs to Drive, same as `build_setlist.py`:
 ```bash
 python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake.md" \
     --swap "Rock This Town" "Valerie" \
@@ -114,27 +110,14 @@ python3 scripts/render_pdf.py --all
 ```
 Requires the `markdown` Python package (`pip3 install --user markdown`) and a Chromium-based browser installed locally.
 
-### RTF Export (no page breaks / Google Doc-ready)
-PDF has fixed page sizes, which means hard page breaks — annoying to scroll through on a phone mid-gig. `scripts/render_rtf.py` renders the same `.md` report as an `.rtf` file instead: a continuously-flowing rich-text document with no pagination, generated automatically alongside the PDF. It's a small purpose-built markdown→RTF converter (not a generic one — it understands exactly the subset of markdown `build_setlist.py` emits: headings, bullet lists, tables, GitHub-style alert callouts, and inline bold/italic/code) with no external dependencies (pure Python stdlib).
-
-RTF opens natively in Word, Pages, and TextEdit. To get it as an actual **Google Doc**: once the `.rtf` is in the synced Drive folder (see below), open it from drive.google.com and choose "Open with → Google Docs" — Drive converts it to a native editable Doc in place, no separate export step needed. (Uploading through the Google Drive MCP connector was tried for this and explicitly ruled out — see the note below — so this manual "open with" step, or dragging the file in via Finder/Drive Desktop, is the supported path.)
-
-To (re-)render RTF for an existing setlist `.md` file:
-```bash
-python3 scripts/render_rtf.py "setlists/2026-07-25 Bear Cave Lake.md"
-
-# Re-render every .md file in setlists/
-python3 scripts/render_rtf.py --all
-```
-
-### Syncing PDFs and RTFs to Shared Google Drive
-After rendering, `build_setlist.py` also copies the `.pdf` and `.rtf` (both best-effort — failures just print a warning) to the local Google Drive Desktop mount for the band's shared drive:
+### Syncing PDFs to Shared Google Drive
+After rendering, `build_setlist.py` also copies the `.pdf` (best-effort — failures just print a warning) to the local Google Drive Desktop mount for the band's shared drive:
 ```
 ~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists/
 ```
-This is a plain filesystem copy (`shutil.copy2`) into the folder synced by the Google Drive Desktop app — **never use the Google Drive MCP connector for this, for any file type, even small ones.** This was tried and explicitly ruled out by the user ("forget the MCP approach altogether"), for good reason: the connector has no chunked/resumable upload, so pushing even a moderate-size binary (like a PDF) through it means base64-encoding the whole thing into a single tool call, which blows past any single-call token budget (a ~300KB PDF is ~400K base64 characters ≈ ~400K tokens). It also has no permission-write tool, so "anyone with the link" sharing can't be automated either way. The local-copy approach sidesteps all of this. Even though small text/HTML content (like an RTF's source) would technically fit through the connector's `create_file` tool, don't use it for anything Drive-related — stick to the local-copy pattern for consistency and because the user was explicit about this.
+This is a plain filesystem copy (`shutil.copy2`) into the folder synced by the Google Drive Desktop app — **never use the Google Drive MCP connector for this, for any file type, even small ones.** This was tried and explicitly ruled out by the user ("forget the MCP approach altogether"), for good reason: the connector has no chunked/resumable upload, so pushing even a moderate-size binary (like a PDF) through it means base64-encoding the whole thing into a single tool call, which blows past any single-call token budget (a ~300KB PDF is ~400K base64 characters ≈ ~400K tokens). It also has no permission-write tool, so "anyone with the link" sharing can't be automated either way. The local-copy approach sidesteps all of this.
 
-To manually re-sync existing files: `cp "setlists/<file>.pdf" "setlists/<file>.rtf" ~/Google\ Drive/Shared\ Drives/Wannabe\ Weekenders/Setlists/`.
+To manually re-sync an existing file: `cp "setlists/<file>.pdf" ~/Google\ Drive/Shared\ Drives/Wannabe\ Weekenders/Setlists/`.
 
 ### Adding a New Song
 To add a new song to the repertoire, run the onboarding script:
@@ -177,13 +160,9 @@ python3 scripts/test_setlist.py
 
 ## Setlist Output Format
 
-**Every generated setlist must be presented in TWO formats, in this order:**
+### Rich Metadata Table
 
----
-
-### Format 1 — Rich Metadata Table
-
-A full structured report including all song metadata, popularity scores, and constraint satisfaction.
+A full structured report including all song metadata, energy arc, and constraint satisfaction.
 
 **Title**: `# YYYY-MM-DD - Location` — matches the file naming convention exactly (date, then venue). If venue or date is unknown, use whichever is known; fall back to `# Setlist` if neither is known.
 
@@ -198,7 +177,7 @@ A full structured report including all song metadata, popularity scores, and con
 All "who's missing" and event-detail info lives here — do not restate it in the title or duplicate a full member roster elsewhere in the document. Detailed substitution effects (which songs get cut, who covers which vocal parts) still belong in a `[!WARNING]` callout below the header, since that's unique actionable info beyond just *who's* missing.
 
 - **Constraints satisfaction table**: One row per constraint (✅/❌), with pass/fail
-- **Song table** with columns: `#`, `Song`, `Artist`, `Lead`, `Backups`, `Key`, `BPM`, `Length`, `Popularity`, `Intro`
+- **Song table** with columns: `#`, `Song`, `Artist`, `Lead`, `Backups`, `Key`, `BPM`, `Length`, `Energy`, `Intro`
 - **Duration summary**: Music time, transitions, breaks, grand total
 - **Songs Not Selected**: A trailing `## SONGS NOT SELECTED` section, after the gig summary stats, listing gig-ready/non-archived songs that didn't make this setlist (any set, break, or encore) — split into `### Full Band` and `### Acoustic` (which also covers `Either`-arrangement songs). Built by `render_not_selected_lines()` in `build_setlist.py`, shared with `apply_substitution.py` — every substitution run fully regenerates this section from the final scheduled songs (dropping whatever was there before), so it's never stale after a swap/remove/add, unlike the acoustic breaks (which that script leaves untouched).
 - **Archived Songs** / **Songs In Progress**: two more standing reference pages after "Songs Not Selected" — `## ARCHIVED SONGS` (everything with `archived: Yes`) and `## SONGS IN PROGRESS` (everything with `gig_ready` not `Yes` and not archived), built by `render_archived_lines()` / `render_in_progress_lines()`. Each is its own PDF page (see PDF Export below), separate from the main sets — and constant across every setlist, since these songs are never eligible for the solver in the first place regardless of gig.
@@ -207,79 +186,21 @@ All "who's missing" and event-detail info lives here — do not restate it in th
 
 ---
 
-### Format 2 — Plaintext Arrow Notation
+### Segue Handling
 
-A performance-script-style view used in rehearsal notes and Google Docs. Rules:
+Segue groups (songs performed with no gap between them) are defined by the `order_rules` column in `songs_metadata.csv` and enforced by `get_segue_groups()` / `tag_emergency_cuts()` in `build_setlist.py` (e.g. keeping segue-linked songs together, never picking one as the emergency cut). This matters when reading or editing a song's `intro_notes`, not just when generating a setlist:
 
-**Header line:**
-```
-{N}x {duration} sets ({who's missing, or "None Missing"})
-```
-Example: `1x 75 Min set (None Missing)` or `3x 1hr sets (No David)`
+- **Segue song order is canonical**: songs within a segue group MUST appear in the order defined by `order_rules`. This applies in sets, encores, and breaks.
+- ⚠️ **Critical**: A song whose `intro_notes` begins with `SEGUE` is always the **destination** (it comes *second*). The source song has a plain intro note and appears *first*. Never invert this.
+- Full canonical segue order reference (all groups):
 
-**Per-song lines** (one per song, separated by blank lines):
-```
-[Starter instruction] [Song Title] ([Lead Vocalist] +[BackupInitials]) [Key] [tags]
-```
-
-- First song has **no** `->` prefix. Every subsequent song starts with `-> `.
-- **Segues** (no gap between songs) use `-> SEGUE [transition note] [Song Title] ...` on its own line.
-- **Segue song order is canonical**: songs within a segue group MUST appear in the order defined by `order_rules` in `songs_metadata.csv`. This applies in sets, encores, and breaks.
-  - ⚠️ **Critical**: A song whose `intro_notes` begins with `SEGUE` is always the **destination** (it comes *second*). The source song has a plain intro note and appears *first*. Never invert this.
-  - Full canonical segue order reference (all groups):
-
-    | Source → Destination | Source intro | Destination intro |
-    |---|---|---|
-    | **Superstition** → **Valerie** | `Alex starts, Lauren welcomes` | `SEGUE Bass sets tempo` |
-    | **Brown Eyed Girl** → **Hey Jealousy** | `Jon starts` | `SEGUE Jon piano, Martin to electric` |
-    | **Peg** → **Second Chance** | `Alex counts us in` | `SEGUE (Cmaj7 to Cm) Jon` |
-    | **Funkytown** → **Miss You** → **Reeling in the Years** | `Jon starts` | `SEGUE Jon` → `SEGUE (E7 Resolve) JJ starts` |
-- **Set breaks** are indicated with a blank line followed by `(break)` on its own line.
-- **Encore** is indicated with `(encore)` on its own line.
-- `[Emergency Cut #N]` tag appended at the end of a line for emergency-cut songs.
-
-**Starter instructions** come directly from the `intro_notes` column in `songs_metadata.csv`. Rules:
-
-- If `intro_notes` begins with `SEGUE`, render the song line as `-> SEGUE [rest of intro_notes] [Song Title] ...` — indicating a direct musical bridge with no gap between songs.
-- If `intro_notes` is a plain instruction (e.g. `JJ starts`, `Alex counts us in`), render it verbatim at the start of the song line.
-- If `intro_notes` is `TBD` or empty, omit the starter instruction entirely and just render `-> [Song Title] ...` (do **not** invent one).
+  | Source → Destination | Source intro | Destination intro |
+  |---|---|---|
+  | **Superstition** → **Valerie** | `Alex starts, Lauren welcomes` | `SEGUE Bass sets tempo` |
+  | **Brown Eyed Girl** → **Hey Jealousy** | `Jon starts` | `SEGUE Jon piano, Martin to electric` |
+  | **Peg** → **Second Chance** | `Alex counts us in` | `SEGUE (Cmaj7 to Cm) Jon` |
+  | **Funkytown** → **Miss You** → **Reeling in the Years** | `Jon starts` | `SEGUE Jon` → `SEGUE (E7 Resolve) JJ starts` |
 - **Never invent or infer segue transitions** — only use what is explicitly in `intro_notes`.
-
-**Stars / highlights**: There is no star field in the data. Do **not** add `*` markers to any song line unless a `starred` or `highlight` column is added to `songs_metadata.csv` in the future.
-
-**Backup vocal notation** `+[initials]`:
-- Initials: `L` = Lauren, `J` = Jon, `D` = David, `M` = Martin
-- `+3` = all three backup vocalists present
-- Example: `(Lauren +JD)` = Lauren leads, Jon & David harmonize
-
-**Example:**
-```
-1x 75 Min set (None Missing)
-
-Alex counts us in Working for the Weekend (Lauren +JD) [Bm] [OPENER]
-
--> JJ starts Rock This Town (Lauren) [D]
-
--> Jon starts Jenny (867-5309) (Jon +LM) [F#m]
-
--> SEGUE Jon stays on keys Brandy (Jon +L) [E]
-
--> Jon starts Rikki Don't Lose That Number (Jon +LD) [E]
-
-* -> Alex counts us in, start together Superstition (Lauren) [E] *
-
--> SEGUE Bass sets tempo Valerie (Lauren) [E]
-
--> Jon starts Roll with the Changes (Lauren +JD) [C] [CLOSER]
-
-(encore)
-
--> JJ starts All Right Now (Lauren +JD) [A]
-
--> Martin to dropped D, starts The Middle (Martin +3) [D]
-```
-
----
 
 ## Setlist Programming Strategies
 

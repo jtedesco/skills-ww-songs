@@ -228,53 +228,6 @@ def format_md_row(song, idx, marker=""):
     energy = energy_display_string(song)
     return f"| {idx+1} | **{song['title']}**{marker} | {song['artist']} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {song['intro_notes']} |"
 
-def backup_initials(song):
-    """Return +XYZ initials string for backup vocals (after martin/david substitution)."""
-    backups = clean_backups(song["lead_vocals"], song.get("backup_vocals", []))
-    mapping = {"L": "L", "J": "J", "D": "D", "M": "M"}
-    initials = "".join(mapping[b] for b in backups if b in mapping)
-    if len(initials) == 3:
-        return "+3"
-    return ("+" + initials) if initials else ""
-
-def song_line(song, is_first=False, is_last=False):
-    """Format a single song's plaintext arrow-notation pieces.
-
-    Returns (is_segue, extra, body) where `extra` is the intro/segue note
-    text (or None) and `body` is the "Title (Vocal) [Key] [tags]" string.
-    """
-    lead = song["lead_vocals"]
-    bi = backup_initials(song)
-    vocal_str = f"({lead} {bi})".strip() if bi else f"({lead})"
-    key = song["key"]
-    tags = []
-    if song["opener"] == "Yes" and is_first:
-        tags.append("[OPENER]")
-    if song["closer"] == "Yes" and is_last:
-        tags.append("[CLOSER]")
-    if song.get("emergency_cut", False):
-        tags.append("[EMERGENCY CUT]")
-    tag_str = (" " + " ".join(tags)) if tags else ""
-    intro = song.get("intro_notes", "").strip()
-    if intro and intro != "TBD":
-        if intro.upper().startswith("SEGUE"):
-            return (True, intro[5:].strip(), f"{song['title']} {vocal_str} [{key}]{tag_str}")
-        else:
-            return (False, intro, f"{song['title']} {vocal_str} [{key}]{tag_str}")
-    return (False, None, f"{song['title']} {vocal_str} [{key}]{tag_str}")
-
-def format_txt_line(song, is_first=False, is_last=False):
-    """Format one song as a full plaintext arrow-notation line (no trailing blank line)."""
-    is_segue, extra, body = song_line(song, is_first=is_first, is_last=is_last)
-    if is_first:
-        return f"{extra} {body}" if extra else body
-    if is_segue:
-        return f"-> SEGUE {extra} {body}"
-    elif extra:
-        return f"-> {extra} {body}"
-    else:
-        return f"-> {body}"
-
 def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, num_breaks, acoustic_pool, martin_out, david_out, forced_encore_songs=None):
     break_songs_sets = []
     if breaks_opt == "acoustic" and num_breaks > 0:
@@ -1016,7 +969,6 @@ def main():
         file_stem = f"setlist_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
     md_path  = os.path.join(setlists_dir, file_stem + ".md")
-    txt_path = os.path.join(setlists_dir, file_stem + ".txt")
 
     # ---------------------------------------------------------------
     # Output report
@@ -1191,72 +1143,6 @@ def main():
     # (Vocalist breakdown used internally by solver; not published in report)
 
     # ---------------------------------------------------------------
-    # Build plaintext arrow-notation (Format 2)
-    # ---------------------------------------------------------------
-    missing_str = "None Missing" if not missing_names else "No " + " & ".join(missing_names)
-    num_sets_label = f"{num_sets}x {int(args.duration / num_sets * 60)} Min set" if num_sets == 1 else f"{num_sets}x Sets"
-    txt_lines = [f"{num_sets_label} ({missing_str})", ""]
-
-    for s_idx, set_songs in enumerate(sets_songs):
-        for i, song in enumerate(set_songs):
-            is_segue, extra, body = song_line(song, is_first=(i == 0), is_last=(i == len(set_songs) - 1))
-            if i == 0:
-                if extra:
-                    txt_lines.append(f"{extra} {body}")
-                else:
-                    txt_lines.append(body)
-            else:
-                if is_segue:
-                    txt_lines.append(f"-> SEGUE {extra} {body}")
-                elif extra:
-                    txt_lines.append(f"-> {extra} {body}")
-                else:
-                    txt_lines.append(f"-> {body}")
-            txt_lines.append("")
-
-        if s_idx < num_sets - 1:
-            if args.breaks == "acoustic" and s_idx < len(break_songs_sets):
-                pair = break_songs_sets[s_idx]
-                txt_lines.append("(break)")
-                txt_lines.append("")
-                for b_idx, bsong in enumerate(pair):
-                    b_is_segue, b_extra, b_body = song_line(bsong, is_first=(b_idx == 0), is_last=(b_idx == len(pair) - 1))
-                    if b_idx == 0:
-                        line = f"{b_extra} {b_body}".strip() if b_extra else b_body
-                    elif b_is_segue:
-                        line = f"-> SEGUE {b_extra} {b_body}"
-                    elif b_extra:
-                        line = f"-> {b_extra} {b_body}"
-                    else:
-                        line = f"-> {b_body}"
-                    txt_lines.append(line)
-                    txt_lines.append("")
-            else:
-                txt_lines.append("(break)")
-                txt_lines.append("")
-
-    if encores:
-        txt_lines.append("(encore)")
-        txt_lines.append("")
-        for i, song in enumerate(encores):
-            is_segue, extra, body = song_line(song, is_last=(i == len(encores) - 1))
-            if is_segue:
-                txt_lines.append(f"-> SEGUE {extra} {body}")
-            elif extra:
-                txt_lines.append(f"-> {extra} {body}")
-            else:
-                txt_lines.append(f"-> {body}")
-            txt_lines.append("")
-
-    txt_content = "\n".join(txt_lines)
-
-    # Print plaintext to stdout
-    print("\n" + "=" * 60)
-    print("PLAINTEXT ARROW NOTATION")
-    print("=" * 60)
-    print(txt_content)
-
-    # ---------------------------------------------------------------
     # Write files
     # ---------------------------------------------------------------
     md_content = md_buf.getvalue()
@@ -1264,11 +1150,7 @@ def main():
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(md_content)
 
-    with open(txt_path, "w", encoding="utf-8") as f:
-        f.write(txt_content)
-
     print(f"\n✅ Saved markdown  → {os.path.abspath(md_path)}", file=sys.stderr)
-    print(f"✅ Saved plaintext → {os.path.abspath(txt_path)}", file=sys.stderr)
 
     pdf_path = None
     try:
@@ -1278,26 +1160,15 @@ def main():
     except Exception as e:
         print(f"⚠️  PDF generation skipped ({e})", file=sys.stderr)
 
-    rtf_path = None
-    try:
-        import render_rtf
-        rtf_path = render_rtf.render(md_path)
-        print(f"✅ Saved RTF       → {rtf_path}", file=sys.stderr)
-    except Exception as e:
-        print(f"⚠️  RTF generation skipped ({e})", file=sys.stderr)
-
     # Only sync real gigs (named via --date/--location) to the shared Drive folder —
     # ad-hoc/test runs fall back to a setlist_<timestamp> stem and shouldn't clutter it.
-    if (pdf_path or rtf_path) and (args.date or args.location):
+    if pdf_path and (args.date or args.location):
         shared_drive_dir = os.path.expanduser("~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists")
-        for path in (pdf_path, rtf_path):
-            if not path:
-                continue
-            try:
-                shutil.copy2(path, shared_drive_dir)
-                print(f"✅ Synced to Drive → {os.path.join(shared_drive_dir, os.path.basename(path))}", file=sys.stderr)
-            except Exception as e:
-                print(f"⚠️  Drive sync skipped for {os.path.basename(path)} ({e})", file=sys.stderr)
+        try:
+            shutil.copy2(pdf_path, shared_drive_dir)
+            print(f"✅ Synced to Drive → {os.path.join(shared_drive_dir, os.path.basename(pdf_path))}", file=sys.stderr)
+        except Exception as e:
+            print(f"⚠️  Drive sync skipped for {os.path.basename(pdf_path)} ({e})", file=sys.stderr)
 
 def tag_emergency_cuts(sets_songs, segue_groups):
     segue_titles = {title.lower() for group in segue_groups for title in group}

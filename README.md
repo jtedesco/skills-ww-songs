@@ -11,14 +11,14 @@ This repo is the skill itself: [SKILL.md](SKILL.md) is the instruction set Claud
 | [SKILL.md](SKILL.md) | Full instructions for Claude: substitution rules, output formats, programming strategy |
 | [songs_metadata.csv](songs_metadata.csv) | Master song database (title, artist, key/BPM, vocalists, genre/mood tags, popularity, gig-readiness, etc.) |
 | [eval.json](eval.json) | Test scenarios used to evaluate the skill's setlist-building behavior |
-| `scripts/build_setlist.py` | Generates a setlist (`.md`, `.txt`, `.pdf`) from the database given constraints |
+| `scripts/build_setlist.py` | Generates a setlist (`.md`, `.pdf`) from the database given constraints |
 | `scripts/apply_substitution.py` | Applies targeted song swaps/removals to an *existing* setlist in place, without re-running the solver |
 | `scripts/render_pdf.py` | Re-renders a styled PDF from an existing setlist `.md` file |
 | `scripts/add_song.py` | Onboards a new song: checks for duplicates, fetches MusicBrainz/ListenBrainz data, prompts for manual fields, appends to the CSV |
 | `scripts/enrich_metadata.py` | Backfills missing MusicBrainz metadata (release year, album, genre, mood) for existing songs |
 | `scripts/fetch_listenbrainz_popularity.py` | Refreshes the global `relative_popularity` score for all songs |
 | `scripts/test_setlist.py` | Automated test suite covering database constraints and setlist generation logic |
-| `setlists/` | Generated setlist output, one `.md` / `.txt` / `.pdf` triplet per gig |
+| `setlists/` | Generated setlist output, one `.md` / `.pdf` pair per gig |
 
 ## Quick start
 
@@ -28,7 +28,7 @@ Generate a 3-hour bar-gig setlist with acoustic breaks:
 python3 scripts/build_setlist.py --gig-type bar --duration 3 --breaks acoustic --date 2026-07-18 --location "Local Bar & Grill"
 ```
 
-This writes `setlists/2026-07-18 Local Bar & Grill.md` (rich metadata table), `.txt` (plaintext arrow-notation performance script), and `.pdf` (styled render of the `.md`), and best-effort copies the PDF to the band's shared Google Drive folder.
+This writes `setlists/2026-07-18 Local Bar & Grill.md` (rich metadata table) and `.pdf` (styled render of the `.md`), and best-effort copies the PDF to the band's shared Google Drive folder.
 
 Filter by genre, era, mood, or vocalist lead counts — see `python3 scripts/build_setlist.py --help` for the full option list, or the "Automated Setlist Builder" section of [SKILL.md](SKILL.md).
 
@@ -51,7 +51,7 @@ python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake.md" \
     --remove "Ooh La La"
 ```
 
-Edits the `.md`/`.txt` in place (only the named songs change — order and everything else stays untouched), recomputes durations and the EMERGENCY CUT marker, and re-renders `.pdf`/`.rtf`. See "Revising an Existing Setlist" in [SKILL.md](SKILL.md) for details.
+Edits the `.md` in place (only the named songs change — order and everything else stays untouched), recomputes durations and the EMERGENCY CUT marker, and re-renders `.pdf`. See "Revising an Existing Setlist" in [SKILL.md](SKILL.md) for details.
 
 ### Adding a song
 

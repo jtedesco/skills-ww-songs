@@ -2,7 +2,7 @@
 """Apply targeted song swaps/removals to an already-generated setlist.
 
 Unlike build_setlist.py (a from-scratch randomized solver that re-optimizes
-the entire setlist on every run), this script edits an existing .md/.txt
+the entire setlist on every run), this script edits an existing .md
 setlist in place: only the named songs change, everything else — song
 order, unrelated songs, which acoustic songs fill the breaks — is preserved
 exactly. Duration stats and the EMERGENCY CUT marker are recomputed for the
@@ -23,8 +23,8 @@ existing one (e.g. building out a medley); --set-length "Title" "M:SS"
 overrides a song's performed length for this instance only, without
 touching songs_metadata.csv (e.g. a trimmed intro when segued into a medley).
 
-Re-renders the .md and .txt in place, then the .pdf/.rtf, and syncs the
-.pdf/.rtf to the shared Drive folder (same as build_setlist.py).
+Re-renders the .md in place, then the .pdf, and syncs the .pdf to the shared
+Drive folder (same as build_setlist.py).
 """
 import csv
 import os
@@ -37,7 +37,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPT_DIR)
 from build_setlist import (
     parse_length, format_length, get_segue_groups, tag_emergency_cuts,
-    format_md_row, format_txt_line, clean_backups, parse_covering_vocalist,
+    format_md_row, clean_backups, parse_covering_vocalist,
     render_not_selected_lines, render_archived_lines, render_in_progress_lines,
 )
 
@@ -419,58 +419,6 @@ def render_md(header_lines, sections, songs_by_section, all_songs, break_titles=
     return "\n".join(rebuilt).rstrip("\n") + "\n"
 
 
-def render_txt(txt_path, sections, songs_by_section):
-    with open(txt_path, "r", encoding="utf-8") as f:
-        blocks = f.read().split("\n\n")
-    # Trailing split artifact from a final newline
-    while blocks and blocks[-1] == "":
-        blocks.pop()
-
-    header = blocks[0]
-    main_set_songs = [songs for sec, songs in zip(sections, songs_by_section) if sec["heading"].upper().startswith("SET")]
-    encore_songs = next((songs for sec, songs in zip(sections, songs_by_section) if sec["heading"].upper() == "ENCORES"), None)
-
-    # Walk the original blocks, classifying runs of song-lines between the
-    # literal "(break)" / "(encore)" markers. Regenerate "regular set" runs
-    # and the "(encore)" run; preserve "(break)" runs verbatim untouched.
-    out_blocks = [header]
-    set_cursor = 0
-    i = 1
-    n = len(blocks)
-    while i < n:
-        b = blocks[i]
-        if b.strip() == "(break)":
-            # Preserve the marker and the following (untouched) break run verbatim
-            out_blocks.append(b)
-            i += 1
-            while i < n and blocks[i].strip() not in ("(break)", "(encore)"):
-                out_blocks.append(blocks[i])
-                i += 1
-            continue
-        if b.strip() == "(encore)":
-            out_blocks.append(b)
-            i += 1
-            if encore_songs is not None:
-                # Encore songs always get the "-> " arrow prefix, even the
-                # first one — only the show's true opener omits it.
-                for idx, song in enumerate(encore_songs):
-                    out_blocks.append(format_txt_line(song, is_first=False, is_last=(idx == len(encore_songs) - 1)))
-            # Skip past the original encore run
-            while i < n and blocks[i].strip() not in ("(break)", "(encore)"):
-                i += 1
-            continue
-        # A regular main-set run: consume until the next marker, regenerate from set_cursor
-        while i < n and blocks[i].strip() not in ("(break)", "(encore)"):
-            i += 1
-        if set_cursor < len(main_set_songs):
-            cur_songs = main_set_songs[set_cursor]
-            for idx, song in enumerate(cur_songs):
-                out_blocks.append(format_txt_line(song, is_first=(idx == 0), is_last=(idx == len(cur_songs) - 1)))
-            set_cursor += 1
-
-    return "\n\n".join(out_blocks) + "\n"
-
-
 def main():
     parser = argparse.ArgumentParser(description="Apply targeted song swaps/removals to an existing setlist")
     parser.add_argument("md_path", help="Path to the existing setlist .md file")
@@ -489,7 +437,6 @@ def main():
         sys.exit(1)
 
     md_path = args.md_path
-    txt_path = os.path.splitext(md_path)[0] + ".txt"
     csv_path = os.path.join(SCRIPT_DIR, "..", "songs_metadata.csv")
 
     by_title, all_songs = load_song_db(csv_path)
@@ -518,14 +465,10 @@ def main():
 
     break_titles = extract_break_titles(sections)
     md_content = render_md(header_lines, sections, songs_by_section, all_songs, break_titles)
-    txt_content = render_txt(txt_path, sections, songs_by_section)
 
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(md_content)
-    with open(txt_path, "w", encoding="utf-8") as f:
-        f.write(txt_content)
     print(f"✅ Saved markdown  → {os.path.abspath(md_path)}", file=sys.stderr)
-    print(f"✅ Saved plaintext → {os.path.abspath(txt_path)}", file=sys.stderr)
 
     pdf_path = None
     try:
@@ -535,25 +478,14 @@ def main():
     except Exception as e:
         print(f"⚠️  PDF generation skipped ({e})", file=sys.stderr)
 
-    rtf_path = None
-    try:
-        import render_rtf
-        rtf_path = render_rtf.render(md_path)
-        print(f"✅ Saved RTF       → {rtf_path}", file=sys.stderr)
-    except Exception as e:
-        print(f"⚠️  RTF generation skipped ({e})", file=sys.stderr)
-
-    if pdf_path or rtf_path:
+    if pdf_path:
         import shutil
         shared_drive_dir = os.path.expanduser("~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists")
-        for path in (pdf_path, rtf_path):
-            if not path:
-                continue
-            try:
-                shutil.copy2(path, shared_drive_dir)
-                print(f"✅ Synced to Drive → {os.path.join(shared_drive_dir, os.path.basename(path))}", file=sys.stderr)
-            except Exception as e:
-                print(f"⚠️  Drive sync skipped for {os.path.basename(path)} ({e})", file=sys.stderr)
+        try:
+            shutil.copy2(pdf_path, shared_drive_dir)
+            print(f"✅ Synced to Drive → {os.path.join(shared_drive_dir, os.path.basename(pdf_path))}", file=sys.stderr)
+        except Exception as e:
+            print(f"⚠️  Drive sync skipped for {os.path.basename(pdf_path)} ({e})", file=sys.stderr)
 
 
 if __name__ == "__main__":
