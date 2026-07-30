@@ -179,8 +179,14 @@ All "who's missing" and event-detail info lives here — do not restate it in th
 - **Constraints satisfaction table**: One row per constraint (✅/❌), with pass/fail
 - **Song table** with columns: `#`, `Song`, `Artist`, `Lead`, `Backups`, `Key`, `BPM`, `Length`, `Energy`, `Intro`
 - **Duration summary**: Music time, transitions, breaks, grand total
-- **Songs Not Selected**: A trailing `## SONGS NOT SELECTED` section, after the gig summary stats, listing gig-ready/non-archived songs that didn't make this setlist (any set, break, or encore) — split into `### Full Band` and `### Acoustic` (which also covers `Either`-arrangement songs). Built by `render_not_selected_lines()` in `build_setlist.py`, shared with `apply_substitution.py` — every substitution run fully regenerates this section from the final scheduled songs (dropping whatever was there before), so it's never stale after a swap/remove/add, unlike the acoustic breaks (which that script leaves untouched).
-- **Archived Songs** / **Songs In Progress**: two more standing reference pages after "Songs Not Selected" — `## ARCHIVED SONGS` (everything with `archived: Yes`) and `## SONGS IN PROGRESS` (everything with `gig_ready` not `Yes` and not archived), built by `render_archived_lines()` / `render_in_progress_lines()`. Each is its own PDF page (see PDF Export below), separate from the main sets — and constant across every setlist, since these songs are never eligible for the solver in the first place regardless of gig.
+- **Gig Summary page**: A single trailing `## GIG SUMMARY` section (one PDF page, separate from the main sets — see PDF Export below) built by `render_summary_page_lines()` in `build_setlist.py`, combining four subsections:
+  - `### 📊 Stats` — the same duration/song-count bullets that used to stand alone.
+  - `### Lead Vocalist Breakdown` — a table of each vocalist's led-song count and % of the night (sets + breaks + encores), via `render_vocal_breakdown_lines()`.
+  - `### Songs Not Selected` — gig-ready/non-archived songs that didn't make this setlist (any set, break, or encore), split into **Full Band** / **Acoustic** (which also covers `Either`-arrangement songs) bold labels, via `render_not_selected_lines()`.
+  - `### Archived Songs` — everything with `archived: Yes`, via `render_archived_lines()`.
+
+  Every `apply_substitution.py` run fully regenerates this whole page from the final scheduled songs (dropping whatever was there before — including old-format documents that had these as separate top-level sections, or nested the stats inside the last set/encore), so it's never stale after a swap/remove/add, unlike the acoustic breaks (which that script leaves untouched).
+- **Songs In Progress**: its own separate trailing page, `## SONGS IN PROGRESS` (everything with `gig_ready` not `Yes` and not archived), via `render_in_progress_lines()`. Kept separate from the Gig Summary page since it's gig-independent repertoire status (always the same regardless of which gig this is), not this gig's bookkeeping.
 
 > **Note**: Vocalist target percentages are used internally by the solver but are **not** published in the report.
 

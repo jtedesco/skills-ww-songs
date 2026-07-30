@@ -145,13 +145,18 @@ def _song_bullet(s):
     return f"- **{s['title']}** ({s['artist']})"
 
 
+SUMMARY_PAGE_HEADING = "## GIG SUMMARY"
+
+
 def render_not_selected_lines(all_songs, scheduled_titles):
-    """Build the trailing '## SONGS NOT SELECTED' section: gig-ready, non-archived
-    songs that didn't make this setlist, split into Full Band vs. Acoustic
-    ('Either'-arrangement songs count as acoustic here, matching how they're
-    pooled for breaks). Archived and in-progress songs are excluded here —
-    they get their own dedicated reference pages instead (see
-    render_archived_lines / render_in_progress_lines below)."""
+    """Build the 'Songs Not Selected' subsection (h3, no page of its own —
+    it lives on the combined summary page, see render_summary_page_lines):
+    gig-ready, non-archived songs that didn't make this setlist, split into
+    Full Band vs. Acoustic ('Either'-arrangement songs count as acoustic
+    here, matching how they're pooled for breaks). Archived and in-progress
+    songs are excluded here — archived gets its own subsection on the same
+    page (render_archived_lines); in-progress gets its own separate page
+    (render_in_progress_lines below)."""
     scheduled_lower = {t.lower() for t in scheduled_titles}
     remaining = [
         s for s in all_songs
@@ -162,22 +167,56 @@ def render_not_selected_lines(all_songs, scheduled_titles):
     full_band = sorted((s for s in remaining if s["arrangement"] == "Full Band"), key=lambda s: s["title"])
     acoustic = sorted((s for s in remaining if s["arrangement"] in ("Acoustic", "Either")), key=lambda s: s["title"])
 
-    lines = ["## SONGS NOT SELECTED", "Everything else in the repertoire that didn't make this setlist.", ""]
-    lines.append("### Full Band")
+    lines = ["### Songs Not Selected", "Everything else in the repertoire that didn't make this setlist.", ""]
+    lines.append("**Full Band**")
     lines.extend([_song_bullet(s) for s in full_band] if full_band else ["*None — every full-band song made the cut.*"])
     lines.append("")
-    lines.append("### Acoustic")
+    lines.append("**Acoustic**")
     lines.extend([_song_bullet(s) for s in acoustic] if acoustic else ["*None — every acoustic song made the cut.*"])
     return lines
 
 
 def render_archived_lines(all_songs):
-    """A standing reference page listing every archived song — always the
-    same regardless of which setlist this is, since archived songs are never
-    eligible for selection in the first place."""
+    """The 'Archived Songs' subsection (h3, on the combined summary page) —
+    always the same regardless of which setlist this is, since archived
+    songs are never eligible for selection in the first place."""
     archived = sorted((s for s in all_songs if s.get("archived") == "Yes"), key=lambda s: s["title"])
-    lines = ["## ARCHIVED SONGS", "Retired from the repertoire — never selected by the solver.", ""]
+    lines = ["### Archived Songs", "Retired from the repertoire — never selected by the solver.", ""]
     lines.extend([_song_bullet(s) for s in archived] if archived else ["*Nothing currently archived.*"])
+    return lines
+
+
+def render_vocal_breakdown_lines(scheduled_songs):
+    """The 'Lead Vocalist Breakdown' subsection (h3, on the combined summary
+    page): what % of tonight's songs (sets + breaks + encores) each vocalist
+    leads, sorted by count descending."""
+    counts = {}
+    for s in scheduled_songs:
+        counts[s["lead_vocals"]] = counts.get(s["lead_vocals"], 0) + 1
+    total = len(scheduled_songs)
+
+    lines = ["### Lead Vocalist Breakdown", "", "| Vocalist | Songs Led | % |", "|---|---|---|"]
+    for vocalist, count in sorted(counts.items(), key=lambda kv: kv[1], reverse=True):
+        pct = (count / total * 100) if total else 0
+        lines.append(f"| {vocalist} | {count} | {pct:.1f}% |")
+    return lines
+
+
+def render_summary_page_lines(stats_lines, scheduled_songs, all_songs, scheduled_titles):
+    """Combine the gig summary stats, lead vocalist breakdown, songs-not-
+    selected, and archived-songs subsections onto one page (one '##'
+    heading, so render_pdf.py's per-set page-break wrapper keeps them
+    together). 'Songs In Progress' stays a separate page — see
+    render_in_progress_lines — since it's gig-independent repertoire status,
+    not this gig's bookkeeping."""
+    lines = [SUMMARY_PAGE_HEADING, "", "### 📊 Stats"]
+    lines.extend(stats_lines)
+    lines.append("")
+    lines.extend(render_vocal_breakdown_lines(scheduled_songs))
+    lines.append("")
+    lines.extend(render_not_selected_lines(all_songs, scheduled_titles))
+    lines.append("")
+    lines.extend(render_archived_lines(all_songs))
     return lines
 
 
@@ -1114,33 +1153,29 @@ def main():
         
     total_breaks_sec = num_breaks * 10 * 60
     grand_total_sec = total_music_seconds + total_trans_seconds + total_breaks_sec
-    md(f"\n### 📊 GIG SUMMARY STATS")
-    md(f"- **Total Songs Scheduled**: {sum(len(s) for s in sets_songs) + len(encores) + len(break_songs_sets)*2}")
-    md(f"- **Pure Music Playtime**: {format_length(total_music_seconds)}")
-    md(f"- **Transition Buffers (30s/song)**: {format_length(total_trans_seconds)}")
-    md(f"- **Break Time**: {format_length(total_breaks_sec)}")
-    md(f"- **Grand Total Duration**: {format_length(grand_total_sec)} (Target: {format_length(total_gig_seconds)})")
+    stats_lines = [
+        f"- **Total Songs Scheduled**: {sum(len(s) for s in sets_songs) + len(encores) + len(break_songs_sets)*2}",
+        f"- **Pure Music Playtime**: {format_length(total_music_seconds)}",
+        f"- **Transition Buffers (30s/song)**: {format_length(total_trans_seconds)}",
+        f"- **Break Time**: {format_length(total_breaks_sec)}",
+        f"- **Grand Total Duration**: {format_length(grand_total_sec)} (Target: {format_length(total_gig_seconds)})",
+    ]
 
     scheduled_titles = {s["title"] for set_s in sets_songs for s in set_s}
     scheduled_titles |= {s["title"] for s in encores}
     for pair in break_songs_sets:
         scheduled_titles |= {s["title"] for s in pair}
+
+    all_scheduled = [s for set_s in sets_songs for s in set_s] + encores
+    for pair in break_songs_sets:
+        all_scheduled.extend(pair)
+
     md()
-    for line in render_not_selected_lines(all_songs, scheduled_titles):
-        md(line)
-    md()
-    for line in render_archived_lines(all_songs):
+    for line in render_summary_page_lines(stats_lines, all_scheduled, all_songs, scheduled_titles):
         md(line)
     md()
     for line in render_in_progress_lines(all_songs):
         md(line)
-
-    all_scheduled = [s for set_s in sets_songs for s in set_s] + encores
-    vocal_counts = {}
-    for s in all_scheduled:
-        vocal_counts[s["lead_vocals"]] = vocal_counts.get(s["lead_vocals"], 0) + 1
-    total_v = len(all_scheduled)
-    # (Vocalist breakdown used internally by solver; not published in report)
 
     # ---------------------------------------------------------------
     # Write files

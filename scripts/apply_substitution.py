@@ -38,11 +38,16 @@ sys.path.insert(0, SCRIPT_DIR)
 from build_setlist import (
     parse_length, format_length, get_segue_groups, tag_emergency_cuts,
     format_md_row, clean_backups, parse_covering_vocalist,
-    render_not_selected_lines, render_archived_lines, render_in_progress_lines,
+    render_in_progress_lines, render_summary_page_lines, SUMMARY_PAGE_HEADING,
 )
 
-NOT_SELECTED_HEADING = "## SONGS NOT SELECTED"
+# Any of these starting a line marks the beginning of the always-regenerated
+# tail — old-format files (pre-dating the combined summary page) used the
+# first three as separate top-level headings; new ones use just the last two.
+TRAILING_HEADINGS = {"## SONGS NOT SELECTED", "## ARCHIVED SONGS", SUMMARY_PAGE_HEADING, "## SONGS IN PROGRESS"}
+GIG_STATS_HEADING = "### 📊 GIG SUMMARY STATS"
 BREAK_BULLET_RE = re.compile(r"^-\s*\*\*(.+?)\*\*\s*\(")
+BREAK_LEAD_RE = re.compile(r"Lead:\s*(\w+)")
 
 
 def normalize_title(t):
@@ -120,13 +125,28 @@ def parse_md(md_path):
     with open(md_path, "r", encoding="utf-8") as f:
         lines = f.read().split("\n")
 
-    # The 'Songs Not Selected' section depends on the final scheduled songs
-    # (not just the edited slots), so it's always fully regenerated rather
-    # than preserved — drop whatever's already there so it isn't parsed as a
-    # normal SET/ENCORES section or duplicated when a fresh one is appended.
-    not_selected_idx = next((i for i, l in enumerate(lines) if l.strip() == NOT_SELECTED_HEADING), None)
-    if not_selected_idx is not None:
-        lines = lines[:not_selected_idx]
+    # Capture the original target duration (e.g. "180:00") before truncating
+    # anything, so the regenerated stats block can keep it.
+    target_duration = None
+    for l in lines:
+        m = re.search(r"\(Target:\s*([\d:]+)\)", l)
+        if m:
+            target_duration = m.group(1)
+            break
+
+    # The whole tail (gig stats, vocalist breakdown, not-selected, archived,
+    # in-progress) depends on the final scheduled songs, not just the edited
+    # slots, so it's always fully regenerated — drop whatever's there so it
+    # isn't parsed as a normal SET/ENCORES section or duplicated. Older
+    # documents nested the gig-stats block inside the last section instead
+    # of giving it its own heading, so also cut at that line if a real
+    # trailing heading isn't found first.
+    cut_idx = next(
+        (i for i, l in enumerate(lines) if l.strip() in TRAILING_HEADINGS or l.strip() == GIG_STATS_HEADING),
+        None,
+    )
+    if cut_idx is not None:
+        lines = lines[:cut_idx]
 
     heading_idxs = [i for i, l in enumerate(lines) if l.startswith("## ")]
     if not heading_idxs:
@@ -173,7 +193,7 @@ def parse_md(md_path):
 
         sections.append({"heading": heading, "rows": rows, "extra_after": extra_after})
 
-    return header_lines, sections
+    return header_lines, sections, target_duration
 
 
 def build_new_song(by_title, title, martin_out, david_out):
@@ -318,27 +338,27 @@ def enrich_static_fields(sections, by_title):
             row["end_energy"] = csv_row.get("end_energy", "")
 
 
-def extract_break_titles(sections):
+def extract_break_songs(sections):
     """Break-pair songs live in each section's preserved extra_after text as
     '- **Title** (Artist) - Lead: X' bullets (breaks aren't touched by this
-    script, so this just reads back what's already there) — used both to
-    keep the summary's Total Songs Scheduled accurate and to exclude break
-    songs from the regenerated 'Songs Not Selected' section. Matched on the
-    bold-title-then-open-paren shape, which GIG SUMMARY STATS bullets
-    ('- **Label**: value') don't have, since extra_after for the final
-    section also picks up that trailing block (no heading follows it)."""
-    titles = []
+    script, so this just reads back what's already there) — used to keep
+    the summary stats/vocalist-breakdown/'Songs Not Selected' section
+    accurate. Matched on the bold-title-then-open-paren shape, which GIG
+    SUMMARY STATS bullets ('- **Label**: value') don't have, since
+    extra_after for the final section can also pick up trailing content
+    with no heading following it. Returns [{"title":..., "lead_vocals":...}]."""
+    songs = []
     for sec in sections:
         for line in sec["extra_after"]:
             m = BREAK_BULLET_RE.match(line.strip())
             if m:
-                titles.append(m.group(1).strip())
-    return titles
+                lead_m = BREAK_LEAD_RE.search(line)
+                songs.append({"title": m.group(1).strip(), "lead_vocals": lead_m.group(1) if lead_m else ""})
+    return songs
 
 
-def render_md(header_lines, sections, songs_by_section, all_songs, break_titles=None):
-    break_titles = break_titles or []
-    break_song_count = len(break_titles)
+def render_md(header_lines, sections, songs_by_section, all_songs, by_title, break_songs=None, target_duration=None):
+    break_songs = break_songs or []
     out = list(header_lines)
     for sec, songs in zip(sections, songs_by_section):
         out.append(f"## {sec['heading']}")
@@ -367,56 +387,44 @@ def render_md(header_lines, sections, songs_by_section, all_songs, break_titles=
         out.append("-" * 40)
         out.extend(sec["extra_after"])
 
-    # Recompute the grand summary stats block at the end of the file, if present
-    total_songs = sum(len(s) for s in songs_by_section) + break_song_count
+    # Gig-wide stats + the combined summary page are always fully
+    # regenerated (not patched in place) — total_music/total_trans cover the
+    # main sets/encores (songs_by_section); break duration is looked up
+    # fresh from the database via each break song's title, since breaks
+    # aren't structured data here, just preserved bullet text.
     total_music = sum(parse_length(sg["length"]) for songs in songs_by_section for sg in songs)
     total_trans = sum((len(songs) - 1) * 30 if len(songs) > 1 else 0 for songs in songs_by_section)
 
-    rebuilt = []
-    skip_old_summary = False
-    for line in out:
-        if line.startswith("### 📊 GIG SUMMARY STATS"):
-            skip_old_summary = True
-            rebuilt.append(line)
-            continue
-        if skip_old_summary:
-            if line.startswith("- **Total Songs Scheduled**"):
-                rebuilt.append(f"- **Total Songs Scheduled**: {total_songs}")
-                continue
-            if line.startswith("- **Pure Music Playtime**"):
-                rebuilt.append(f"- **Pure Music Playtime**: {format_length(total_music)}")
-                continue
-            if line.startswith("- **Transition Buffers"):
-                rebuilt.append(f"- **Transition Buffers (30s/song)**: {format_length(total_trans)}")
-                continue
-            if line.startswith("- **Break Time**"):
-                rebuilt.append(line)  # untouched by this script — breaks aren't modified
-                # Break time isn't recomputed; extract it to fold into grand total below
-                continue
-            if line.startswith("- **Grand Total Duration**"):
-                break_seconds = 0
-                for l2 in out:
-                    if l2.startswith("- **Break Time**"):
-                        h, m = l2.split("**Break Time**:")[1].strip().split(":")
-                        break_seconds = int(h) * 60 + int(m)
-                        break
-                target = line.split("(Target:")[1].rstrip(")").strip() if "(Target:" in line else None
-                grand = total_music + total_trans + break_seconds
-                target_str = f" (Target: {target})" if target else ""
-                rebuilt.append(f"- **Grand Total Duration**: {format_length(grand)}{target_str}")
-                skip_old_summary = False
-                continue
-        rebuilt.append(line)
+    break_seconds = 0
+    for bs in break_songs:
+        key = normalize_title(bs["title"])
+        if key in by_title:
+            break_seconds += parse_length(by_title[key]["length"])
+    if len(break_songs) > 1:
+        break_seconds += (len(break_songs) - 1) * 30
 
-    scheduled_titles = {s["title"] for songs in songs_by_section for s in songs} | set(break_titles)
-    rebuilt.append("")
-    rebuilt.extend(render_not_selected_lines(all_songs, scheduled_titles))
-    rebuilt.append("")
-    rebuilt.extend(render_archived_lines(all_songs))
-    rebuilt.append("")
-    rebuilt.extend(render_in_progress_lines(all_songs))
+    total_songs = sum(len(s) for s in songs_by_section) + len(break_songs)
+    grand_total = total_music + total_trans + break_seconds
+    target_str = f" (Target: {target_duration})" if target_duration else ""
 
-    return "\n".join(rebuilt).rstrip("\n") + "\n"
+    stats_lines = [
+        f"- **Total Songs Scheduled**: {total_songs}",
+        f"- **Pure Music Playtime**: {format_length(total_music)}",
+        f"- **Transition Buffers (30s/song)**: {format_length(total_trans)}",
+        f"- **Break Time**: {format_length(break_seconds)}",
+        f"- **Grand Total Duration**: {format_length(grand_total)}{target_str}",
+    ]
+
+    scheduled_titles = {s["title"] for songs in songs_by_section for s in songs}
+    scheduled_titles |= {bs["title"] for bs in break_songs}
+    all_scheduled = [s for songs in songs_by_section for s in songs] + break_songs
+
+    out.append("")
+    out.extend(render_summary_page_lines(stats_lines, all_scheduled, all_songs, scheduled_titles))
+    out.append("")
+    out.extend(render_in_progress_lines(all_songs))
+
+    return "\n".join(out).rstrip("\n") + "\n"
 
 
 def main():
@@ -440,7 +448,7 @@ def main():
     csv_path = os.path.join(SCRIPT_DIR, "..", "songs_metadata.csv")
 
     by_title, all_songs = load_song_db(csv_path)
-    header_lines, sections = parse_md(md_path)
+    header_lines, sections, target_duration = parse_md(md_path)
     martin_out, david_out = parse_missing(header_lines)
 
     apply_ops(sections, [tuple(s) for s in args.swap], args.remove, [tuple(a) for a in args.add],
@@ -463,8 +471,8 @@ def main():
     for i, tagged_songs in zip(main_set_indices, tagged):
         songs_by_section[i] = tagged_songs
 
-    break_titles = extract_break_titles(sections)
-    md_content = render_md(header_lines, sections, songs_by_section, all_songs, break_titles)
+    break_songs = extract_break_songs(sections)
+    md_content = render_md(header_lines, sections, songs_by_section, all_songs, by_title, break_songs, target_duration)
 
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(md_content)

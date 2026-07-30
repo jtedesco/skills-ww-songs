@@ -666,18 +666,23 @@ def test_scenario_8():
         all_pass = False
         log_test("Acoustic Vocalist Coverage constraint present in summary", False)
 
-    if "## SONGS NOT SELECTED" in stdout and "### Full Band" in stdout and "### Acoustic" in stdout:
-        log_test("Songs Not Selected section present with Full Band/Acoustic split", True)
+    if ("## GIG SUMMARY" in stdout and "### Songs Not Selected" in stdout
+            and "**Full Band**" in stdout and "**Acoustic**" in stdout
+            and "### Archived Songs" in stdout and "### Lead Vocalist Breakdown" in stdout):
+        log_test("Combined GIG SUMMARY page present (stats/vocalist breakdown/not-selected/archived)", True)
     else:
         all_pass = False
-        log_test("Songs Not Selected section present with Full Band/Acoustic split", False)
+        log_test("Combined GIG SUMMARY page present (stats/vocalist breakdown/not-selected/archived)", False)
 
     # No song scheduled in a set, break, or encore should also show up as "not selected"
     scheduled_titles = {s["title"] for set_songs in res["sets"] for s in set_songs}
     scheduled_titles |= {s["title"] for s in res["encores"]}
     scheduled_titles |= set(res["breaks"])
 
-    not_selected_block = stdout.split("## SONGS NOT SELECTED", 1)[-1] if "## SONGS NOT SELECTED" in stdout else ""
+    not_selected_block = ""
+    if "### Songs Not Selected" in stdout:
+        after = stdout.split("### Songs Not Selected", 1)[-1]
+        not_selected_block = after.split("### Archived Songs", 1)[0]
     not_selected_titles = set(re.findall(r"^-\s*\*\*(.+?)\*\*\s*\(", not_selected_block, re.MULTILINE))
 
     overlap = scheduled_titles & not_selected_titles
