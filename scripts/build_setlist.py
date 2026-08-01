@@ -245,11 +245,17 @@ def clean_backups(lead_vocals, backups_list):
     return cleaned
 
 def vocal_display_string(song):
-    """'Lead (Backup, Backup)' string used in the .md table's Lead Vocal column."""
+    """'Lead (for Absentee) (Backup, Backup)' string used in the .md table's
+    Lead Vocal column. The '(for X)' marker only appears when this song's
+    lead vocal was reassigned away from an absent member (X) — see
+    `covering_for`, set wherever lead_vocals gets overwritten by the
+    Martin-out/David-out substitution logic."""
     lead_v = song["lead_vocals"]
     song["backup_vocals"] = clean_backups(lead_v, song.get("backup_vocals", []))
     backups = ", ".join(song["backup_vocals"])
-    return lead_v + (f" ({backups})" if backups else "")
+    covering_for = song.get("covering_for")
+    sub_marker = f" (for {covering_for})" if covering_for else ""
+    return lead_v + sub_marker + (f" ({backups})" if backups else "")
 
 def energy_display_string(song):
     """'Low' (constant) or 'Low→High' (build/wind-down) for the table's
@@ -452,6 +458,7 @@ def main():
                 continue
             if song["lead_vocals"] == "Martin":
                 song["lead_vocals"] = parse_covering_vocalist(notes, "David")
+                song["covering_for"] = "Martin"
             if "M" in song.get("backup_vocals", []):
                 song["backup_vocals"] = [b for b in song["backup_vocals"] if b != "M"]
 
@@ -463,6 +470,7 @@ def main():
                 continue
             if song["lead_vocals"] == "David":
                 song["lead_vocals"] = parse_covering_vocalist(notes, "Lauren")
+                song["covering_for"] = "David"
             if "D" in song.get("backup_vocals", []):
                 song["backup_vocals"] = [b for b in song["backup_vocals"] if b != "D"]
                 
@@ -1131,7 +1139,9 @@ def main():
                 pair = break_songs_sets[s_idx]
                 md(f"\n### ☕ BREAK {s_idx + 1} (Acoustic Set - 10 mins)")
                 for song in pair:
-                    md(f"- **{song['title']}** ({song['artist']}) - Lead: {song['lead_vocals']}")
+                    covering_for = song.get("covering_for")
+                    sub_marker = f" (for {covering_for})" if covering_for else ""
+                    md(f"- **{song['title']}** ({song['artist']}) - Lead: {song['lead_vocals']}{sub_marker}")
                 md("\n" + "-" * 40)
             else:
                 md(f"\n### ⏸️ BREAK {s_idx + 1} (Silent Break - 10 mins)\n")

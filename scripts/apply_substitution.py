@@ -88,16 +88,19 @@ def parse_energy_cell(cell):
     return cell, cell
 
 
-VOCAL_CELL_RE = re.compile(r"^([A-Za-z]+)(?:\s*\(([^)]*)\))?$")
+VOCAL_CELL_RE = re.compile(r"^([A-Za-z]+)(?:\s*\(for\s+([A-Za-z]+)\))?(?:\s*\(([^)]*)\))?$")
 
 
 def parse_vocal_cell(cell):
-    """'Jon (L, D)' -> ('Jon', ['L', 'D']); 'Lauren' -> ('Lauren', [])."""
+    """'Jon (L, D)' -> ('Jon', None, ['L', 'D']); 'Lauren' -> ('Lauren', None, []);
+    'Lauren (for David) (J)' -> ('Lauren', 'David', ['J']) — the '(for X)'
+    marker (see vocal_display_string in build_setlist.py) records that this
+    row's lead was reassigned away from an absent member."""
     m = VOCAL_CELL_RE.match(cell.strip())
     if not m:
-        return cell.strip(), []
-    backups = [b.strip() for b in m.group(2).split(",")] if m.group(2) else []
-    return m.group(1), backups
+        return cell.strip(), None, []
+    backups = [b.strip() for b in m.group(3).split(",")] if m.group(3) else []
+    return m.group(1), m.group(2), backups
 
 
 def parse_missing(header_lines):
@@ -174,12 +177,13 @@ def parse_md(md_path):
                     cells = [c.strip() for c in l.split("|")[1:-1]]
                     # | # | Title | Artist | Key | BPM | Length | Lead Vocal | Energy | Intro |
                     title = strip_row_title(cells[1])
-                    lead, backups = parse_vocal_cell(cells[6])
+                    lead, covering_for, backups = parse_vocal_cell(cells[6])
                     start_energy, end_energy = parse_energy_cell(cells[7])
                     rows.append({
                         "title": title, "artist": cells[2], "key": cells[3],
                         "bpm": int(cells[4]), "length": cells[5],
                         "lead_vocals": lead, "backup_vocals": backups,
+                        "covering_for": covering_for,
                         "start_energy": start_energy, "end_energy": end_energy,
                         "intro_notes": cells[8],
                     })
@@ -215,8 +219,10 @@ def build_new_song(by_title, title, martin_out, david_out):
         sys.exit(1)
     if martin_out and song["lead_vocals"] == "Martin":
         song["lead_vocals"] = parse_covering_vocalist(notes, "David")
+        song["covering_for"] = "Martin"
     if david_out and song["lead_vocals"] == "David":
         song["lead_vocals"] = parse_covering_vocalist(notes, "Lauren")
+        song["covering_for"] = "David"
     if martin_out:
         song["backup_vocals"] = [b for b in song.get("backup_vocals", []) if b != "M"]
     if david_out:

@@ -30,6 +30,8 @@ When a member is out, `build_setlist.py` applies these band-wide rules automatic
 
 Per-song specifics — which songs must be **cut** vs. **survive** without a given member, and who covers lead vocals on which title — live entirely in `songs_metadata.csv`'s `substitution_notes` column. **Do not duplicate per-song lists here**; a hardcoded copy in this file will drift out of sync with the database as songs get added, archived, or re-arranged (this section previously listed a since-archived song as "Martin-out safe").
 
+**Marking covered leads in the Lead Vocal column**: whenever a song's lead vocal is reassigned because the original singer is out (per the rules above), the Lead Vocal cell must say so explicitly — `Lauren (for David)` — not just show the covering singer's name with no indication a substitution happened. This applies everywhere a lead vocalist is printed: the main-set/encore table's `Lead Vocal` column and the acoustic break bullets' `Lead: ...` field. If the song also has its own backup vocalists, the `(for X)` marker comes right after the covering singer's name, before the backups parenthetical, e.g. `Lauren (for David) (J)`. `build_setlist.py` (`vocal_display_string`, driven by the `covering_for` field set alongside the `martin_out`/`david_out` reassignment logic) and `apply_substitution.py` (`parse_vocal_cell` / `build_new_song`, which round-trip the marker on existing rows and apply it to freshly-added songs) both implement this — don't hand-write a Lead Vocal cell without the marker when the printed name differs from the song's default `lead_vocals` in the database.
+
 ## Automated Setlist Builder & Tests
 The skill includes an automated setlist building script: `build_setlist.py`.
 You can execute it using:
