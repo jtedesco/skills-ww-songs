@@ -233,6 +233,7 @@ def parse_md(md_path):
                         "covering_for": covering_for,
                         "start_energy": start_energy, "end_energy": end_energy,
                         "intro_notes": cells[8],
+                        "emergency_cut": "EMERGENCY CUT" in cells[1],
                     })
                 else:
                     table_end = j
@@ -512,17 +513,31 @@ def main():
 
     songs_by_section = [sec["rows"] for sec in sections]
 
-    # Recompute the EMERGENCY CUT marker for main sets only (encores never
-    # carry it), using the same selection logic build_setlist.py uses, over
-    # the whole (non-archived) song database's segue chains.
-    non_archived = [s for s in all_songs if s.get("archived", "No") != "Yes"]
-    segue_groups = get_segue_groups(non_archived)
-
+    # EMERGENCY CUT selection is independent of reordering: a --swap/--remove/
+    # --add that doesn't touch the currently-marked song (including a plain
+    # reorder via --remove + --add of some other title) must leave the mark
+    # exactly where it is — including a hand-picked override in the source
+    # .md that doesn't match what tag_emergency_cuts() would have picked.
+    # Only recompute (same selection logic build_setlist.py uses, over the
+    # whole non-archived song database's segue chains) when the previously
+    # marked song is no longer present post-edit — swapped out, removed, or
+    # this is an older file that never had a mark — so the setlist is never
+    # left without a cut candidate. Checked per SET, not globally: each set
+    # carries its own independent cut candidate, so one set losing its mark
+    # must not force a recompute (and thus overwrite a hand-picked override)
+    # in an unrelated set that still has one.
     main_set_indices = [i for i, sec in enumerate(sections) if sec["heading"].upper().startswith("SET")]
     main_sets_songs = [songs_by_section[i] for i in main_set_indices]
-    tagged = tag_emergency_cuts(main_sets_songs, segue_groups)
-    for i, tagged_songs in zip(main_set_indices, tagged):
-        songs_by_section[i] = tagged_songs
+    sets_needing_recompute = [
+        local_idx for local_idx, songs in enumerate(main_sets_songs)
+        if not any(song.get("emergency_cut", False) for song in songs)
+    ]
+    if sets_needing_recompute:
+        non_archived = [s for s in all_songs if s.get("archived", "No") != "Yes"]
+        segue_groups = get_segue_groups(non_archived)
+        tagged = tag_emergency_cuts(main_sets_songs, segue_groups)
+        for local_idx in sets_needing_recompute:
+            songs_by_section[main_set_indices[local_idx]] = tagged[local_idx]
 
     missing_names = parse_missing_names(header_lines)
     labeled_sections = [(sections[i]["heading"], songs_by_section[i]) for i in range(len(sections))]
