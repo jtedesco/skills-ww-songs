@@ -39,6 +39,8 @@ from build_setlist import (
     parse_length, format_length, get_segue_groups, tag_emergency_cuts,
     format_md_row, clean_backups, parse_covering_vocalist,
     render_in_progress_lines, render_summary_page_lines, SUMMARY_PAGE_HEADING,
+    check_absent_member_notes, format_absent_member_status,
+    check_energy_flow, format_pacing_flow_status,
 )
 
 # Any of these starting a line marks the beginning of the always-regenerated
@@ -115,6 +117,51 @@ def parse_missing(header_lines):
             martin_out = "Martin" in names
             david_out = "David" in names
     return martin_out, david_out
+
+
+def parse_missing_names(header_lines):
+    """Read the '- **Missing:** David, Debo (Paul subbing on bass)' header
+    line into a clean name list (['David', 'Debo']) — same source as
+    parse_missing() but keeps every absent name (not just Martin/David) and
+    strips trailing '(...)' asides, for the absent-member note check."""
+    for l in header_lines:
+        s = l.strip()
+        if s.startswith("- **Missing:**"):
+            raw = s.split("**Missing:**", 1)[1].strip()
+            if raw == "None":
+                return []
+            return [part.split("(")[0].strip() for part in raw.split(",") if part.split("(")[0].strip()]
+    return []
+
+
+CONSTRAINT_ROW_RE = re.compile(r"^\|\s*(.+?)\s*\|.*\|$")
+
+
+def upsert_constraint_rows(header_lines, updates):
+    """Replace (or, for older-format files that predate a given check,
+    append) rows in the CONSTRAINTS SATISFACTION SUMMARY table by
+    constraint name, in the same '| Name | Status |' shape build_setlist.py
+    writes. `updates` is {constraint_name: status_text}."""
+    heading_idx = next((i for i, l in enumerate(header_lines)
+                         if l.strip() == "### 📋 CONSTRAINTS SATISFACTION SUMMARY"), None)
+    if heading_idx is None:
+        return header_lines
+    rows_start = heading_idx + 3  # heading, "| Constraint | Status | Notes |", "|:---|...|"
+    rows_end = rows_start
+    while rows_end < len(header_lines) and header_lines[rows_end].startswith("|"):
+        rows_end += 1
+
+    remaining = dict(updates)
+    for i in range(rows_start, rows_end):
+        m = CONSTRAINT_ROW_RE.match(header_lines[i])
+        if m and m.group(1) in remaining:
+            header_lines[i] = f"| {m.group(1)} | {remaining.pop(m.group(1))} |"
+
+    insert_at = rows_end
+    for name, status in remaining.items():
+        header_lines.insert(insert_at, f"| {name} | {status} |")
+        insert_at += 1
+    return header_lines
 
 
 def parse_md(md_path):
@@ -476,6 +523,16 @@ def main():
     tagged = tag_emergency_cuts(main_sets_songs, segue_groups)
     for i, tagged_songs in zip(main_set_indices, tagged):
         songs_by_section[i] = tagged_songs
+
+    missing_names = parse_missing_names(header_lines)
+    labeled_sections = [(sections[i]["heading"], songs_by_section[i]) for i in range(len(sections))]
+    energy_drops = check_energy_flow(labeled_sections)
+    absent_flags = check_absent_member_notes(
+        [s for songs in songs_by_section for s in songs], missing_names)
+    header_lines = upsert_constraint_rows(header_lines, {
+        "Pacing Flow": format_pacing_flow_status(energy_drops),
+        "Absent-Member Note Check": format_absent_member_status(absent_flags),
+    })
 
     break_songs = extract_break_songs(sections)
     md_content = render_md(header_lines, sections, songs_by_section, all_songs, by_title, break_songs, target_duration)

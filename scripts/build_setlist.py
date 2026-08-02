@@ -56,6 +56,53 @@ def get_segue_groups(songs):
             groups.append(group)
     return groups
 
+def check_absent_member_notes(song_list, missing_names):
+    """Flag songs whose printed intro_notes still name an absent band
+    member (e.g. 'David starts w/ marimba' when David is out) — a stage
+    cue the vocal/instrument substitution logic doesn't touch, since that
+    only reassigns the lead_vocals/backup_vocals/instrument columns, not
+    free-text notes. Only scans main-set/encore songs, since acoustic break
+    bullets don't print intro_notes at all. Returns
+    [(title, absent_name, intro_notes), ...]."""
+    if not missing_names:
+        return []
+    name_res = [(name, re.compile(rf"\b{re.escape(name)}\b")) for name in missing_names]
+    flagged = []
+    for song in song_list:
+        notes = song.get("intro_notes", "") or ""
+        for name, rx in name_res:
+            if rx.search(notes):
+                flagged.append((song["title"], name, notes))
+    return flagged
+
+def format_absent_member_status(flags):
+    if not flags:
+        return "✅ Satisfied (No absent-member references in intro notes)"
+    detail = "; ".join(f'*{title}* mentions {name} ("{notes}")' for title, name, notes in flags)
+    return f"⚠️ {len(flags)} stale reference(s): {detail}"
+
+def check_energy_flow(labeled_song_lists):
+    """labeled_song_lists: [(label, [song, ...]), ...] — one entry per
+    Set/Encores section. Flags every adjacent pair within a section where a
+    High-energy song is immediately followed by a Low-energy one — an
+    abrupt loss of momentum the BPM-only V-shape pacing doesn't catch,
+    worth extra scrutiny near a set's start or end. Returns
+    [(label, position, title_a, title_b), ...] where position is 1-based,
+    naming song_a (the one ending High)."""
+    drops = []
+    for label, songs in labeled_song_lists:
+        for i in range(len(songs) - 1):
+            cur, nxt = songs[i], songs[i + 1]
+            if cur.get("end_energy") == "High" and nxt.get("start_energy") == "Low":
+                drops.append((label, i + 1, cur["title"], nxt["title"]))
+    return drops
+
+def format_pacing_flow_status(drops):
+    if not drops:
+        return "✅ Satisfied (No High→Low energy drops)"
+    detail = "; ".join(f"{a} → {b} (#{i}→#{i+1}, {label})" for label, i, a, b in drops)
+    return f"⚠️ {len(drops)} energy drop(s): {detail}"
+
 class Item:
     def __init__(self, songs_list):
         self.songs = songs_list
@@ -1053,6 +1100,16 @@ def main():
     missing_field = ", ".join(missing_names) if missing_names else "None"
     if args.debo_out and args.bass_sub:
         missing_field += f" ({args.bass_sub} subbing on bass)"
+
+    labeled_sections = [(f"Set {i+1}", ss) for i, ss in enumerate(sets_songs)]
+    if encores:
+        labeled_sections.append(("Encores", encores))
+    energy_drops = check_energy_flow(labeled_sections)
+    constraints_satisfied_summary["Pacing Flow"] = format_pacing_flow_status(energy_drops)
+
+    absent_flags = check_absent_member_notes(
+        [s for ss in sets_songs for s in ss] + encores, missing_names)
+    constraints_satisfied_summary["Absent-Member Note Check"] = format_absent_member_status(absent_flags)
 
     filter_details = []
     if args.genre: filter_details.append(f"Genre: {args.genre}")

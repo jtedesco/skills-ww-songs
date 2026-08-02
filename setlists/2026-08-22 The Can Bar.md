@@ -15,6 +15,8 @@
 | Acoustic Vocalist Coverage | ✅ Satisfied (Every present vocalist leads an acoustic song — Interstate Love Song gives Martin one) |
 | Target Duration | ⚠️ Partially Satisfied (~2h57m of music/transitions vs. 3hr target — pad with banter/tuning) |
 | Vocalist Inclusion | ✅ Satisfied |
+| Pacing Flow | ⚠️ 3 energy drop(s): Free Ride → Brown Eyed Girl (#3→#4, SET 1); Jenny (867-5309) → Brass in Pocket (#11→#12, SET 1); You Oughta Know → Pink Pony Club (#13→#14, SET 1) |
+| Absent-Member Note Check | ⚠️ 2 stale reference(s): *Rikki Don't Lose That Number* mentions David ("David starts w/ marimba"); *Ventura Highway* mentions David ("3 guitars, counted off by David") |
 
 > [!WARNING]
 > **Substitutions**: David and Debo are both out — Paul is subbing on bass. Keyboard/marimba parts are covered by Jon (piano) or omitted, and Lauren covers David's lead vocal parts on *Wish You Were Here*, *Ventura Highway*, *Ooh La La*, and *Keep Your Hands to Yourself*.
@@ -81,6 +83,7 @@
 
 **Set 2 Music Duration**: 68:30 | **Transitions**: 8:30 | **Total**: 77:00
 ----------------------------------------
+
 
 
 
