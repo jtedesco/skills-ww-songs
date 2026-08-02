@@ -142,8 +142,8 @@ def select_acoustic_pool_songs(candidates, count, target_vocalists):
     Goal: cover as many distinct `target_vocalists` (present vocalists with
     at least one eligible acoustic-pool lead song) as possible, so each
     singer gets a moment in the acoustic set — rather than the old
-    stage-overlap-avoidance approach. Remaining slots are filled by highest
-    relative_popularity. Returns (chosen_songs, covered_vocalists).
+    stage-overlap-avoidance approach. Remaining slots are filled from
+    whatever's left. Returns (chosen_songs, covered_vocalists).
     """
     if count <= 0 or not candidates:
         return [], set()
@@ -152,25 +152,18 @@ def select_acoustic_pool_songs(candidates, count, target_vocalists):
     chosen_titles = set()
     covered = set()
 
-    def popularity(s):
-        try:
-            return float(s.get("relative_popularity") or 0)
-        except ValueError:
-            return 0.0
-
     for vocalist in target_vocalists:
         if len(chosen) >= count:
             break
         options = [s for s in candidates if s["lead_vocals"] == vocalist and s["title"] not in chosen_titles]
         if not options:
             continue
-        options.sort(key=popularity, reverse=True)
         pick = options[0]
         chosen.append(pick)
         chosen_titles.add(pick["title"])
         covered.add(vocalist)
 
-    remaining = sorted((s for s in candidates if s["title"] not in chosen_titles), key=popularity, reverse=True)
+    remaining = [s for s in candidates if s["title"] not in chosen_titles]
     for s in remaining:
         if len(chosen) >= count:
             break

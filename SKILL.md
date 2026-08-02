@@ -128,11 +128,10 @@ python3 scripts/add_song.py "Song Title" "Artist Name"
 ```
 This script will automatically:
 1. **Check for duplicates** — exits early if the song already exists.
-2. **Fetch MusicBrainz metadata** — release year, original album, genre tags, mood tags, and recording MBID.
-3. **Fetch ListenBrainz popularity** — aggregates listens across all recording versions and computes a global 1–10 score.
-4. **Prompt for manual fields** — key, BPM, length, lead vocalist, backup vocals, arrangement, gig readiness, opener/closer, intro notes, substitution notes, instrumentation (electric/acoustic guitar, keys, drums, bass, percussion, harmonica, accordion, sax — defaults are pre-filled per the Instrumentation Columns rules above, e.g. Jon always on `keys_1`, Martin defaulting to acoustic on the fixed song list), and `start_energy`/`end_energy`, etc.
-5. **Append the new row** to `songs_metadata.csv` with `date_added` set to the current month.
-6. **Audit the full repertoire** and print a summary of: missing critical fields, not-gig-ready songs, songs without ListenBrainz data, and archived songs.
+2. **Fetch MusicBrainz metadata** — release year, original album, genre tags, and mood tags.
+3. **Prompt for manual fields** — key, BPM, length, lead vocalist, backup vocals, arrangement, gig readiness, opener/closer, intro notes, substitution notes, instrumentation (electric/acoustic guitar, keys, drums, bass, percussion, harmonica, accordion, sax — defaults are pre-filled per the Instrumentation Columns rules above, e.g. Jon always on `keys_1`, Martin defaulting to acoustic on the fixed song list), and `start_energy`/`end_energy`, etc.
+4. **Append the new row** to `songs_metadata.csv` with `date_added` set to the current month.
+5. **Audit the full repertoire** and print a summary of: missing critical fields, not-gig-ready songs, and archived songs.
 
 **One field the script can't decide for you**: lead vocalist is a real editorial call, not something to infer from genre/style — ask the band/user rather than guessing.
 
@@ -144,23 +143,10 @@ This script will automatically:
 Run `python3 scripts/test_setlist.py` after adding a song and before considering it done — this is the mechanical "did I miss a step" check.
 
 ### Database Enrichment (MusicBrainz API)
-To update or enrich the song database metadata with the latest details (original release year, album, genre, and recording ID) from the MusicBrainz API, run the enrichment script:
+To update or enrich the song database metadata with the latest details (original release year, album, genre, and mood) from the MusicBrainz API, run the enrichment script:
 ```bash
 python3 scripts/enrich_metadata.py
 ```
-
-### ListenBrainz Popularity
-To refresh the `relative_popularity` scores for all songs, run:
-```bash
-python3 scripts/fetch_listenbrainz_popularity.py
-```
-Popularity uses a **global log-scale** anchored to site-wide ListenBrainz data (not relative to our setlist):
-- Score **1.0** = 0 listens (unknown/obscure)
-- Score **~5–6** = ~10K–50K listens (known track)
-- Score **~8–9** = ~500K listens (popular classic)
-- Score **10.0** = 5,000,000+ listens (global mega-hit)
-
-This means a score is **stable** — adding a new song won't shift every other song's score.
 
 ### Verification and Evaluation
 An evaluation definition is configured in [eval.json](file:///Users/jontedesco/Documents/skills/ww-band-songs/eval.json).
@@ -248,5 +234,5 @@ When generating setlists, consider the following programming strategies to optim
 * **Goal**: Give the full band a musical breather between main sets, with vocal variety.
 * **Approach**:
   - Schedule 10-minute "Acoustic Sets" between main sets, filled with acoustic/either-arrangement songs.
-  - **Acoustic Vocalist Coverage**: `select_acoustic_pool_songs()` in `build_setlist.py` tries to have every present vocalist (with at least one eligible acoustic-pool song) lead at least one acoustic-break song, picking the highest-`relative_popularity` option per vocalist first, then filling any remaining slots by popularity. This is a best-effort goal, not a hard constraint — reported in the report's constraints table as "Acoustic Vocalist Coverage" (✅ full coverage / ⚠️ partial, naming who missed out / ❌ no acoustic songs available at all, silent breaks used instead).
+  - **Acoustic Vocalist Coverage**: `select_acoustic_pool_songs()` in `build_setlist.py` tries to have every present vocalist (with at least one eligible acoustic-pool song) lead at least one acoustic-break song, picking their first eligible option, then filling any remaining slots from whatever's left. This is a best-effort goal, not a hard constraint — reported in the report's constraints table as "Acoustic Vocalist Coverage" (✅ full coverage / ⚠️ partial, naming who missed out / ❌ no acoustic songs available at all, silent breaks used instead).
   - Songs that require Martin's acoustic guitar (*Landslide*, *Blackbird*) are cut from the acoustic break pool when Martin is out. Songs with a Martin-out substitution (*Wish You Were Here*, *Ventura Highway*, *Ooh La La*, *All For You*) remain in the pool.

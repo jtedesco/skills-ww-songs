@@ -44,7 +44,7 @@ def test_database_integrity():
         "gig_ready", "length", "arrangement", "vocalist_constraints",
         "opener", "closer", "date_added", "archived",
         "preferred_emergency_cut", "release_year", "original_album",
-        "musicbrainz_genre", "musicbrainz_mood", "musicbrainz_id"
+        "musicbrainz_genre", "musicbrainz_mood"
     }
     
     missing_fields_count = 0

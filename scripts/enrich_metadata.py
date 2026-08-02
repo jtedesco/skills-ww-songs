@@ -97,14 +97,12 @@ def fetch_song_attributes(title, artist):
     rec_data = query_musicbrainz(rec_url)
     time.sleep(1.0) # Respect rate limits
     
-    recording_id = ""
     rec_genres = []
     rec_moods = []
     
     if rec_data and rec_data.get('recordings'):
         best_rec = rec_data['recordings'][0]
-        recording_id = best_rec.get('id', '')
-        
+
         # Pull tags/genres
         tags = best_rec.get('tags', [])
         all_tags_sorted = sorted(tags, key=lambda x: x.get('count', 0), reverse=True)
@@ -157,7 +155,6 @@ def fetch_song_attributes(title, artist):
         'original_album': album_title,
         'musicbrainz_genre': genre_str,
         'musicbrainz_mood': mood_str,
-        'musicbrainz_id': recording_id
     }
 
 def main():
@@ -178,7 +175,7 @@ def main():
             songs.append(dict(row))
             
     # Add new headers if they don't exist
-    new_headers = ['release_year', 'original_album', 'musicbrainz_genre', 'musicbrainz_mood', 'musicbrainz_id']
+    new_headers = ['release_year', 'original_album', 'musicbrainz_genre', 'musicbrainz_mood']
     for nh in new_headers:
         if nh not in headers:
             headers.append(nh)
@@ -201,8 +198,7 @@ def main():
             song['original_album'] = attrs['original_album'] or song.get('original_album') or ""
             song['musicbrainz_genre'] = attrs['musicbrainz_genre'] or song.get('musicbrainz_genre') or ""
             song['musicbrainz_mood'] = attrs['musicbrainz_mood'] or song.get('musicbrainz_mood') or ""
-            song['musicbrainz_id'] = attrs['musicbrainz_id'] or song.get('musicbrainz_id') or ""
-            print(f"  Result -> Year: {song['release_year']}, Album: {song['original_album']}, Genre: {song['musicbrainz_genre']}, Mood: {song['musicbrainz_mood']}, ID: {song['musicbrainz_id']}")
+            print(f"  Result -> Year: {song['release_year']}, Album: {song['original_album']}, Genre: {song['musicbrainz_genre']}, Mood: {song['musicbrainz_mood']}")
         except Exception as e:
             print(f"  Failed to enrich '{title}': {e}", file=sys.stderr)
             

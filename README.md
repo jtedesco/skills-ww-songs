@@ -9,14 +9,13 @@ This repo is the skill itself: [SKILL.md](SKILL.md) is the instruction set Claud
 | Path | Purpose |
 |---|---|
 | [SKILL.md](SKILL.md) | Full instructions for Claude: substitution rules, output formats, programming strategy |
-| [songs_metadata.csv](songs_metadata.csv) | Master song database (title, artist, key/BPM, vocalists, genre/mood tags, popularity, gig-readiness, etc.) |
+| [songs_metadata.csv](songs_metadata.csv) | Master song database (title, artist, key/BPM, vocalists, genre/mood tags, gig-readiness, etc.) |
 | [eval.json](eval.json) | Test scenarios used to evaluate the skill's setlist-building behavior |
 | `scripts/build_setlist.py` | Generates a setlist (`.md`, `.pdf`) from the database given constraints |
 | `scripts/apply_substitution.py` | Applies targeted song swaps/removals to an *existing* setlist in place, without re-running the solver |
 | `scripts/render_pdf.py` | Re-renders a styled PDF from an existing setlist `.md` file |
-| `scripts/add_song.py` | Onboards a new song: checks for duplicates, fetches MusicBrainz/ListenBrainz data, prompts for manual fields, appends to the CSV |
+| `scripts/add_song.py` | Onboards a new song: checks for duplicates, fetches MusicBrainz metadata, prompts for manual fields, appends to the CSV |
 | `scripts/enrich_metadata.py` | Backfills missing MusicBrainz metadata (release year, album, genre, mood) for existing songs |
-| `scripts/fetch_listenbrainz_popularity.py` | Refreshes the global `relative_popularity` score for all songs |
 | `scripts/test_setlist.py` | Automated test suite covering database constraints and setlist generation logic |
 | `setlists/` | Generated setlist output, one `.md` / `.pdf` pair per gig |
 
@@ -65,10 +64,9 @@ Fetches metadata automatically, prompts you for the fields it can't infer (key, 
 
 ```bash
 python3 scripts/enrich_metadata.py                  # backfill missing MusicBrainz fields
-python3 scripts/fetch_listenbrainz_popularity.py     # refresh popularity scores
 ```
 
-Note: `enrich_metadata.py` and `fetch_listenbrainz_popularity.py` don't support `--help` — running `--help` executes the script itself.
+Note: `enrich_metadata.py` doesn't support `--help` — running `--help` executes the script itself.
 
 ### Running tests
 
