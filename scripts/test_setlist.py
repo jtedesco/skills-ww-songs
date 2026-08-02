@@ -126,8 +126,8 @@ def test_database_integrity():
                 all_pass = False
                 log_test(f"Date added check: {title}", False, f"Non-gig-ready song should have date_added: 'None', found: {s.get('date_added')}")
                 
-        # Archive check (Paint It Black, Crazy Little Thing Called Love, and Them Changes only)
-        if title in ["Paint It Black", "Crazy Little Thing Called Love", "Them Changes"]:
+        # Archive check (Paint It Black, Crazy Little Thing Called Love, Them Changes, and Maybe I'm Amazed only)
+        if title in ["Paint It Black", "Crazy Little Thing Called Love", "Them Changes", "Maybe I'm Amazed"]:
             if s.get("archived") != "Yes":
                 archived_count += 1
                 all_pass = False
