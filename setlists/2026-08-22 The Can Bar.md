@@ -10,12 +10,12 @@
 | :--- | :--- | :--- |
 | Show Opener (Working for the Weekend) | ✅ Satisfied |
 | Show Closer (Roll with the Changes) | ✅ Satisfied |
-| Vocalist Balance | ✅ Satisfied (Brown Eyed Girl and Rikki Don't Lose That Number break up the two Lauren streaks; max is now 3 in a row) |
+| Vocalist Balance | ⚠️ Partially Satisfied (Everybody Wants to Rule the World and Rikki Don't Lose That Number break up two Lauren streaks in Set 1 at 3-in-a-row; but Zombie → Second Chance → All Right Now → The Chain → Roll with the Changes is 5 Lauren leads in a row closing Set 2 — pre-existing, not introduced by this edit) |
 | Lauren Vocal Health | ✅ Satisfied |
 | Acoustic Vocalist Coverage | ✅ Satisfied (Every present vocalist leads an acoustic song — Interstate Love Song gives Martin one) |
 | Target Duration | ⚠️ Partially Satisfied (~2h57m of music/transitions vs. 3hr target — pad with banter/tuning) |
 | Vocalist Inclusion | ✅ Satisfied |
-| Pacing Flow | ⚠️ 3 energy drop(s): Free Ride → Brown Eyed Girl (#3→#4, SET 1); Jenny (867-5309) → Brass in Pocket (#11→#12, SET 1); You Oughta Know → Pink Pony Club (#13→#14, SET 1) |
+| Pacing Flow | ⚠️ 3 energy drop(s): Jenny (867-5309) → Brass in Pocket (#11→#12, SET 1); You Oughta Know → Pink Pony Club (#13→#14, SET 1); American Girl → Brown Eyed Girl (#9→#10, SET 2) |
 | Absent-Member Note Check | ⚠️ 2 stale reference(s): *Rikki Don't Lose That Number* mentions David ("David starts w/ marimba"); *Ventura Highway* mentions David ("3 guitars, counted off by David") |
 
 > [!WARNING]
@@ -30,9 +30,9 @@
 | 1 | **Working for the Weekend** 🟢 *[Opener]* | Loverboy | Bm | 147 | 3:30 | Lauren (J) | High | Cowbell starts |
 | 2 | **The Middle** | Jimmy Eat World | D | 162 | 3:00 | Martin (J, L) | Medium→High | starts on F# |
 | 3 | **Free Ride** | Edgar Winter Group | D | 104 | 3:00 | Lauren (J) | High | guitar riff |
-| 4 | **Brown Eyed Girl** | Van Morrison | G | 120 | 3:00 | Jon (L) | Low | Jon starts |
-| 5 | **Superstition** | Stevie Wonder | E | 100 | 4:30 | Lauren | Medium | drums |
-| 6 | **Valerie** | Amy Winehouse | E | 106 | 3:30 | Lauren | Medium | SEGUE Bass sets tempo |
+| 4 | **Superstition** | Stevie Wonder | E | 100 | 4:30 | Lauren | Medium | drums |
+| 5 | **Valerie** | Amy Winehouse | E | 106 | 3:30 | Lauren | Medium | SEGUE Bass sets tempo |
+| 6 | **Everybody Wants to Rule the World** | Tears for Fears | D | 112 | 4:00 | Jon (L) | Medium | keys |
 | 7 | **Funkytown** | Lipps, Inc. | C | 122 | 2:00 | Lauren (J) | Medium | keys |
 | 8 | **Miss You** | Rolling Stones | Am | 110 | 4:00 | Jon (L) | Medium | SEGUE Jon |
 | 9 | **Reeling in the Years** | Steely Dan | A | 136 | 4:30 | Jon (L) | Medium | SEGUE (E7 Resolve) JJ starts |
@@ -46,7 +46,7 @@
 | 17 | **Don’t Stop Believing** | Journey | E | 118 | 4:00 | Lauren (J) | High | piano |
 | 18 | **Born to Run** | Bruce Springsteen | E | 147 | 4:30 | Martin (L) | High | stage banter, last song of first set |
 
-**Set 1 Music Duration**: 68:30 | **Transitions**: 8:30 | **Total**: 77:00
+**Set 1 Music Duration**: 69:30 | **Transitions**: 8:30 | **Total**: 78:00
 ----------------------------------------
 
 ### ☕ BREAK (Acoustic Set - ~23 mins, extended)
@@ -71,18 +71,19 @@
 | 7 | **Peg** | Steely Dan | G | 116 | 4:00 | Jon (L) | Medium | drums and bass vamp |
 | 8 | **Respect** | Aretha Franklin | C | 115 | 2:30 | Lauren | Medium→High | Alex counts us in, start together |
 | 9 | **American Girl** | Tom Petty | D | 114 | 3:30 | Martin (L) | High | guitar |
-| 10 | **Hey Jealousy** | Gin Blossoms | D | 153 | 4:00 | Martin (J, L) | Medium | SEGUE Jon piano, Martin to electric (keys) |
-| 11 | **Keep Your Hands to Yourself** | Georgia Satellites | A | 120 | 3:30 | Lauren (for David) | Medium | guitar, A riff |
-| 12 | **Gold on the Ceiling** | Black Keys, The | G | 130 | 3:30 | Jon (L, M) | High | guitar, ring out |
-| 13 | **Zombie** 🛑 **[EMERGENCY CUT]** | The Cranberries | G | 83 | 5:00 | Lauren | Medium | guitar |
-| 14 | **Second Chance** | Shinedown | Cm | 140 | 3:30 | Lauren (J) | Medium→High | SEGUE (Cmaj7 to Cm) Jon (keys) |
-| 15 | **All Right Now** | Free | A | 120 | 4:00 | Lauren (J) | Medium | drums |
-| 16 | **Everybody Wants to Rule the World** | Tears for Fears | D | 112 | 4:00 | Jon (L) | Medium | keys |
+| 10 | **Brown Eyed Girl** | Van Morrison | G | 120 | 3:00 | Jon (L) | Low | Jon starts |
+| 11 | **Hey Jealousy** | Gin Blossoms | D | 153 | 4:00 | Martin (J, L) | Medium | SEGUE Jon piano, Martin to electric (keys) |
+| 12 | **Keep Your Hands to Yourself** | Georgia Satellites | A | 120 | 3:30 | Lauren (for David) | Medium | guitar, A riff |
+| 13 | **Gold on the Ceiling** | Black Keys, The | G | 130 | 3:30 | Jon (L, M) | High | guitar, ring out |
+| 14 | **Zombie** 🛑 **[EMERGENCY CUT]** | The Cranberries | G | 83 | 5:00 | Lauren | Medium | guitar |
+| 15 | **Second Chance** | Shinedown | Cm | 140 | 3:30 | Lauren (J) | Medium→High | SEGUE (Cmaj7 to Cm) Jon (keys) |
+| 16 | **All Right Now** | Free | A | 120 | 4:00 | Lauren (J) | Medium | drums |
 | 17 | **The Chain** | Fleetwood Mac | Em | 152 | 4:30 | Lauren (J) | Medium→High | drums |
 | 18 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | C | 134 | 5:30 | Lauren (J) | High | bass, stage banter thank yous |
 
-**Set 2 Music Duration**: 68:30 | **Transitions**: 8:30 | **Total**: 77:00
+**Set 2 Music Duration**: 67:30 | **Transitions**: 8:30 | **Total**: 76:00
 ----------------------------------------
+
 
 
 
@@ -120,6 +121,7 @@ Everything else in the repertoire that didn't make this setlist.
 Retired from the repertoire — never selected by the solver.
 
 - **Crazy Little Thing Called Love** (Queen)
+- **Maybe I'm Amazed** (Paul McCartney)
 - **Paint It Black** (Rolling Stones)
 - **Them Changes** (Buddy Miles)
 
