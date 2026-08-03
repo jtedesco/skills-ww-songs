@@ -37,15 +37,15 @@ CSS = """
   ul { margin: 4px 0 8px; padding-left: 20px; }
   li { margin: 2px 0; }
   hr { border: none; border-top: 1px solid #ddd; margin: 8px 0; }
-  table { border-collapse: collapse; width: 100%; margin: 8px 0 10px; font-size: 9.5pt; }
-  th, td { border: 1px solid #ddd; padding: 4px 6px; text-align: left; vertical-align: top; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 8px; font-size: 9.5pt; }
+  th, td { border: 1px solid #ddd; padding: 3px 6px; text-align: left; vertical-align: top; }
   th { background: #f2f2f2; font-weight: 600; }
   tr:nth-child(even) td { background: #fafafa; }
   strong { font-weight: 600; }
   code { background: #f2f2f2; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
   .icon { width: 0.95em; height: 0.95em; vertical-align: -0.12em; margin-right: 2px; }
-  .callout { border-left: 4px solid #d4a017; background: #fff8e6; padding: 10px 14px; margin: 12px 0; border-radius: 3px; }
-  .callout-title { font-weight: 700; margin-bottom: 4px; }
+  .callout { border-left: 4px solid #d4a017; background: #fff8e6; padding: 7px 12px; margin: 8px 0; border-radius: 3px; }
+  .callout-title { font-weight: 700; margin-bottom: 3px; }
   .callout p { margin: 4px 0; }
   .callout ul { margin: 4px 0; }
   .callout-note { border-left-color: #0969da; background: #eff6ff; }
