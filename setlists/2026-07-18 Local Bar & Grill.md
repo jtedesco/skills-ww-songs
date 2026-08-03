@@ -13,10 +13,11 @@
 | Set Openers & Closers | ✅ Satisfied |
 | Vocalist Balance | ✅ Satisfied |
 | Lauren Vocal Health | ✅ Satisfied |
-| Pacing Flow | ✅ Satisfied |
+| Pacing Flow | ⚠️ 4 energy drop(s): Working for the Weekend → Brown Eyed Girl (#1→#2, SET 1); The Middle → Lights (#2→#3, SET 2); Jenny (867-5309) → Baby Blue (#2→#3, SET 3); American Girl → Dreams (#7→#8, SET 3) |
 | Bathroom Breaks | ✅ Satisfied (All members get breaks) |
 | Target Duration | ✅ Satisfied |
 | Vocalist Inclusion | ✅ Satisfied |
+| Absent-Member Note Check | ⚠️ 7 stale reference(s): *Hey Jealousy* mentions Martin ("SEGUE Jon piano, Martin to electric"); *Gold on the Ceiling* mentions Martin ("Martin starts"); *Zombie* mentions Martin ("Martin starts"); *The Middle* mentions Martin ("Martin to dropped D, starts"); *Me and Bobby McGee* mentions Martin ("Martin to acoustic, starts"); *Hook* mentions Martin ("Martin starts, Lauren intros"); *Take It Easy* mentions Martin ("Martin acoustic, starts") |
 
 > [!WARNING]
 > **Substitutions**: Rhythm guitar parts are cut, David covers Martin's vocal parts, and *The Chain*, *Colors*, *Landslide*, *Blackbird* are cut from the sets (require Martin per database).
@@ -93,38 +94,41 @@ Everyone gets a bathroom break! No member performs in both songs.
 **Set 3 Music Duration**: 44:30 | **Transitions**: 5:30 | **Total**: 50:00
 ----------------------------------------
 
-### 📊 GIG SUMMARY STATS
+
+## GIG SUMMARY
+
+### 📊 Stats
 - **Total Songs Scheduled**: 40
 - **Pure Music Playtime**: 138:00
 - **Transition Buffers (30s/song)**: 16:30
-- **Break Time**: 20:00
-- **Grand Total Duration**: 174:30 (Target: 180:00)
+- **Break Time**: 14:00
+- **Grand Total Duration**: 168:30 (Target: 180:00)
 
+### Lead Vocalist Breakdown
 
-## SONGS NOT SELECTED
-Everything else in the repertoire that didn't make this setlist.
+| Vocalist | Songs Led | % |
+|---|---|---|
+| Lauren | 20 | 50.0% |
+| Jon | 12 | 30.0% |
+| David | 7 | 17.5% |
+|  | 1 | 2.5% |
 
-### Full Band
-- **Colors** (Black Pumas, The)
-- **The Chain** (Fleetwood Mac)
-
-### Acoustic
-- **All For You** (Sister Hazel)
-- **Blackbird** (Beatles)
-- **Interstate Love Song** (Stone Temple Pilots)
-- **Landslide** (Stevie Nicks)
-
-## ARCHIVED SONGS
-Retired from the repertoire — never selected by the solver.
-
-- **Crazy Little Thing Called Love** (Queen)
-- **Paint It Black** (Rolling Stones)
-- **Them Changes** (Buddy Miles)
+### Not Selected / Archived
+| Not Selected | Archived |
+|---|---|
+| **All For You** (Sister Hazel) | **Crazy Little Thing Called Love** (Queen) |
+| **Blackbird** (Beatles) | **Maybe I'm Amazed** (Paul McCartney) |
+| **Colors** (Black Pumas, The) | **Paint It Black** (Rolling Stones) |
+| **Interstate Love Song** (Stone Temple Pilots) | **Them Changes** (Buddy Miles) |
+| **Landslide** (Stevie Nicks) |  |
+| **The Chain** (Fleetwood Mac) |  |
 
 ## SONGS IN PROGRESS
 Not yet gig-ready — excluded from the solver unless --include-not-ready is passed.
 
 - **Don't Know Why** (Norah Jones)
 - **Kid Charlemagne** (Steely Dan)
+- **Listen to the Music** (The Doobie Brothers)
+- **Ride Like the Wind** (Christopher Cross)
 - **The Story** (Brandi Carlile)
 - **Vienna** (Billy Joel)

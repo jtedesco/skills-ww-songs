@@ -8,7 +8,7 @@ order, unrelated songs, which acoustic songs fill the breaks — is preserved
 exactly. Duration stats and the EMERGENCY CUT marker are recomputed for the
 sections that changed, using the same logic build_setlist.py uses, so a
 substitution can't silently leave the setlist without a cut candidate or
-wrong totals. The trailing "Songs Not Selected" section is always fully
+wrong totals. The trailing "Not Selected / Archived" table is always fully
 regenerated from the final scheduled songs, so it never goes stale.
 
 Usage:
@@ -396,7 +396,7 @@ def extract_break_songs(sections):
     """Break-pair songs live in each section's preserved extra_after text as
     '- **Title** (Artist) - Lead: X' bullets (breaks aren't touched by this
     script, so this just reads back what's already there) — used to keep
-    the summary stats/vocalist-breakdown/'Songs Not Selected' section
+    the summary stats/vocalist-breakdown/'Not Selected / Archived' table
     accurate. Matched on the bold-title-then-open-paren shape, which GIG
     SUMMARY STATS bullets ('- **Label**: value') don't have, since
     extra_after for the final section can also pick up trailing content

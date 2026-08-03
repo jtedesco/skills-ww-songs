@@ -14,10 +14,11 @@
 | Set Openers & Closers | ✅ Satisfied |
 | Vocalist Balance | ✅ Satisfied |
 | Lauren Vocal Health | ✅ Satisfied |
-| Pacing Flow | ✅ Satisfied |
+| Pacing Flow | ⚠️ 2 energy drop(s): Working for the Weekend → Me and Bobby McGee (#1→#2, SET 1); Respect → Brass in Pocket (#11→#12, SET 1) |
 | Bathroom Breaks | ✅ Satisfied |
 | Target Duration | ✅ Satisfied |
 | Vocalist Inclusion | ✅ Satisfied |
+| Absent-Member Note Check | ✅ Satisfied (No absent-member references in intro notes) |
 
 ## SET 1
 | # | Title | Artist | Key | BPM | Length | Lead Vocal | Energy | Intro |
@@ -51,58 +52,61 @@
 **Encore Music Duration**: 4:30 | **Transitions**: 0:00 | **Total**: 4:30
 ----------------------------------------
 
-### 📊 GIG SUMMARY STATS
+
+## GIG SUMMARY
+
+### 📊 Stats
 - **Total Songs Scheduled**: 19
 - **Pure Music Playtime**: 75:30
 - **Transition Buffers (30s/song)**: 8:30
 - **Break Time**: 0:00
 - **Grand Total Duration**: 84:00 (Target: 75:00)
 
+### Lead Vocalist Breakdown
 
-## SONGS NOT SELECTED
-Everything else in the repertoire that didn't make this setlist.
+| Vocalist | Songs Led | % |
+|---|---|---|
+| Lauren | 10 | 52.6% |
+| Jon | 6 | 31.6% |
+| Martin | 2 | 10.5% |
+| David | 1 | 5.3% |
 
-### Full Band
-- **All Right Now** (Free)
-- **American Girl** (Tom Petty)
-- **Baby Blue** (Badfinger)
-- **Brandy** (Looking Glass)
-- **Brown Eyed Girl** (Van Morrison)
-- **Colors** (Black Pumas, The)
-- **Dreams** (Fleetwood Mac)
-- **Free Ride** (Edgar Winter Group)
-- **Gold on the Ceiling** (Black Keys, The)
-- **Hook** (Blues Traveler)
-- **Jenny (867-5309)** (Tommy Tutone)
-- **Keep Your Hands to Yourself** (Georgia Satellites)
-- **Lights** (Journey)
-- **Rock This Town** (Stray Cats)
-- **Superstition** (Stevie Wonder)
-- **Take It Easy** (Eagles)
-- **The Middle** (Jimmy Eat World)
-- **Valerie** (Amy Winehouse)
-- **You Oughta Know** (Alanis Morissette)
-- **Zombie** (The Cranberries)
-
-### Acoustic
-- **All For You** (Sister Hazel)
-- **Blackbird** (Beatles)
-- **Interstate Love Song** (Stone Temple Pilots)
-- **Landslide** (Stevie Nicks)
-- **Ooh La La** (Faces)
-- **Wish You Were Here** (Pink Floyd)
-
-## ARCHIVED SONGS
-Retired from the repertoire — never selected by the solver.
-
-- **Crazy Little Thing Called Love** (Queen)
-- **Paint It Black** (Rolling Stones)
-- **Them Changes** (Buddy Miles)
+### Not Selected / Archived
+| Not Selected | Archived |
+|---|---|
+| **All For You** (Sister Hazel) | **Crazy Little Thing Called Love** (Queen) |
+| **All Right Now** (Free) | **Maybe I'm Amazed** (Paul McCartney) |
+| **American Girl** (Tom Petty) | **Paint It Black** (Rolling Stones) |
+| **Baby Blue** (Badfinger) | **Them Changes** (Buddy Miles) |
+| **Blackbird** (Beatles) |  |
+| **Brandy** (Looking Glass) |  |
+| **Brown Eyed Girl** (Van Morrison) |  |
+| **Colors** (Black Pumas, The) |  |
+| **Dreams** (Fleetwood Mac) |  |
+| **Free Ride** (Edgar Winter Group) |  |
+| **Gold on the Ceiling** (Black Keys, The) |  |
+| **Hook** (Blues Traveler) |  |
+| **Interstate Love Song** (Stone Temple Pilots) |  |
+| **Jenny (867-5309)** (Tommy Tutone) |  |
+| **Keep Your Hands to Yourself** (Georgia Satellites) |  |
+| **Landslide** (Stevie Nicks) |  |
+| **Lights** (Journey) |  |
+| **Ooh La La** (Faces) |  |
+| **Rock This Town** (Stray Cats) |  |
+| **Superstition** (Stevie Wonder) |  |
+| **Take It Easy** (Eagles) |  |
+| **The Middle** (Jimmy Eat World) |  |
+| **Valerie** (Amy Winehouse) |  |
+| **Wish You Were Here** (Pink Floyd) |  |
+| **You Oughta Know** (Alanis Morissette) |  |
+| **Zombie** (The Cranberries) |  |
 
 ## SONGS IN PROGRESS
 Not yet gig-ready — excluded from the solver unless --include-not-ready is passed.
 
 - **Don't Know Why** (Norah Jones)
 - **Kid Charlemagne** (Steely Dan)
+- **Listen to the Music** (The Doobie Brothers)
+- **Ride Like the Wind** (Christopher Cross)
 - **The Story** (Brandi Carlile)
 - **Vienna** (Billy Joel)

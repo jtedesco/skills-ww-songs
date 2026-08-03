@@ -188,41 +188,37 @@ def _song_bullet(s):
 SUMMARY_PAGE_HEADING = "## GIG SUMMARY"
 
 
-def render_not_selected_lines(all_songs, scheduled_titles):
-    """Build the 'Songs Not Selected' subsection (h3, no page of its own —
-    it lives on the combined summary page, see render_summary_page_lines):
-    gig-ready, non-archived songs that didn't make this setlist, split into
-    Full Band vs. Acoustic ('Either'-arrangement songs count as acoustic
-    here, matching how they're pooled for breaks). Archived and in-progress
-    songs are excluded here — archived gets its own subsection on the same
-    page (render_archived_lines); in-progress gets its own separate page
-    (render_in_progress_lines below)."""
+def render_not_selected_and_archived_lines(all_songs, scheduled_titles):
+    """The 'Not Selected / Archived' subsection (h3, on the combined summary
+    page): a two-column table pairing gig-ready songs that didn't make this
+    setlist against the repertoire's archived songs, side by side instead of
+    stacked — keeps the whole GIG SUMMARY page within one printed page (see
+    render_pdf.py's wrap_set_blocks, which forces GIG SUMMARY onto a fresh
+    page but relies on its content actually fitting on just that one).
+    Rows pad out to the longer column's length; an empty column gets a
+    single italic placeholder row instead of repeating it. In-progress
+    songs are excluded — that's its own separate page, render_in_progress_lines
+    below, since it's gig-independent repertoire status, not this gig's
+    bookkeeping."""
     scheduled_lower = {t.lower() for t in scheduled_titles}
-    remaining = [
-        s for s in all_songs
-        if s["title"].lower() not in scheduled_lower
-        and s.get("archived") != "Yes"
-        and s.get("gig_ready") == "Yes"
-    ]
-    full_band = sorted((s for s in remaining if s["arrangement"] == "Full Band"), key=lambda s: s["title"])
-    acoustic = sorted((s for s in remaining if s["arrangement"] in ("Acoustic", "Either")), key=lambda s: s["title"])
-
-    lines = ["### Songs Not Selected", "Everything else in the repertoire that didn't make this setlist.", ""]
-    lines.append("**Full Band**")
-    lines.extend([_song_bullet(s) for s in full_band] if full_band else ["*None — every full-band song made the cut.*"])
-    lines.append("")
-    lines.append("**Acoustic**")
-    lines.extend([_song_bullet(s) for s in acoustic] if acoustic else ["*None — every acoustic song made the cut.*"])
-    return lines
-
-
-def render_archived_lines(all_songs):
-    """The 'Archived Songs' subsection (h3, on the combined summary page) —
-    always the same regardless of which setlist this is, since archived
-    songs are never eligible for selection in the first place."""
+    not_selected = sorted(
+        (s for s in all_songs
+         if s["title"].lower() not in scheduled_lower
+         and s.get("archived") != "Yes"
+         and s.get("gig_ready") == "Yes"),
+        key=lambda s: s["title"],
+    )
     archived = sorted((s for s in all_songs if s.get("archived") == "Yes"), key=lambda s: s["title"])
-    lines = ["### Archived Songs", "Retired from the repertoire — never selected by the solver.", ""]
-    lines.extend([_song_bullet(s) for s in archived] if archived else ["*Nothing currently archived.*"])
+
+    def cell(s):
+        return f"**{s['title']}** ({s['artist']})"
+
+    left = [cell(s) for s in not_selected] or ["*None — everything made the cut.*"]
+    right = [cell(s) for s in archived] or ["*Nothing currently archived.*"]
+
+    lines = ["### Not Selected / Archived", "| Not Selected | Archived |", "|---|---|"]
+    for i in range(max(len(left), len(right))):
+        lines.append(f"| {left[i] if i < len(left) else ''} | {right[i] if i < len(right) else ''} |")
     return lines
 
 
@@ -243,20 +239,20 @@ def render_vocal_breakdown_lines(scheduled_songs):
 
 
 def render_summary_page_lines(stats_lines, scheduled_songs, all_songs, scheduled_titles):
-    """Combine the gig summary stats, lead vocalist breakdown, songs-not-
-    selected, and archived-songs subsections onto one page (one '##'
-    heading, so render_pdf.py's per-set page-break wrapper keeps them
-    together). 'Songs In Progress' stays a separate page — see
-    render_in_progress_lines — since it's gig-independent repertoire status,
-    not this gig's bookkeeping."""
+    """Combine the gig summary stats, lead vocalist breakdown, and the
+    not-selected/archived table onto one page (one '##' heading, forced onto
+    its own fresh page by render_pdf.py's wrap_set_blocks — kept compact
+    enough, notably via the two-column not-selected/archived table, to fit
+    within that single page rather than spilling onto a second one).
+    'Songs In Progress' stays a separate page — see render_in_progress_lines
+    — since it's gig-independent repertoire status, not this gig's
+    bookkeeping."""
     lines = [SUMMARY_PAGE_HEADING, "", "### 📊 Stats"]
     lines.extend(stats_lines)
     lines.append("")
     lines.extend(render_vocal_breakdown_lines(scheduled_songs))
     lines.append("")
-    lines.extend(render_not_selected_lines(all_songs, scheduled_titles))
-    lines.append("")
-    lines.extend(render_archived_lines(all_songs))
+    lines.extend(render_not_selected_and_archived_lines(all_songs, scheduled_titles))
     return lines
 
 

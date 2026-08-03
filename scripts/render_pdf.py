@@ -133,13 +133,18 @@ def convert_alerts(md_text):
 
 
 def wrap_set_blocks(html):
-    """Wrap each 'SET N' / 'ENCORES' <h2> heading and everything up to the
-    next h2 (its table, duration line, and following acoustic break) in a
-    single div so the whole thing moves together to a fresh page instead of
-    splitting. Other h2 sections (GIG SUMMARY, SONGS IN PROGRESS) are left
-    unwrapped so they flow naturally and can share a page — forcing every h2
-    onto its own page (the previous behavior) left each of those trailing,
-    much-shorter sections stranded on its own mostly-empty page."""
+    """Wrap each 'SET N' / 'ENCORES' / 'GIG SUMMARY' <h2> heading and
+    everything up to the next h2 (its table, duration line, and following
+    acoustic break, for SET/ENCORES) in a single div so the whole thing
+    moves together to a fresh page instead of splitting. GIG SUMMARY gets
+    its own forced page too (kept to one page by construction — see
+    render_summary_page_lines/render_not_selected_and_archived_lines in
+    build_setlist.py — rather than by pagination tricks here). Other h2
+    sections (SONGS IN PROGRESS, or the older separate SONGS NOT SELECTED /
+    ARCHIVED SONGS format) are left unwrapped so they flow naturally and can
+    share a page — forcing every h2 onto its own page (the original,
+    pre-fix behavior) left each short trailing section stranded on its own
+    mostly-empty page."""
     parts = re.split(r"(<h2[^>]*>.*?</h2>)", html, flags=re.S)
     if len(parts) <= 1:
         return html
@@ -148,7 +153,7 @@ def wrap_set_blocks(html):
         heading = parts[i]
         content = parts[i + 1] if i + 1 < len(parts) else ""
         heading_text = re.sub(r"<[^>]+>", "", heading).strip()
-        if re.match(r"^SET\b", heading_text, re.I) or heading_text.upper() == "ENCORES":
+        if re.match(r"^SET\b", heading_text, re.I) or heading_text.upper() in ("ENCORES", "GIG SUMMARY"):
             out.append(f'<div class="set-block">{heading}{content}</div>')
         else:
             out.append(heading + content)

@@ -677,9 +677,8 @@ def test_scenario_8():
         all_pass = False
         log_test("Acoustic Vocalist Coverage constraint present in summary", False)
 
-    if ("## GIG SUMMARY" in stdout and "### Songs Not Selected" in stdout
-            and "**Full Band**" in stdout and "**Acoustic**" in stdout
-            and "### Archived Songs" in stdout and "### Lead Vocalist Breakdown" in stdout):
+    if ("## GIG SUMMARY" in stdout and "### Not Selected / Archived" in stdout
+            and "| Not Selected | Archived |" in stdout and "### Lead Vocalist Breakdown" in stdout):
         log_test("Combined GIG SUMMARY page present (stats/vocalist breakdown/not-selected/archived)", True)
     else:
         all_pass = False
@@ -691,10 +690,22 @@ def test_scenario_8():
     scheduled_titles |= set(res["breaks"])
 
     not_selected_block = ""
-    if "### Songs Not Selected" in stdout:
-        after = stdout.split("### Songs Not Selected", 1)[-1]
-        not_selected_block = after.split("### Archived Songs", 1)[0]
-    not_selected_titles = set(re.findall(r"^-\s*\*\*(.+?)\*\*\s*\(", not_selected_block, re.MULTILINE))
+    if "### Not Selected / Archived" in stdout:
+        after = stdout.split("### Not Selected / Archived", 1)[-1]
+        not_selected_block = after.split("## SONGS IN PROGRESS", 1)[0]
+
+    # Only the table's left ("Not Selected") column counts — the right
+    # ("Archived") column is a fixed reference list, not gig-specific.
+    not_selected_titles = set()
+    for line in not_selected_block.splitlines():
+        line = line.strip()
+        if not line.startswith("|") or line.startswith("|---") or line.startswith("| Not Selected"):
+            continue
+        cells = [c.strip() for c in line.split("|")[1:-1]]
+        if cells:
+            m = re.match(r"\*\*(.+?)\*\*", cells[0])
+            if m:
+                not_selected_titles.add(m.group(1))
 
     overlap = scheduled_titles & not_selected_titles
     if overlap:
