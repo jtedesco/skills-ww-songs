@@ -133,9 +133,13 @@ def convert_alerts(md_text):
 
 
 def wrap_set_blocks(html):
-    """Wrap each '## SET N' heading and everything up to the next h2 (its
-    table, duration line, and following acoustic break) in a single div so
-    the whole thing moves together to a fresh page instead of splitting."""
+    """Wrap each 'SET N' / 'ENCORES' <h2> heading and everything up to the
+    next h2 (its table, duration line, and following acoustic break) in a
+    single div so the whole thing moves together to a fresh page instead of
+    splitting. Other h2 sections (GIG SUMMARY, SONGS IN PROGRESS) are left
+    unwrapped so they flow naturally and can share a page — forcing every h2
+    onto its own page (the previous behavior) left each of those trailing,
+    much-shorter sections stranded on its own mostly-empty page."""
     parts = re.split(r"(<h2[^>]*>.*?</h2>)", html, flags=re.S)
     if len(parts) <= 1:
         return html
@@ -143,7 +147,11 @@ def wrap_set_blocks(html):
     for i in range(1, len(parts), 2):
         heading = parts[i]
         content = parts[i + 1] if i + 1 < len(parts) else ""
-        out.append(f'<div class="set-block">{heading}{content}</div>')
+        heading_text = re.sub(r"<[^>]+>", "", heading).strip()
+        if re.match(r"^SET\b", heading_text, re.I) or heading_text.upper() == "ENCORES":
+            out.append(f'<div class="set-block">{heading}{content}</div>')
+        else:
+            out.append(heading + content)
     return "".join(out)
 
 
