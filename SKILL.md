@@ -137,6 +137,19 @@ This script will automatically:
 
 **One field the script can't decide for you**: lead vocalist is a real editorial call, not something to infer from genre/style — ask the band/user rather than guessing.
 
+#### NEVER guess a key or BPM
+
+`key` and `bpm` are **musical facts the band plays to**, not placeholder metadata. A wrong value doesn't fail loudly — it silently propagates into printed setlists, the BPM-driven `make_v_shape()` pacing, and whatever the band reads off the stand at the gig.
+
+This applies to **any** write of `key`/`bpm` into `songs_metadata.csv` — `add_song.py` prompts, a hand-edit, a bulk fix, a correction to an existing row. No exceptions:
+
+1. **Never invent, infer, or approximate.** Not from genre, not from a similar song, not from "sounds about right," not from a half-remembered recording. Recalling a plausible number *is* guessing — the failure mode is a confident-looking value nobody flagged.
+2. **Look it up explicitly** against a real source, and note which one.
+3. **Confirm every looked-up value with the band/user before writing it to the CSV** — including values that came from a lookup, since sources disagree (live vs. studio cuts, capo/transposed keys, half-time vs. double-time BPM readings) and the band may play it in a different key or tempo than any recording anyway.
+4. **If you can't look it up and get confirmation, leave it unset and say so.** An obviously-blank field the band can fill in beats a plausible wrong number that never gets questioned. Never backfill a blank key/bpm just to make a row look complete or to satisfy a test.
+
+The same care applies to `length` when it feeds duration math, though it's lower-stakes and self-correcting once the band plays the set.
+
 **Test suite maintenance — do this every time, not just when it's convenient**: `test_setlist.py`'s `test_database_integrity()` has two hardcoded whitelists that don't derive from the CSV automatically and silently start failing if you forget them:
 - New song is **Acoustic/Either** and marked `gig_ready: Yes` → add its title to `gig_ready_acoustic`.
 - New song is **Full Band** and marked `gig_ready: No` (the script's own default!) → add its title to `not_ready_full_band`, or the integrity check will fail expecting every full-band song to be ready.

@@ -224,6 +224,12 @@ def gather_manual_fields(title: str, artist: str) -> dict:
     print(f"\n📝 Manual fields for '{title}' by '{artist}'")
     print("   (Press Enter to accept defaults where shown)\n")
 
+    # key/bpm are musical facts the band plays to, not placeholder metadata —
+    # a wrong value propagates silently into printed setlists and the
+    # BPM-driven pacing. See SKILL.md's "NEVER guess a key or BPM": look them
+    # up and confirm with the band before writing, or leave them blank.
+    print("   ⚠️  Key/BPM: look these up and confirm with the band — never guess.")
+    print("       Leave blank rather than entering an unverified value.\n")
     key         = prompt("Musical key (e.g. G, Am, Bb)")
     bpm         = prompt("BPM (e.g. 120)")
     length      = prompt("Song length (mm:ss, e.g. 3:45)")
