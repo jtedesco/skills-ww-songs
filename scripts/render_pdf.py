@@ -37,8 +37,17 @@ CSS = """
   ul { margin: 4px 0 8px; padding-left: 20px; }
   li { margin: 2px 0; }
   hr { border: none; border-top: 1px solid #ddd; margin: 8px 0; }
-  table { border-collapse: collapse; width: 100%; margin: 6px 0 8px; font-size: 9.5pt; }
-  th, td { border: 1px solid #ddd; padding: 3px 6px; text-align: left; vertical-align: top; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 8px; font-size: 9pt; }
+  th, td { border: 1px solid #ddd; padding: 2px 5px; text-align: left; vertical-align: top; }
+  /* Keep an 18-song set on one printed page: the # and Dance columns only ever
+     hold a number and a ✓, so give them the minimum and let Intro (the one
+     column that wraps) keep the slack. Without this the wider table pushes
+     each set onto a second page and the band turns a page mid-set.
+     Scoped to .song-table (see tag_song_tables) — applying these widths to
+     every table squeezes the constraints table's first column to 1.6em and
+     wraps each constraint name into a tower. */
+  .song-table th:nth-child(1), .song-table td:nth-child(1) { width: 1.4em; }
+  .song-table th:nth-child(9), .song-table td:nth-child(9) { width: 1.4em; text-align: center; padding-left: 2px; padding-right: 2px; }
   th { background: #f2f2f2; font-weight: 600; }
   tr:nth-child(even) td { background: #fafafa; }
   strong { font-weight: 600; }
@@ -132,6 +141,19 @@ def convert_alerts(md_text):
     return "\n".join(out)
 
 
+def tag_song_tables(html):
+    """Add class="song-table" to the main running-order tables so the
+    per-column width rules in CSS can target them without also hitting the
+    constraints / vocalist-breakdown / not-selected tables, which have
+    completely different column counts and meanings. Identified by their
+    first header cell being '#', which only the song tables use."""
+    return re.sub(
+        r"<table>(\s*<thead>\s*<tr>\s*<th[^>]*>#</th>)",
+        r'<table class="song-table">\1',
+        html,
+    )
+
+
 def wrap_set_blocks(html):
     """Wrap each 'SET N' / 'ENCORES' / 'GIG SUMMARY' <h2> heading and
     everything up to the next h2 (its table, duration line, and following
@@ -177,6 +199,7 @@ def render(md_path, pdf_path=None):
         extensions=["tables", "fenced_code", "sane_lists", "nl2br"],
     )
     body_html = slim_emoji(body_html)
+    body_html = tag_song_tables(body_html)
     body_html = wrap_set_blocks(body_html)
     html = f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></head><body>{body_html}</body></html>"
 

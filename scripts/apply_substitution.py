@@ -370,6 +370,28 @@ def apply_length_overrides(sections, overrides):
             sys.exit(1)
 
 
+def refresh_intro_notes(sections, by_title):
+    """Overwrite each printed Intro cell with the current songs_metadata.csv
+    value. Deliberately opt-in (--refresh-intro-notes), because a printed
+    note can carry gig-specific staging the database has no place for —
+    'last song of first set', 'stage banter thank yous' — and a blanket
+    refresh would silently drop it. Every overwrite is printed so those
+    cases are visible and can be re-added by hand. A blank CSV value is
+    skipped rather than wiping a printed note."""
+    changed = 0
+    for sec in sections:
+        for row in sec["rows"]:
+            csv_row = by_title.get(normalize_title(row["title"]))
+            if not csv_row:
+                continue
+            new = (csv_row.get("intro_notes") or "").strip()
+            if new and new != row["intro_notes"]:
+                print(f"   {row['title']}: {row['intro_notes']!r} -> {new!r}", file=sys.stderr)
+                row["intro_notes"] = new
+                changed += 1
+    print(f"✅ Refreshed {changed} intro note(s) from songs_metadata.csv", file=sys.stderr)
+
+
 def check_no_duplicates(sections):
     """Error out if any title now appears more than once across the setlist
     — most likely a --swap target that was already scheduled elsewhere."""
@@ -517,10 +539,14 @@ def main():
                          help="Insert TITLE immediately before an existing song BEFORE (repeatable)")
     parser.add_argument("--set-length", nargs=2, action="append", default=[], metavar=("TITLE", "LENGTH"),
                          help="Override a song's performed length (M:SS) for this instance only, e.g. a trimmed medley segue-in (repeatable)")
+    parser.add_argument("--refresh-intro-notes", action="store_true",
+                         help="Overwrite every printed Intro cell with the current songs_metadata.csv value. "
+                              "Off by default: printed notes can carry gig-specific staging the database lacks "
+                              "(e.g. 'last song of first set'), so each overwrite is printed for review.")
     args = parser.parse_args()
 
-    if not args.swap and not args.remove and not args.add:
-        print("Error: nothing to do — pass at least one --swap, --remove, or --add", file=sys.stderr)
+    if not args.swap and not args.remove and not args.add and not args.refresh_intro_notes:
+        print("Error: nothing to do — pass at least one --swap, --remove, --add, or --refresh-intro-notes", file=sys.stderr)
         sys.exit(1)
 
     md_path = args.md_path
@@ -534,6 +560,8 @@ def main():
               by_title, martin_out, david_out)
     check_no_duplicates(sections)
     enrich_static_fields(sections, by_title)
+    if args.refresh_intro_notes:
+        refresh_intro_notes(sections, by_title)
     apply_length_overrides(sections, [tuple(s) for s in args.set_length])
 
     songs_by_section = [sec["rows"] for sec in sections]
