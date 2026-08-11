@@ -302,12 +302,31 @@ def energy_display_string(song):
         return start
     return f"{start}→{end}"
 
+def dance_display_string(song):
+    """'✓' for a danceable song, blank otherwise — the Dance column in the
+    .md table. Blank rather than '✗' on purpose: the checkmarks are what the
+    band scans for when reading the floor, so the non-danceable slots should
+    recede, not compete. Reads the `danceable` CSV column; anything other
+    than an explicit 'No' counts as danceable, so a song added before the
+    column existed doesn't silently render as a floor-killer."""
+    return "" if str(song.get("danceable", "")).strip() == "No" else "✓"
+
+# The one place the main song-table's column layout is defined. Both
+# build_setlist.py's SET/ENCORES tables and apply_substitution.py's
+# regenerated tables render from these, so the header can't drift out of
+# sync with format_md_row()'s cells.
+TABLE_COLUMNS = ["#", "Title", "Artist", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Dance", "Intro"]
+TABLE_HEADER = "| " + " | ".join(TABLE_COLUMNS) + " |"
+TABLE_DIVIDER = "|" + "|".join(["---"] * len(TABLE_COLUMNS)) + "|"
+
 def format_md_row(song, idx, marker=""):
     """Render one .md setlist table row. `marker` is the caller-computed
-    opener/closer/emergency-cut annotation (e.g. ' 🛑 **[EMERGENCY CUT]**')."""
+    opener/closer/emergency-cut annotation (e.g. ' 🛑 **[EMERGENCY CUT]**').
+    Cell order must match TABLE_COLUMNS above."""
     v_string = vocal_display_string(song)
     energy = energy_display_string(song)
-    return f"| {idx+1} | **{song['title']}**{marker} | {song['artist']} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {song['intro_notes']} |"
+    dance = dance_display_string(song)
+    return f"| {idx+1} | **{song['title']}**{marker} | {song['artist']} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
 
 def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, num_breaks, acoustic_pool, martin_out, david_out, forced_encore_songs=None):
     break_songs_sets = []
@@ -1157,8 +1176,8 @@ def main():
     
     for s_idx in range(num_sets):
         md(f"## SET {s_idx + 1}")
-        md("| # | Title | Artist | Key | BPM | Length | Lead Vocal | Energy | Intro |")
-        md("|---|---|---|---|---|---|---|---|---|")
+        md(TABLE_HEADER)
+        md(TABLE_DIVIDER)
         
         set_songs = sets_songs[s_idx]
         for idx, song in enumerate(set_songs):
@@ -1195,8 +1214,8 @@ def main():
                 
     if encores:
         md("## ENCORES")
-        md("| # | Title | Artist | Key | BPM | Length | Lead Vocal | Energy | Intro |")
-        md("|---|---|---|---|---|---|---|---|---|")
+        md(TABLE_HEADER)
+        md(TABLE_DIVIDER)
         for idx, song in enumerate(encores):
             md(format_md_row(song, idx))
 

@@ -41,7 +41,7 @@ def test_database_integrity():
     required_fields = {
         "title", "artist", "key", "bpm", "lead_vocals", "backup_vocals",
         "intro_notes", "order_rules", "substitution_notes", "yacht_adjacent",
-        "gig_ready", "length", "arrangement", "vocalist_constraints",
+        "gig_ready", "length", "arrangement", "danceable", "vocalist_constraints",
         "opener", "closer", "date_added", "archived",
         "preferred_emergency_cut", "release_year", "original_album",
         "musicbrainz_genre", "musicbrainz_mood"

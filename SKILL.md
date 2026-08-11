@@ -19,6 +19,14 @@ Martin switches between `electric_guitar` (his default) and `acoustic_guitar` on
 
 `keys_2`, `percussion`, `harmonica`, and `accordion` are David's remaining parts (he also covers `electric_guitar`/`acoustic_guitar` and vocals per-song) and `sax` has no assigned player yet — all left blank for now, to be backfilled per-song rather than guessed.
 
+## Danceable Column
+
+`songs_metadata.csv` has a `danceable` column (`Yes`/`No`) marking whether a song holds a dance floor. It's stored as `Yes`/`No` to match every other boolean column in the database, but renders as a `✓` (danceable) or blank (not) in the setlist table's **Dance** column — blank rather than `✗` on purpose, so the checkmarks are what the eye catches when reading the floor.
+
+Most of the repertoire is danceable; the exceptions are tracked in the CSV, not here (same anti-drift rule as the substitution lists). `dance_display_string()` in `build_setlist.py` treats anything other than an explicit `No` as danceable, so a song added before this column existed doesn't silently render as a floor-killer.
+
+Two setlist-programming ideas came out of this and are **not yet implemented** in the solver — prefer danceable songs toward the second half of the show, and never strand a single non-danceable song in the middle of a run of danceable ones. The second rule needs a definition of how long a non-danceable run has to be before it counts as a deliberate mellow pocket rather than a momentum kill (a lone song is clearly one, an adjacent pair is arguably the other), so don't implement either as a hard constraint until that's settled with the band.
+
 ## Energy Arc Columns
 
 `songs_metadata.csv` has `start_energy` and `end_energy` columns (`Low` / `Medium` / `High`) capturing how a song feels at its first and last bar — for building the set's energy arc (e.g. start and end each set high, use a Low→High "build" song to come out of an acoustic break or recover after a mellow mid-set stretch). Most songs hold one energy level throughout (`start_energy` == `end_energy`); only songs that noticeably build or wind down have different start/end values (e.g. *Me and Bobby McGee*: Low→High). This data isn't wired into `build_setlist.py`'s pacing logic yet (which currently paces by BPM only via `make_v_shape()`) — that's a natural next step if arc-aware set-building is wanted.

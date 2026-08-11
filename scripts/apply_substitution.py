@@ -41,6 +41,7 @@ from build_setlist import (
     render_in_progress_lines, render_summary_page_lines, SUMMARY_PAGE_HEADING,
     check_absent_member_notes, format_absent_member_status,
     check_energy_flow, format_pacing_flow_status,
+    TABLE_HEADER, TABLE_DIVIDER,
 )
 
 # Any of these starting a line marks the beginning of the always-regenerated
@@ -70,6 +71,13 @@ def load_song_db(csv_path):
             all_songs.append(song)
             by_title[normalize_title(song["title"])] = song
     return by_title, all_songs
+
+
+def _cell(cells, col, name, default=""):
+    """Read one table cell by column header name, tolerating a missing
+    column (older setlist written before that column existed)."""
+    i = col.get(name)
+    return cells[i] if i is not None and i < len(cells) else default
 
 
 def strip_row_title(cell):
@@ -213,27 +221,35 @@ def parse_md(md_path):
         rows = []
         table_end = len(block)
         in_table = False
+        col = {}
         for j, l in enumerate(block):
             if l.startswith("| #"):
                 in_table = True
+                # Index cells by header NAME, not fixed position: setlists
+                # written before the Dance column existed have 9 columns and
+                # current ones have 10, so a positional read would silently
+                # pull Intro text out of the Dance slot on older files.
+                col = {name.strip(): i for i, name in enumerate(l.split("|")[1:-1])}
                 continue
             if l.startswith("|---"):
                 continue
             if in_table:
                 if l.startswith("|"):
                     cells = [c.strip() for c in l.split("|")[1:-1]]
-                    # | # | Title | Artist | Key | BPM | Length | Lead Vocal | Energy | Intro |
-                    title = strip_row_title(cells[1])
-                    lead, covering_for, backups = parse_vocal_cell(cells[6])
-                    start_energy, end_energy = parse_energy_cell(cells[7])
+                    title_cell = _cell(cells, col, "Title")
+                    lead, covering_for, backups = parse_vocal_cell(_cell(cells, col, "Lead Vocal"))
+                    start_energy, end_energy = parse_energy_cell(_cell(cells, col, "Energy"))
                     rows.append({
-                        "title": title, "artist": cells[2], "key": cells[3],
-                        "bpm": int(cells[4]), "length": cells[5],
+                        "title": strip_row_title(title_cell),
+                        "artist": _cell(cells, col, "Artist"),
+                        "key": _cell(cells, col, "Key"),
+                        "bpm": int(_cell(cells, col, "BPM")),
+                        "length": _cell(cells, col, "Length"),
                         "lead_vocals": lead, "backup_vocals": backups,
                         "covering_for": covering_for,
                         "start_energy": start_energy, "end_energy": end_energy,
-                        "intro_notes": cells[8],
-                        "emergency_cut": "EMERGENCY CUT" in cells[1],
+                        "intro_notes": _cell(cells, col, "Intro"),
+                        "emergency_cut": "EMERGENCY CUT" in title_cell,
                     })
                 else:
                     table_end = j
@@ -390,6 +406,7 @@ def enrich_static_fields(sections, by_title):
             row["preferred_emergency_cut"] = csv_row.get("preferred_emergency_cut")
             row["start_energy"] = csv_row.get("start_energy", "")
             row["end_energy"] = csv_row.get("end_energy", "")
+            row["danceable"] = csv_row.get("danceable", "")
 
 
 def extract_break_songs(sections):
@@ -416,8 +433,8 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
     out = list(header_lines)
     for sec, songs in zip(sections, songs_by_section):
         out.append(f"## {sec['heading']}")
-        out.append("| # | Title | Artist | Key | BPM | Length | Lead Vocal | Energy | Intro |")
-        out.append("|---|---|---|---|---|---|---|---|---|")
+        out.append(TABLE_HEADER)
+        out.append(TABLE_DIVIDER)
 
         is_main_set = sec["heading"].upper().startswith("SET")
         for idx, song in enumerate(songs):
@@ -472,6 +489,14 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
     scheduled_titles = {s["title"] for songs in songs_by_section for s in songs}
     scheduled_titles |= {bs["title"] for bs in break_songs}
     all_scheduled = [s for songs in songs_by_section for s in songs] + break_songs
+
+    # The final section's preserved extra_after ends with whatever blank
+    # lines trailed the last '----' separator. Without trimming them first,
+    # the append below stacks one more on every run and the gap before GIG
+    # SUMMARY grows without bound (observed at 10 blank lines after repeated
+    # edits). Normalize to exactly one.
+    while out and not out[-1].strip():
+        out.pop()
 
     out.append("")
     out.extend(render_summary_page_lines(stats_lines, all_scheduled, all_songs, scheduled_titles))
