@@ -144,6 +144,24 @@ def parse_missing_names(header_lines):
     return []
 
 
+BREAKS_BULLET_RE = re.compile(
+    r"^-\s*\*\*Breaks:\*\*\s*(?P<kind>\w+)\s*\(\s*(?P<count>\d+)\s*[x×]\s*~?\s*(?P<mins>\d+)\s*min",
+    re.I,
+)
+
+
+def parse_declared_break_seconds(header_lines):
+    """Break time as stated in the header, e.g. '- **Breaks:** Silent (2 × 10
+    min)' -> 1200. Used when a setlist's breaks carry no song bullets to
+    measure (silent breaks), so the grand total still includes them.
+    Returns 0 for 'None' or an unrecognised shape."""
+    for l in header_lines:
+        m = BREAKS_BULLET_RE.match(l.strip())
+        if m:
+            return int(m.group("count")) * int(m.group("mins")) * 60
+    return 0
+
+
 CONSTRAINT_ROW_RE = re.compile(r"^\|\s*(.+?)\s*\|.*\|$")
 
 
@@ -497,6 +515,14 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
             break_seconds += parse_length(by_title[key]["length"])
     if len(break_songs) > 1:
         break_seconds += (len(break_songs) - 1) * 30
+
+    # An acoustic break is measured by its songs (above), but a SILENT break
+    # has no song bullets at all — so deriving break time purely from bullets
+    # silently scored a "Silent (2 x 10 min)" gig as 0:00 of break and
+    # under-reported the grand total by the full 20 minutes. Fall back to the
+    # break count/length declared in the header's 'Breaks:' bullet.
+    if break_seconds == 0:
+        break_seconds = parse_declared_break_seconds(header_lines)
 
     total_songs = sum(len(s) for s in songs_by_section) + len(break_songs)
     grand_total = total_music + total_trans + break_seconds
