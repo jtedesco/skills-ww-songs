@@ -33,7 +33,9 @@ def test_database_integrity():
         songs = []
         for row in reader:
             song = dict(row)
-            song["bpm"] = int(song["bpm"])
+            # Blank bpm is a legitimate state (see "NEVER guess a key or BPM"
+            # in SKILL.md) — keep it as None instead of failing to parse.
+            song["bpm"] = int(song["bpm"]) if song["bpm"].strip() else None
             song["backup_vocals"] = [v for v in song["backup_vocals"].split(";") if v]
             songs.append(song)
         
@@ -95,7 +97,10 @@ def test_database_integrity():
         gig_ready_acoustic = {"Landslide", "Blackbird", "Interstate Love Song",
                                "Wish You Were Here", "Ooh La La", "Ventura Highway",
                                "All For You"}
-        not_ready_full_band = {"Kid Charlemagne", "Ride Like the Wind", "Listen to the Music"}
+        not_ready_full_band = {"Kid Charlemagne", "Ride Like the Wind",
+                               "Don't Stop", "Hit Me with Your Best Shot",
+                               "I Hate Myself for Loving You", "You May Be Right",
+                               "Basket Case"}
         if s.get("arrangement") in ["Acoustic", "Either"]:
             if title in gig_ready_acoustic:
                 if s.get("gig_ready") != "Yes":
@@ -280,8 +285,8 @@ def test_scenario_1():
                    "Peg", "Second Chance", "Baby Blue", "Rikki Don't Lose That Number", 
                    "Brandy", "Everybody Wants to Rule the World", "Reeling in the Years", 
                    "The Chain", "Take It Easy", "Colors", "Brass in Pocket", "Dreams", 
-                   "Lights", "Roll with the Changes", "Ventura Highway", "Ooh La La", 
-                   "Landslide", "Vienna", "Don't Know Why"}
+                   "Lights", "Roll with the Changes", "Ventura Highway", "Ooh La La",
+                   "Landslide", "Vienna", "Don't Know Why", "Listen to the Music"}
     
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:

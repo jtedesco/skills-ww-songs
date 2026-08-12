@@ -86,6 +86,17 @@ Refer to the script's help menu (`--help`) for all options.
   - If no venue is known at generation time, use only the date: `YYYY-MM-DD.md` / `.pdf`.
   - Do **not** overwrite an existing file; create a new one or confirm with the user first.
 
+### Setlist Versioning — ENFORCED, no exceptions
+
+Once a setlist has been generated, **every** subsequent revision of it is written to a **new versioned file**. Never edit a shared setlist in place, and never overwrite a previous version — the band prints from these and needs to be able to tell which copy someone is holding.
+
+- **Filenames**: `YYYY-MM-DD Location vN.md` and `YYYY-MM-DD Location vN.pdf` — the version suffix goes last, after the venue, e.g. `2026-08-22 The Can Bar v4.md`.
+- **Title line**: `# YYYY-MM-DD - Location (vN)`.
+- **Header block**: add a `- **Version:** vN` bullet as the *first* bullet, naming what it supersedes, e.g. `- **Version:** v4 — supersedes the 2-set v3 (\`2026-08-22 The Can Bar.md\`)`.
+- **Numbering**: `N` counts revisions of *that gig's* setlist and only ever increments. A setlist's original unversioned file (from before this rule existed) counts as its own version for numbering purposes — the three unversioned revisions of `2026-08-22 The Can Bar.md` were v1–v3, so the next one was **v4**. Never reuse or reset a number, and never renumber an already-shared version.
+- **Previous versions stay put.** Leave the older `.md`/`.pdf` files exactly as they are; superseding is recorded in the new file's Version bullet, not by deleting or rewriting history.
+- This applies to *every* kind of revision — a one-song swap via `apply_substitution.py`, a hand-edit, or a structural rebuild. `apply_substitution.py` edits its input file in place, so **copy the current version to the next `vN` filename first, then run the script against the copy**, and re-render the PDF from it.
+
 ### Revising an Existing Setlist (Band Feedback)
 When the band gives feedback on a setlist that's **already been generated and shared** — "swap X for Y", "drop Z", "add W" — do **not** re-run `build_setlist.py`. It's a from-scratch randomized solver: every run re-optimizes the *entire* setlist, so even a two-song request can silently reshuffle unrelated songs, drop others, and change the emergency-cut pick. The band asked for specific changes, not a new setlist — only make the changes they named.
 
@@ -120,7 +131,7 @@ python3 scripts/render_pdf.py "setlists/2026-07-25 Bear Cave Lake.md"
 # Re-render every .md file in setlists/
 python3 scripts/render_pdf.py --all
 ```
-Requires the `markdown` Python package (`pip3 install --user markdown`) and a Chromium-based browser installed locally.
+Requires the `markdown` Python package (`pip3 install --user markdown`) and a Chromium-based browser installed locally. `find_chrome()` resolves the browser in this order: `$CHROME_PATH` (explicit override), the Mac app bundle paths, a Chrome/Chromium/Edge binary on `PATH`, then a Playwright browser directory — so the same command works on a Mac, a Linux box, or a cloud session.
 
 ### Syncing PDFs to Shared Google Drive
 After rendering, `build_setlist.py` also copies the `.pdf` (best-effort — failures just print a warning) to the local Google Drive Desktop mount for the band's shared drive:
@@ -162,6 +173,8 @@ The same care applies to `length` when it feeds duration math, though it's lower
 - New song is **Acoustic/Either** and marked `gig_ready: Yes` → add its title to `gig_ready_acoustic`.
 - New song is **Full Band** and marked `gig_ready: No` (the script's own default!) → add its title to `not_ready_full_band`, or the integrity check will fail expecting every full-band song to be ready.
 - Song is (or becomes) **archived** → add its title to the archive-check whitelist in `test_database_integrity()` (currently `["Paint It Black", "Crazy Little Thing Called Love", "Them Changes", "Maybe I'm Amazed"]`), or the integrity check will fail expecting every other song to be un-archived. `add_song.py` always writes `archived: No` for a brand-new song — flipping it to `Yes` (e.g. adding a song directly as archived/retired) is a manual CSV edit, so it's easy to forget this whitelist update at the same time.
+- Song is **Yacht Rock or Yacht-Adjacent** (`yacht_adjacent` is `Yes`/`Adjacent`) **and** gig-ready → add its title to the `yacht_songs` set in `test_yacht_scenario()`, or Scenario 1 fails the moment the solver puts it in a yacht setlist. This one bites on a *readiness flip*, not just a new song: making an already-adjacent song gig-ready is what makes it eligible for the yacht pool.
+- Not-yet-gig-ready songs legitimately have a **blank `key`/`bpm`** (see "NEVER guess a key or BPM" above) and `date_added: None`. All three loaders (`build_setlist.py`, `apply_substitution.py`, `test_setlist.py`) parse a blank `bpm` to `None` rather than failing — don't "fix" that by backfilling a number.
 
 Run `python3 scripts/test_setlist.py` after adding a song and before considering it done — this is the mechanical "did I miss a step" check.
 
