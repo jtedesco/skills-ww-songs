@@ -190,6 +190,51 @@ def _song_bullet(s):
 
 SUMMARY_PAGE_HEADING = "## GIG SUMMARY"
 
+SHARED_DRIVE_DIR = os.path.expanduser("~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists")
+
+# 'YYYY-MM-DD Venue v13.pdf' -> ('YYYY-MM-DD Venue', '13')
+VERSIONED_PDF_RE = re.compile(r"^(?P<stem>.+) v(?P<n>\d+)\.pdf$")
+
+
+def sync_pdf_to_drive(pdf_path, shared_dir=SHARED_DRIVE_DIR):
+    """Publish a rendered setlist PDF to the band's shared Drive folder.
+
+    Numbered versions are archived in a per-gig subfolder named for the gig
+    ('2026-08-22 The Can Bar/'), and the newest one is *also* copied to the
+    folder root under the unversioned name ('2026-08-22 The Can Bar.pdf') as
+    the single canonical copy the band prints from. That way nobody has to
+    work out which vN is current, but the full history stays one click away.
+
+    An unversioned filename just lands at the root as before. Best-effort:
+    a failure warns rather than raising, same as the old flat copy did.
+    """
+    name = os.path.basename(pdf_path)
+    m = VERSIONED_PDF_RE.match(name)
+    try:
+        if not m:
+            shutil.copy2(pdf_path, shared_dir)
+            print(f"✅ Synced to Drive → {os.path.join(shared_dir, name)}", file=sys.stderr)
+            return
+        stem, n = m.group("stem"), int(m.group("n"))
+        version_dir = os.path.join(shared_dir, stem)
+        os.makedirs(version_dir, exist_ok=True)
+        shutil.copy2(pdf_path, os.path.join(version_dir, name))
+        print(f"✅ Archived to Drive → {os.path.join(stem, name)}", file=sys.stderr)
+
+        # The canonical copy must always be the newest version. Re-rendering an
+        # older one (to fix a typo in a superseded file, say) archives it but
+        # must not quietly demote what the band prints from.
+        highest = max([n] + [int(vm.group("n")) for f in os.listdir(version_dir)
+                             if (vm := VERSIONED_PDF_RE.match(f))])
+        canonical = os.path.join(shared_dir, f"{stem}.pdf")
+        if n == highest:
+            shutil.copy2(pdf_path, canonical)
+            print(f"✅ Canonical copy    → {os.path.basename(canonical)} (now v{n})", file=sys.stderr)
+        else:
+            print(f"↩️  Canonical left at v{highest} — v{n} is not the newest version", file=sys.stderr)
+    except Exception as e:
+        print(f"⚠️  Drive sync skipped for {name} ({e})", file=sys.stderr)
+
 
 def render_not_selected_and_archived_lines(all_songs, scheduled_titles):
     """The 'Not Selected / Archived' subsection (h3, on the combined summary
@@ -1279,12 +1324,7 @@ def main():
     # Only sync real gigs (named via --date/--location) to the shared Drive folder —
     # ad-hoc/test runs fall back to a setlist_<timestamp> stem and shouldn't clutter it.
     if pdf_path and (args.date or args.location):
-        shared_drive_dir = os.path.expanduser("~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists")
-        try:
-            shutil.copy2(pdf_path, shared_drive_dir)
-            print(f"✅ Synced to Drive → {os.path.join(shared_drive_dir, os.path.basename(pdf_path))}", file=sys.stderr)
-        except Exception as e:
-            print(f"⚠️  Drive sync skipped for {os.path.basename(pdf_path)} ({e})", file=sys.stderr)
+        sync_pdf_to_drive(pdf_path)
 
 def tag_emergency_cuts(sets_songs, segue_groups):
     segue_titles = {title.lower() for group in segue_groups for title in group}

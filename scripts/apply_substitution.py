@@ -41,7 +41,7 @@ from build_setlist import (
     render_in_progress_lines, render_summary_page_lines, SUMMARY_PAGE_HEADING,
     check_absent_member_notes, format_absent_member_status,
     check_energy_flow, format_pacing_flow_status,
-    TABLE_HEADER, TABLE_DIVIDER,
+    TABLE_HEADER, TABLE_DIVIDER, sync_pdf_to_drive,
 )
 
 # Any of these starting a line marks the beginning of the always-regenerated
@@ -646,13 +646,7 @@ def main():
         print(f"⚠️  PDF generation skipped ({e})", file=sys.stderr)
 
     if pdf_path:
-        import shutil
-        shared_drive_dir = os.path.expanduser("~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists")
-        try:
-            shutil.copy2(pdf_path, shared_drive_dir)
-            print(f"✅ Synced to Drive → {os.path.join(shared_drive_dir, os.path.basename(pdf_path))}", file=sys.stderr)
-        except Exception as e:
-            print(f"⚠️  Drive sync skipped for {os.path.basename(pdf_path)} ({e})", file=sys.stderr)
+        sync_pdf_to_drive(pdf_path)
 
 
 if __name__ == "__main__":

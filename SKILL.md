@@ -95,6 +95,7 @@ Once a setlist has been generated, **every** subsequent revision of it is writte
 - **Header block**: add a `- **Version:** vN` bullet as the *first* bullet, naming what it supersedes, e.g. `- **Version:** v4 — supersedes the 2-set v3 (\`2026-08-22 The Can Bar.md\`)`.
 - **Numbering**: `N` counts revisions of *that gig's* setlist and only ever increments. A setlist's original unversioned file (from before this rule existed) counts as its own version for numbering purposes — the three unversioned revisions of `2026-08-22 The Can Bar.md` were v1–v3, so the next one was **v4**. Never reuse or reset a number, and never renumber an already-shared version.
 - **Previous versions stay put.** Leave the older `.md`/`.pdf` files exactly as they are; superseding is recorded in the new file's Version bullet, not by deleting or rewriting history.
+- **Publishing**: in `setlists/` every version sits side by side; on the shared Drive they're filed into a per-gig subfolder with a single canonical copy at the root — see "Syncing PDFs to Shared Google Drive" below. `sync_pdf_to_drive()` handles both, so a new version needs no manual copying.
 - This applies to *every* kind of revision — a one-song swap via `apply_substitution.py`, a hand-edit, or a structural rebuild. `apply_substitution.py` edits its input file in place, so **copy the current version to the next `vN` filename first, then run the script against the copy**, and re-render the PDF from it.
 
 ### Revising an Existing Setlist (Band Feedback)
@@ -134,13 +135,34 @@ python3 scripts/render_pdf.py --all
 Requires the `markdown` Python package (`pip3 install --user markdown`) and a Chromium-based browser installed locally. `find_chrome()` resolves the browser in this order: `$CHROME_PATH` (explicit override), the Mac app bundle paths, a Chrome/Chromium/Edge binary on `PATH`, then a Playwright browser directory — so the same command works on a Mac, a Linux box, or a cloud session.
 
 ### Syncing PDFs to Shared Google Drive
-After rendering, `build_setlist.py` also copies the `.pdf` (best-effort — failures just print a warning) to the local Google Drive Desktop mount for the band's shared drive:
+After rendering, `build_setlist.py` and `apply_substitution.py` both publish the `.pdf` (best-effort — failures just print a warning) to the local Google Drive Desktop mount for the band's shared drive, via `sync_pdf_to_drive()` in `build_setlist.py`:
 ```
 ~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists/
 ```
+
+**Layout — one canonical copy per gig, versions archived beside it.** The band prints from the root of that folder and must never have to work out which `vN` is current, so:
+
+```
+Setlists/
+├── 2026-08-22 The Can Bar.pdf          <- canonical: always a copy of the newest version
+└── 2026-08-22 The Can Bar/             <- per-gig archive, named for the gig (no version suffix)
+    ├── 2026-08-22 The Can Bar v1.pdf
+    ├── …
+    └── 2026-08-22 The Can Bar v13.pdf
+```
+
+- A **versioned** filename (`<stem> vN.pdf`) is copied into the `<stem>/` subfolder, which is created on demand, *and* copied to the folder root as `<stem>.pdf`.
+- The subfolder name is exactly the canonical PDF's stem, so folder and file names always agree and each is derivable from the other in code — don't introduce a separate convention (an earlier hand-made `The Can Bar - Backups` folder was renamed to match this).
+- **The canonical copy is only overwritten when the version being synced is the highest one in the archive.** Re-rendering a superseded version archives it but leaves the canonical alone, printing `↩️ Canonical left at vN` — otherwise fixing a typo in an old file would silently hand the band a stale setlist.
+- An **unversioned** filename (a gig that has never been revised) just lands at the root, as before.
+
 This is a plain filesystem copy (`shutil.copy2`) into the folder synced by the Google Drive Desktop app — **never use the Google Drive MCP connector for this, for any file type, even small ones.** This was tried and explicitly ruled out by the user ("forget the MCP approach altogether"), for good reason: the connector has no chunked/resumable upload, so pushing even a moderate-size binary (like a PDF) through it means base64-encoding the whole thing into a single tool call, which blows past any single-call token budget (a ~300KB PDF is ~400K base64 characters ≈ ~400K tokens). It also has no permission-write tool, so "anyone with the link" sharing can't be automated either way. The local-copy approach sidesteps all of this.
 
-To manually re-sync an existing file: `cp "setlists/<file>.pdf" ~/Google\ Drive/Shared\ Drives/Wannabe\ Weekenders/Setlists/`.
+To manually re-publish an existing file, call the helper rather than `cp` — a bare copy would drop a `vN` file at the root and leave the canonical stale:
+```bash
+python3 -c "import sys; sys.path.insert(0,'scripts'); from build_setlist import sync_pdf_to_drive; \
+    sync_pdf_to_drive('setlists/2026-08-22 The Can Bar v13.pdf')"
+```
 
 ### Adding a New Song
 To add a new song to the repertoire, run the onboarding script:
