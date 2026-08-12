@@ -66,7 +66,9 @@ def load_song_db(csv_path):
         all_songs = []
         for row in reader:
             song = dict(row)
-            song["bpm"] = int(song["bpm"])
+            # Blank bpm is a legitimate state (see "NEVER guess a key or BPM"
+            # in SKILL.md) — keep it as None instead of failing to parse.
+            song["bpm"] = int(song["bpm"]) if song["bpm"].strip() else None
             song["backup_vocals"] = [v for v in song["backup_vocals"].split(";") if v]
             all_songs.append(song)
             by_title[normalize_title(song["title"])] = song

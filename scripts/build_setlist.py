@@ -116,7 +116,10 @@ class Item:
         self.vocals_sequence = [s["lead_vocals"] for s in songs_list]
         self.opener = songs_list[0]["opener"]
         self.closer = songs_list[-1]["closer"]
-        self.bpm = sum(s["bpm"] for s in songs_list) / len(songs_list)
+        # Songs with no confirmed BPM (None) are excluded from the average
+        # rather than counted as 0, which would skew the pacing sort.
+        known_bpms = [s["bpm"] for s in songs_list if s["bpm"] is not None]
+        self.bpm = sum(known_bpms) / len(known_bpms) if known_bpms else 0
         
         prio_map = {"2026-05": 2, "2026-03": 1, "2026-01": 0}
         self.priority = max(prio_map.get(s.get("date_added", "2026-01"), 0) for s in songs_list)
@@ -370,7 +373,7 @@ def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, nu
             remaining_songs.remove(match)
 
     while len(encores) < 2 and remaining_songs:
-        remaining_songs.sort(key=lambda s: s["bpm"], reverse=True)
+        remaining_songs.sort(key=lambda s: s["bpm"] or 0, reverse=True)
         encores.append(remaining_songs.pop(0))
 
     return [s for set_s in sets_songs for s in set_s] + encores
@@ -421,7 +424,10 @@ def main():
         all_songs = []
         for row in reader:
             song = dict(row)
-            song["bpm"] = int(song["bpm"])
+            # bpm is deliberately blank on songs whose tempo hasn't been looked
+            # up and confirmed yet (see "NEVER guess a key or BPM" in SKILL.md) —
+            # None, not a made-up number, so pacing math can skip it.
+            song["bpm"] = int(song["bpm"]) if song["bpm"].strip() else None
             song["backup_vocals"] = [v for v in song["backup_vocals"].split(";") if v]
             all_songs.append(song)
         
@@ -1014,7 +1020,7 @@ def main():
             remaining_songs.remove(match)
 
     while len(encores) < 2 and remaining_songs:
-        remaining_songs.sort(key=lambda s: s["bpm"], reverse=True)
+        remaining_songs.sort(key=lambda s: s["bpm"] or 0, reverse=True)
         encores.append(remaining_songs.pop(0))
 
     sets_songs = tag_emergency_cuts(sets_songs, segue_raw_groups)

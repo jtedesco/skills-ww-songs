@@ -6,8 +6,10 @@ boxes, then prints the resulting HTML to PDF via headless Chrome — no paid
 API or third-party PDF service required.
 """
 import argparse
+import glob
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -22,6 +24,15 @@ CHROME_PATHS = [
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
     "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+]
+
+# Non-macOS fallbacks, checked only after the paths above — so a Mac keeps
+# using its installed Chrome/Chromium/Edge exactly as before. These let the
+# renderer also work on a Linux box or a cloud session (where the browser
+# lives on PATH or under a Playwright browser dir).
+CHROME_COMMANDS = [
+    "google-chrome", "google-chrome-stable", "chromium", "chromium-browser",
+    "microsoft-edge", "microsoft-edge-stable",
 ]
 
 ALERT_ICONS = {"warning": "⚠️", "note": "📝", "tip": "💡", "important": "❗", "caution": "🛑"}
@@ -183,10 +194,23 @@ def wrap_set_blocks(html):
 
 
 def find_chrome():
+    override = os.environ.get("CHROME_PATH")
+    if override and os.path.exists(override):
+        return override
     for p in CHROME_PATHS:
         if os.path.exists(p):
             return p
+    for cmd in CHROME_COMMANDS:
+        found = shutil.which(cmd)
+        if found:
+            return found
+    for pattern in ("/opt/pw-browsers/chromium*/chrome-linux/chrome",
+                    os.path.expanduser("~/.cache/ms-playwright/chromium*/chrome-linux/chrome")):
+        matches = sorted(glob.glob(pattern))
+        if matches:
+            return matches[-1]
     print("Error: no Chromium-based browser found for PDF rendering.", file=sys.stderr)
+    print("       Set CHROME_PATH to a Chromium-based browser executable to override.", file=sys.stderr)
     sys.exit(1)
 
 
