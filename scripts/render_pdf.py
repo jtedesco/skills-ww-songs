@@ -254,16 +254,17 @@ def render(md_path, pdf_path=None):
 def main():
     parser = argparse.ArgumentParser(description="Render a setlist markdown file to a styled PDF")
     parser.add_argument("md_file", nargs="?", help="Path to a setlist .md file")
-    parser.add_argument("--all", action="store_true", help="Render every .md file in setlists/")
+    parser.add_argument("--all", action="store_true",
+                        help="Render every .md file under setlists/ (recursively)")
     args = parser.parse_args()
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
     setlists_dir = os.path.join(script_dir, "..", "setlists")
 
     if args.all:
-        md_files = sorted(
-            os.path.join(setlists_dir, f) for f in os.listdir(setlists_dir) if f.endswith(".md")
-        )
+        # Recursive: setlists are filed under a per-gig subfolder, so a
+        # flat listdir() would find nothing.
+        md_files = sorted(glob.glob(os.path.join(setlists_dir, "**", "*.md"), recursive=True))
     elif args.md_file:
         md_files = [args.md_file]
     else:

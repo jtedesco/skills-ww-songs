@@ -1176,7 +1176,13 @@ def main():
     else:
         file_stem = f"setlist_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-    md_path  = os.path.join(setlists_dir, file_stem + ".md")
+    # Every setlist lives in its own per-gig folder with an explicit version
+    # suffix, mirroring the shared Drive layout — 'setlists/<stem>/<stem> v1.md'.
+    # A brand-new setlist starts at v1; revisions go through apply_substitution.py,
+    # which writes the next vN alongside it (see "Setlist Versioning" in SKILL.md).
+    gig_dir = os.path.join(setlists_dir, file_stem)
+    os.makedirs(gig_dir, exist_ok=True)
+    md_path  = os.path.join(gig_dir, f"{file_stem} v1.md")
 
     # ---------------------------------------------------------------
     # Output report

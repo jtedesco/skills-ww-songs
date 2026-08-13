@@ -1,3 +1,5 @@
 **/.DS_Store
 scripts/__pycache__
 .*pyc
+# Ad-hoc/test setlist runs (build_setlist.py with no --date/--location)
+setlists/setlist_*/

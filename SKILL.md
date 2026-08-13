@@ -72,28 +72,38 @@ Refer to the script's help menu (`--help`) for all options.
   ```
 
 * **File Output**:
-  - The script writes output files to the `setlists/` subdirectory (created automatically):
-    - `<YYYY-MM-DD Location>.md` — the full Rich Metadata Table report.
-    - `<YYYY-MM-DD Location>.pdf` — a styled PDF rendering of the `.md` report, generated automatically (see below). If PDF rendering fails (e.g. no Chromium-based browser installed), the script prints a warning and continues — the `.md` file is still written.
-  - Pass `--date` and `--location` to control the filename, e.g. `--date 2026-07-18 --location "Local Bar & Grill"`.
-  - If `--date`/`--location` are omitted the files are named `setlist_<timestamp>.md/.pdf`.
+  - The script creates the gig's folder under `setlists/` and writes **v1** into it:
+    - `setlists/<YYYY-MM-DD Location>/<YYYY-MM-DD Location> v1.md` — the full Rich Metadata Table report.
+    - `…v1.pdf` — a styled PDF rendering of the `.md` report, generated automatically (see below). If PDF rendering fails (e.g. no Chromium-based browser installed), the script prints a warning and continues — the `.md` file is still written.
+  - Pass `--date` and `--location` to control the folder and filenames, e.g. `--date 2026-07-18 --location "Local Bar & Grill"`.
+  - If `--date`/`--location` are omitted the output goes to `setlists/setlist_<timestamp>/`, which is gitignored as test noise.
 
-* **Local Setlist File Storage**:
-  - Every generated setlist must be saved to the `setlists/` subdirectory of this skill (i.e., `skills-ww-songs/setlists/`).
-  - Save **two files** per setlist, both named `YYYY-MM-DD Location` (e.g., `2026-07-25 Local Bar and Grill Wooddale`):
-    - `YYYY-MM-DD Location.md` — the rich metadata table format.
-    - `YYYY-MM-DD Location.pdf` — styled PDF of the `.md` report (written automatically by `build_setlist.py`; see PDF Export below).
-  - If no venue is known at generation time, use only the date: `YYYY-MM-DD.md` / `.pdf`.
-  - Do **not** overwrite an existing file; create a new one or confirm with the user first.
+* **Local Setlist File Storage**: every setlist lives in its own per-gig folder under `setlists/`, with every file carrying an explicit version suffix — the same shape as the shared Drive archive:
+
+  ```
+  setlists/
+  └── 2026-08-22 The Can Bar/
+      ├── 2026-08-22 The Can Bar v3.md     ← source (edited by apply_substitution.py)
+      ├── 2026-08-22 The Can Bar v3.pdf    ← output (rendered from the .md)
+      ├── …
+      └── 2026-08-22 The Can Bar v13.md/.pdf
+  ```
+
+  - Folder name is `YYYY-MM-DD Location`, matching the file stem, so folder and filenames always agree. If no venue is known, use just the date.
+  - **Two files per version, and only two**: the `.md` source and the `.pdf` output. `build_setlist.py` writes `<stem> v1.md` into a new gig folder; each revision adds the next `vN` beside it.
+  - **PDF is the only output format.** The `.rtf` and `.txt` exports were removed — don't reintroduce them. The `.md` is *not* an output; it's the editable source of record that `apply_substitution.py` parses and re-renders, and that git diffs meaningfully between versions.
+  - **No canonical/unversioned duplicate is kept locally.** The Drive folder keeps one (so the band always knows what to print) but in the repo that would just be a byte-identical copy of the newest `vN` — the highest version number is unambiguous here, and git already tracks it.
+  - Ad-hoc runs with no `--date`/`--location` land in `setlists/setlist_<timestamp>/` and are gitignored — they're test noise, not gig records.
+  - Do **not** overwrite an existing file; create the next version or confirm with the user first.
 
 ### Setlist Versioning — ENFORCED, no exceptions
 
 Once a setlist has been generated, **every** subsequent revision of it is written to a **new versioned file**. Never edit a shared setlist in place, and never overwrite a previous version — the band prints from these and needs to be able to tell which copy someone is holding.
 
-- **Filenames**: `YYYY-MM-DD Location vN.md` and `YYYY-MM-DD Location vN.pdf` — the version suffix goes last, after the venue, e.g. `2026-08-22 The Can Bar v4.md`.
+- **Filenames**: `setlists/<YYYY-MM-DD Location>/<YYYY-MM-DD Location> vN.md` (and `.pdf`) — the version suffix goes last, after the venue, inside the gig's own folder, e.g. `setlists/2026-08-22 The Can Bar/2026-08-22 The Can Bar v14.md`.
 - **Title line**: `# YYYY-MM-DD - Location (vN)`.
 - **Header block**: add a `- **Version:** vN` bullet as the *first* bullet, naming what it supersedes, e.g. `- **Version:** v4 — supersedes the 2-set v3 (\`2026-08-22 The Can Bar.md\`)`.
-- **Numbering**: `N` counts revisions of *that gig's* setlist and only ever increments. A setlist's original unversioned file (from before this rule existed) counts as its own version for numbering purposes — the three unversioned revisions of `2026-08-22 The Can Bar.md` were v1–v3, so the next one was **v4**. Never reuse or reset a number, and never renumber an already-shared version.
+- **Numbering**: `N` counts revisions of *that gig's* setlist, starts at **v1**, and only ever increments. Never reuse or reset a number, and never renumber an already-shared version. (Files predating this rule were retro-numbered when the repo moved to per-gig folders: The Can Bar's unversioned file became `v3`, since its first three revisions were unversioned; Empire's became `v1`.)
 - **Previous versions stay put.** Leave the older `.md`/`.pdf` files exactly as they are; superseding is recorded in the new file's Version bullet, not by deleting or rewriting history.
 - **Publishing**: in `setlists/` every version sits side by side; on the shared Drive they're filed into a per-gig subfolder with a single canonical copy at the root — see "Syncing PDFs to Shared Google Drive" below. `sync_pdf_to_drive()` handles both, so a new version needs no manual copying.
 - This applies to *every* kind of revision — a one-song swap via `apply_substitution.py`, a hand-edit, or a structural rebuild. `apply_substitution.py` edits its input file in place, so **copy the current version to the next `vN` filename first, then run the script against the copy**, and re-render the PDF from it.
@@ -103,7 +113,7 @@ When the band gives feedback on a setlist that's **already been generated and sh
 
 Use `scripts/apply_substitution.py` instead. It edits the existing `.md` in place — only the named songs change, everything else (order, unrelated songs, breaks) stays byte-identical — then re-renders the `.pdf` and re-syncs to Drive, same as `build_setlist.py`:
 ```bash
-python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake.md" \
+python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake/2026-07-25 Bear Cave Lake v1.md" \
     --swap "Rock This Town" "Valerie" \
     --swap "Brown Eyed Girl" "Reeling in the Years" \
     --remove "Ooh La La"
@@ -127,9 +137,9 @@ python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake.md" \
 
 To (re-)render a PDF for an existing setlist `.md` file without regenerating the setlist itself:
 ```bash
-python3 scripts/render_pdf.py "setlists/2026-07-25 Bear Cave Lake.md"
+python3 scripts/render_pdf.py "setlists/2026-07-25 Bear Cave Lake/2026-07-25 Bear Cave Lake v1.md"
 
-# Re-render every .md file in setlists/
+# Re-render every .md under setlists/ (recursive)
 python3 scripts/render_pdf.py --all
 ```
 Requires the `markdown` Python package (`pip3 install --user markdown`) and a Chromium-based browser installed locally. `find_chrome()` resolves the browser in this order: `$CHROME_PATH` (explicit override), the Mac app bundle paths, a Chrome/Chromium/Edge binary on `PATH`, then a Playwright browser directory — so the same command works on a Mac, a Linux box, or a cloud session.
@@ -194,7 +204,7 @@ Copy those values out of `rclone config show wwdrive` and store them as **secret
 To manually re-publish an existing file, call the helper rather than `cp` — a bare copy would drop a `vN` file at the root and leave the canonical stale:
 ```bash
 python3 -c "import sys; sys.path.insert(0,'scripts'); from build_setlist import sync_pdf_to_drive; \
-    sync_pdf_to_drive('setlists/2026-08-22 The Can Bar v13.pdf')"
+    sync_pdf_to_drive('setlists/2026-08-22 The Can Bar/2026-08-22 The Can Bar v13.pdf')"
 ```
 
 ### Adding a New Song
