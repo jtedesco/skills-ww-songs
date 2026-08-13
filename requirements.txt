@@ -1,0 +1,11 @@
+# Python dependencies for the setlist scripts.
+#   pip3 install --user -r requirements.txt
+#
+# Two non-Python tools are also needed and are NOT installed by this file:
+#   * A Chromium-based browser, for PDF rendering (render_pdf.py). On Linux/cloud:
+#       apt-get install -y chromium   (or set CHROME_PATH to any Chromium binary)
+#   * rclone, only for publishing to Drive without a mounted Google Drive Desktop
+#     (see "Publishing from a cloud session" in SKILL.md):
+#       curl https://rclone.org/install.sh | sudo bash
+
+markdown

@@ -7,7 +7,7 @@ description: Master list of 50 cover band songs cross-referenced with genres, se
 
 This skill provides access to the master song database of **Wannabe Weekenders cover songs** (51+ and growing).
 
-The full structured dataset containing song titles, artists, opener/closer roles, transition sequences, key/BPM details, vocal arrangements, playtimes, cleaned intro notes, song ordering rules (segue groupings), Yacht Rock classifications, gig readiness, arrangements (Acoustic / Full / Either), vocalist constraints, date added, archive status, and substitution rules is stored in [songs_metadata.csv](file:///Users/jontedesco/Documents/skills/ww-band-songs/songs_metadata.csv).
+The full structured dataset containing song titles, artists, opener/closer roles, transition sequences, key/BPM details, vocal arrangements, playtimes, cleaned intro notes, song ordering rules (segue groupings), Yacht Rock classifications, gig readiness, arrangements (Acoustic / Full / Either), vocalist constraints, date added, archive status, and substitution rules is stored in `songs_metadata.csv`.
 
 ## Instrumentation Columns (Who Plays What)
 
@@ -44,7 +44,7 @@ Per-song specifics — which songs must be **cut** vs. **survive** without a giv
 The skill includes an automated setlist building script: `build_setlist.py`.
 You can execute it using:
 ```bash
-python3 /Users/jontedesco/Documents/skills/ww-band-songs/scripts/build_setlist.py --gig-type bar --duration 3 --breaks acoustic
+python3 scripts/build_setlist.py --gig-type bar --duration 3 --breaks acoustic
 ```
 Refer to the script's help menu (`--help`) for all options.
 * **Genre, Era & Mood Filtering**: You can filter the setlist by genre, era, or mood:
@@ -158,6 +158,39 @@ Setlists/
 
 This is a plain filesystem copy (`shutil.copy2`) into the folder synced by the Google Drive Desktop app — **never use the Google Drive MCP connector for this, for any file type, even small ones.** This was tried and explicitly ruled out by the user ("forget the MCP approach altogether"), for good reason: the connector has no chunked/resumable upload, so pushing even a moderate-size binary (like a PDF) through it means base64-encoding the whole thing into a single tool call, which blows past any single-call token budget (a ~300KB PDF is ~400K base64 characters ≈ ~400K tokens). It also has no permission-write tool, so "anyone with the link" sharing can't be automated either way. The local-copy approach sidesteps all of this.
 
+### Publishing from a cloud session (no mounted Drive)
+
+`sync_pdf_to_drive()` picks its backend automatically:
+
+1. **rclone** — used when `WW_DRIVE_REMOTE` is set (e.g. `wwdrive:Setlists`) and `rclone` is on `PATH`. Works headless, so a cloud run publishes unattended.
+2. **Local mount** — the Google Drive Desktop folder, the default on a Mac. Override the location with `WW_SETLISTS_DIR`.
+3. **Neither** — prints `⚠️ NOT PUBLISHED` and returns `False`. It does *not* fail silently: a cloud run without a target used to look like it had published.
+
+Both backends produce the identical layout (per-gig archive folder + canonical root copy) and both enforce the newest-version guard, so a file published from the cloud is indistinguishable from one published on the Mac.
+
+**Why rclone rather than the Drive MCP connector**: the connector only accepts `base64Content`, and a setlist PDF is ~500KB — about **225K tokens** as base64, more than a whole context window per file. Ghostscript at maximum compression only gets it to ~323KB (~144K tokens), so it isn't a fixable problem. Markdown is a different story: the `.md` files are ~8–10KB and go through as `textContent` for ~3–4K tokens, so pushing a *text* copy via the connector is perfectly reasonable — just never the PDF.
+
+**One-time setup** (authorize on a machine with a browser, then carry the token):
+
+```bash
+brew install rclone            # macOS; on Linux: curl https://rclone.org/install.sh | sudo bash
+rclone config                  # n) new remote → name it, type "drive", accept the built-in
+                               # client ID, choose a scope, and pick the Shared Drive when asked
+rclone lsd wwdrive:            # verify it can see the Shared Drive
+```
+
+Then export the configured remote for the cloud session. rclone can be configured entirely from environment variables — no config file needs to ship:
+
+```bash
+RCLONE_CONFIG_WWDRIVE_TYPE=drive
+RCLONE_CONFIG_WWDRIVE_SCOPE=drive
+RCLONE_CONFIG_WWDRIVE_TOKEN={"access_token":"…","refresh_token":"…","expiry":"…"}
+RCLONE_CONFIG_WWDRIVE_TEAM_DRIVE=<shared drive id>
+WW_DRIVE_REMOTE=wwdrive:Setlists
+```
+
+Copy those values out of `rclone config show wwdrive` and store them as **secrets** in the cloud environment — the token grants write access to the Shared Drive, so it never belongs in this repo. The refresh token is long-lived; rclone renews the access token itself.
+
 To manually re-publish an existing file, call the helper rather than `cp` — a bare copy would drop a `vN` file at the root and leave the canonical stale:
 ```bash
 python3 -c "import sys; sys.path.insert(0,'scripts'); from build_setlist import sync_pdf_to_drive; \
@@ -207,8 +240,8 @@ python3 scripts/enrich_metadata.py
 ```
 
 ### Verification and Evaluation
-An evaluation definition is configured in [eval.json](file:///Users/jontedesco/Documents/skills/ww-band-songs/eval.json).
-A comprehensive automated validation suite is provided in [test_setlist.py](file:///Users/jontedesco/Documents/skills/ww-band-songs/scripts/test_setlist.py). To run the test suite and verify database constraints and setlist generation logic:
+An evaluation definition is configured in `eval.json`.
+A comprehensive automated validation suite is provided in `scripts/test_setlist.py`. To run the test suite and verify database constraints and setlist generation logic:
 ```bash
 python3 scripts/test_setlist.py
 ```

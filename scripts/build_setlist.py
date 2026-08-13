@@ -7,6 +7,7 @@ import re
 import argparse
 import io
 import shutil
+import subprocess
 from datetime import datetime
 from math import ceil
 
@@ -190,13 +191,43 @@ def _song_bullet(s):
 
 SUMMARY_PAGE_HEADING = "## GIG SUMMARY"
 
-SHARED_DRIVE_DIR = os.path.expanduser("~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists")
+# Local Google Drive Desktop mount. Overridable so a non-default mount (or a
+# test dir) works without editing code.
+SHARED_DRIVE_DIR = os.path.expanduser(
+    os.environ.get("WW_SETLISTS_DIR", "~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists"))
+
+# An rclone destination like 'wwdrive:Setlists'. Set this (with rclone
+# configured) to publish without a mounted Drive — the cloud path. See
+# SKILL.md's "Publishing from a cloud session" section.
+RCLONE_REMOTE = os.environ.get("WW_DRIVE_REMOTE", "").rstrip("/")
 
 # 'YYYY-MM-DD Venue v13.pdf' -> ('YYYY-MM-DD Venue', '13')
 VERSIONED_PDF_RE = re.compile(r"^(?P<stem>.+) v(?P<n>\d+)\.pdf$")
 
 
-def sync_pdf_to_drive(pdf_path, shared_dir=SHARED_DRIVE_DIR):
+def _rclone(*args):
+    """Run an rclone subcommand, returning stdout. Raises on failure."""
+    res = subprocess.run(["rclone", *args], capture_output=True, text=True)
+    if res.returncode != 0:
+        raise RuntimeError((res.stderr or res.stdout).strip().splitlines()[-1] if (res.stderr or res.stdout).strip() else f"rclone exited {res.returncode}")
+    return res.stdout
+
+
+def _pick_drive_backend(shared_dir):
+    """Choose how to publish: rclone (works headless, no mounted Drive) if
+    WW_DRIVE_REMOTE is set and the binary is present, otherwise the local
+    Drive Desktop mount. Returns (kind, target) or None when neither is
+    usable — the caller must then say so loudly rather than pretend."""
+    if RCLONE_REMOTE:
+        if shutil.which("rclone"):
+            return ("rclone", RCLONE_REMOTE)
+        print("⚠️  WW_DRIVE_REMOTE is set but rclone is not on PATH.", file=sys.stderr)
+    if os.path.isdir(shared_dir):
+        return ("fs", shared_dir)
+    return None
+
+
+def sync_pdf_to_drive(pdf_path, shared_dir=None):
     """Publish a rendered setlist PDF to the band's shared Drive folder.
 
     Numbered versions are archived in a per-gig subfolder named for the gig
@@ -204,36 +235,60 @@ def sync_pdf_to_drive(pdf_path, shared_dir=SHARED_DRIVE_DIR):
     folder root under the unversioned name ('2026-08-22 The Can Bar.pdf') as
     the single canonical copy the band prints from. That way nobody has to
     work out which vN is current, but the full history stays one click away.
+    An unversioned filename just lands at the root.
 
-    An unversioned filename just lands at the root as before. Best-effort:
-    a failure warns rather than raising, same as the old flat copy did.
+    Publishes over rclone when configured (so a cloud session with no mounted
+    Drive can still publish) and over the local mount otherwise. Returns True
+    on success. Failures warn rather than raise — but a run with no usable
+    target says so explicitly instead of looking like it succeeded.
     """
     name = os.path.basename(pdf_path)
+    backend = _pick_drive_backend(shared_dir or SHARED_DRIVE_DIR)
+    if backend is None:
+        print(f"⚠️  NOT PUBLISHED: {name} — no Google Drive target available.", file=sys.stderr)
+        print("    Mount Google Drive Desktop, or set WW_DRIVE_REMOTE to an rclone remote "
+              "(e.g. 'wwdrive:Setlists') with rclone configured.", file=sys.stderr)
+        return False
+
+    kind, target = backend
     m = VERSIONED_PDF_RE.match(name)
     try:
         if not m:
-            shutil.copy2(pdf_path, shared_dir)
-            print(f"✅ Synced to Drive → {os.path.join(shared_dir, name)}", file=sys.stderr)
-            return
+            if kind == "rclone":
+                _rclone("copyto", pdf_path, f"{target}/{name}")
+            else:
+                shutil.copy2(pdf_path, os.path.join(target, name))
+            print(f"✅ Synced to Drive → {name}", file=sys.stderr)
+            return True
+
         stem, n = m.group("stem"), int(m.group("n"))
-        version_dir = os.path.join(shared_dir, stem)
-        os.makedirs(version_dir, exist_ok=True)
-        shutil.copy2(pdf_path, os.path.join(version_dir, name))
+        if kind == "rclone":
+            _rclone("copyto", pdf_path, f"{target}/{stem}/{name}")
+            archived = _rclone("lsf", f"{target}/{stem}/").splitlines()
+        else:
+            version_dir = os.path.join(target, stem)
+            os.makedirs(version_dir, exist_ok=True)
+            shutil.copy2(pdf_path, os.path.join(version_dir, name))
+            archived = os.listdir(version_dir)
         print(f"✅ Archived to Drive → {os.path.join(stem, name)}", file=sys.stderr)
 
         # The canonical copy must always be the newest version. Re-rendering an
         # older one (to fix a typo in a superseded file, say) archives it but
         # must not quietly demote what the band prints from.
-        highest = max([n] + [int(vm.group("n")) for f in os.listdir(version_dir)
-                             if (vm := VERSIONED_PDF_RE.match(f))])
-        canonical = os.path.join(shared_dir, f"{stem}.pdf")
+        highest = max([n] + [int(vm.group("n")) for f in archived
+                             if (vm := VERSIONED_PDF_RE.match(f.strip("/")))])
         if n == highest:
-            shutil.copy2(pdf_path, canonical)
-            print(f"✅ Canonical copy    → {os.path.basename(canonical)} (now v{n})", file=sys.stderr)
+            if kind == "rclone":
+                _rclone("copyto", pdf_path, f"{target}/{stem}.pdf")
+            else:
+                shutil.copy2(pdf_path, os.path.join(target, f"{stem}.pdf"))
+            print(f"✅ Canonical copy    → {stem}.pdf (now v{n})", file=sys.stderr)
         else:
             print(f"↩️  Canonical left at v{highest} — v{n} is not the newest version", file=sys.stderr)
+        return True
     except Exception as e:
         print(f"⚠️  Drive sync skipped for {name} ({e})", file=sys.stderr)
+        return False
 
 
 def render_not_selected_and_archived_lines(all_songs, scheduled_titles):
