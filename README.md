@@ -16,6 +16,11 @@ This repo is the skill itself: [SKILL.md](SKILL.md) is the instruction set Claud
 | `scripts/render_pdf.py` | Re-renders a styled PDF from an existing setlist `.md` file |
 | `scripts/add_song.py` | Onboards a new song: checks for duplicates, fetches MusicBrainz metadata, prompts for manual fields, appends to the CSV |
 | `scripts/enrich_metadata.py` | Backfills missing MusicBrainz metadata (release year, album, genre, mood) for existing songs |
+| `scripts/ytmusic_browser_login.py` | One-time YouTube Music sign-in from pasted browser headers |
+| `scripts/sync_playlists.py` | Syncs the three canonical YouTube Music playlists (active / in progress / archived) |
+| `scripts/build_playlist.py` | Builds a one-off playlist for a single gig's setlist, in running order |
+| `scripts/resolve_youtube_urls.py` | Fills the `youtube_url` column with each song's canonical studio recording |
+| `scripts/review_youtube_urls.py` | Audits those URLs for misattributions and writes a clickable review page |
 | `scripts/test_setlist.py` | Automated test suite covering database constraints and setlist generation logic |
 | `setlists/` | Generated setlist output, one `.md` / `.pdf` pair per gig |
 
@@ -68,6 +73,24 @@ python3 scripts/enrich_metadata.py                  # backfill missing MusicBrai
 
 Note: `enrich_metadata.py` doesn't support `--help` — running `--help` executes the script itself.
 
+### Syncing the YouTube Music playlists
+Three unlisted playlists track the library's state — active repertoire, in progress, archived:
+```bash
+python3 scripts/sync_playlists.py --dry-run    # show the diff, no credentials needed
+python3 scripts/sync_playlists.py
+```
+They're diffed on each run, so re-syncing only touches what changed. Playlist ids live in
+`playlists.json` — commit it. A one-off playlist for a single gig's setlist is also available via
+`scripts/build_playlist.py "setlists/<gig>"`.
+Tracks come from the `youtube_url` column of `songs_metadata.csv`, so building a playlist never
+searches YouTube and two runs can't pick different recordings. Publishing needs a Google OAuth
+client of type *TVs and Limited Input devices*, with credentials in `~/.config/ww-songs/`
+(outside the repo, which is inside Google Drive) — see "YouTube Music Playlists" in
+[SKILL.md](SKILL.md). To check those matches by ear:
+```bash
+python3 scripts/review_youtube_urls.py --html youtube_review.html
+```
+
 ### Running tests
 
 ```bash
@@ -77,5 +100,23 @@ python3 scripts/test_setlist.py
 ## Requirements
 
 - Python 3
-- `pip3 install --user markdown` (for PDF rendering)
+- `pip3 install --user -r requirements.txt` (`markdown` for PDF rendering, `ytmusicapi` for playlists)
 - A Chromium-based browser installed locally (Chrome, Chromium, or Edge) — used headlessly to print the `.md` report to PDF, no external API required
+
+### Which `python3`
+
+Install the dependencies into the interpreter you actually run the scripts with, and use that
+same one everywhere. On a Mac with Homebrew Python installed, `python3` on `PATH` is usually
+*not* the system one, so `pip3 install --user` and `python3 scripts/…` can end up on opposite
+sides of the fence — the symptom is `ModuleNotFoundError: No module named 'markdown'` (or
+`'ytmusicapi'`) even though pip said it installed fine. Check with:
+
+```bash
+python3 -c "import sys, markdown; print(sys.executable)"
+```
+
+If that errors, the deps are installed somewhere else — on this machine they live in
+`/usr/bin/python3`, so the commands above become `/usr/bin/python3 scripts/…`. The YouTube
+Music scripts detect this and print the exact interpreter to use; `scripts/test_setlist.py`
+does not — it shells out to a bare `python3`, so running the suite with the wrong one on `PATH`
+fails every scenario with a `markdown` error while `Database Integrity` still passes.

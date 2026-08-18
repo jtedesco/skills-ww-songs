@@ -207,6 +207,136 @@ python3 -c "import sys; sys.path.insert(0,'scripts'); from build_setlist import 
     sync_pdf_to_drive('setlists/2026-08-22 The Can Bar/2026-08-22 The Can Bar v13.pdf')"
 ```
 
+### YouTube Music Playlists
+Each gig's setlist can be published as an **unlisted** YouTube Music playlist so the band can
+learn the material in running order. Two scripts, with a deliberate split:
+
+**1. `resolve_youtube_urls.py` — one-time, per song.** Fills the `youtube_url` column in
+`songs_metadata.csv` with the canonical *original studio* recording. Search runs
+**unauthenticated** (ytmusicapi only needs credentials to write), so anyone can run it:
+```bash
+python3 scripts/resolve_youtube_urls.py                      # fill empty cells only
+python3 scripts/resolve_youtube_urls.py --only "Valerie" --force --verbose
+```
+The band plays covers, so a match must land on the *original artist's studio* cut. Candidates are
+scored, never taken top-hit-first — YouTube Music's first result is routinely a live take, a
+re-recording, or a different act entirely. The scorer weighs title (order-insensitive, so
+`Jenny (867-5309)` matches `867-5309 / Jenny`), artist, and album, and penalises live/karaoke/
+re-recorded versions, live *albums* whose track titles hide it, and extra credited acts. Two
+distinctions it makes that matter:
+- **Backing band vs. collaboration.** `Tom Petty And The Heartbreakers` is Tom Petty;
+  `Badfinger & Matthew Sweet` is a latter-day re-recording and is rejected.
+- **Featured credit.** `Mark Ronson (feat. Amy Winehouse)` *is* the canonical *Valerie*, even
+  though the database files it under Amy Winehouse.
+
+**Ties are settled on play count.** Scoring often can't separate the same recording pressed on
+two different releases — identical title, identical artist. When candidates finish within a few
+points of each other, the one with the most plays wins, which is what "the studio version" means
+in practice: *Paint It Black* resolved to a 2.8M-play mono pressing over the 206M-play one, and
+*Take It Easy* to a remaster with a fifth of the plays of the standard cut. This matters most
+where the database's own `original_album` is thin or wrong — *Ventura Highway* is filed under a
+2002 compilation, so the album-match bonus actively steered it to an obscure reissue.
+
+**The CSV is the source of truth.** Anything below the confidence threshold is written but
+flagged for review; to correct it, paste the right URL into the cell by hand. `--force`
+re-resolves from scratch and **will overwrite hand-picked URLs** — it reports every replacement
+it makes, so check that list (and `git diff songs_metadata.csv`) after running it.
+
+Some songs can't be fixed by scoring alone because the *database attribution itself* differs from
+the canonical recording — the library credits **Landslide** to Stevie Nicks, who never released a
+studio version of it; the recording everyone knows is Fleetwood Mac's. Those are set by hand.
+
+**2. `sync_playlists.py` — the three canonical playlists.** The band keeps **three** playlists,
+mirroring the library's state rather than any one gig:
+
+| Playlist | Contents |
+| :--- | :--- |
+| `Wannabe Weekenders — Active Songs` | `gig_ready: Yes` and not archived — the current repertoire |
+| `Wannabe Weekenders — In Progress` | not yet gig-ready |
+| `Wannabe Weekenders — Archived` | `archived: Yes` — retired from the set |
+
+```bash
+python3 scripts/sync_playlists.py --dry-run    # show the diff, no credentials needed
+python3 scripts/sync_playlists.py              # apply
+python3 scripts/sync_playlists.py --only active
+```
+- **Archived wins over gig-ready.** Every archived song is still flagged `gig_ready: Yes`, so
+  without that precedence all four would appear in two playlists at once.
+- **Diffed, not rebuilt.** After creation each run adds and removes only what changed, so an
+  unchanged playlist reports "already in sync" and the links the band holds keep working.
+  Contents are sorted by title — these are reference lists, not a running order.
+- **Ids live in `playlists.json` at the repo root — commit it.** Without it the next sync
+  creates a second set of playlists. The id is written the moment a playlist is created,
+  *before* its tracks are added, so a failure partway through can't orphan one.
+- **Adds are batched (20 at a time, halving on conflict).** YouTube rejects a large add with
+  `HTTP 409: Conflict` — 46 tracks at once fails where 20 succeeds. The API is also eventually
+  consistent: a freshly-added track can read back as absent for a few seconds.
+- The account needs a **YouTube channel**. Without one, YouTube answers a create request with a
+  channel-creation form instead of a playlist id; the script detects exactly that and says so.
+
+`build_playlist.py` still builds a single playlist for one gig's setlist in running order
+(`python3 scripts/build_playlist.py "setlists/<gig>"`), and `sync_playlists.py` imports its auth
+plumbing — but the three canonical playlists above are the band's actual workflow.
+
+**Auth (writing only).** `--dry-run` needs no credentials, so the whole track list can be
+verified before any account is involved. To publish, use **browser auth**:
+
+```bash
+python3 scripts/ytmusic_browser_login.py      # paste headers, then Ctrl-D
+```
+Use that script rather than `ytmusicapi browser`, which writes a file that fails to load.
+`setup_browser()` validates only `cookie` and `x-goog-authuser`, but `YTMusic()` decides a file
+is browser auth **solely** by an `authorization` header containing `SAPISIDHASH` — so a file
+without one is misread as an OAuth token and raises *"oauth JSON provided … but
+oauth_credentials not provided"*. That header doesn't have to come from the browser at all:
+ytmusicapi recomputes it from the cookie on every request, so the script derives it. It also
+sets mode 600 and verifies against the account before declaring success. `--repair` fixes an
+existing file (raw headers, or a missing `authorization`).
+
+`build_playlist.py` picks up `~/.config/ww-songs/ytmusic_browser.json` automatically; set
+`WW_YTMUSIC_AUTH` only to override.
+It asks you to paste the request headers of any `/youtubei/v1/` POST from music.youtube.com
+(DevTools → Network → right-click the request → Copy → Copy request headers). The headers must
+include **`cookie`** and **`x-goog-authuser`** — those two, not `authorization`, are what
+`setup_browser()` validates. Open DevTools *before* reloading the page: YouTube Music is a
+single-page app that fires its API calls on load, so a panel opened afterwards shows nothing.
+Filter on `browse` to find one. Credentials live in `~/.config/ww-songs/`, **never in the
+repo** — this repo sits inside a Google Drive folder, so a secret saved beside the code gets
+uploaded to Drive; `.gitignore` stops git but does nothing about Drive sync.
+
+Browser auth is session-cookie based: it lasts months but dies on sign-out or a password change.
+Re-run the same command to refresh it.
+
+> [!IMPORTANT]
+> **Do not use OAuth, even though the CLI marks browser auth "deprecated".** OAuth tokens mint
+> and refresh correctly, then every single endpoint returns `HTTP 400: Request contains an
+> invalid argument` — including `search`, which works fine *unauthenticated*. This is a
+> server-side YouTube change ([ytmusicapi#676](https://github.com/sigma67/ytmusicapi/issues/676)),
+> not a configuration mistake: no client id, scope, or client context (`TVHTML5`,
+> `ANDROID_MUSIC`, `IOS_MUSIC`) avoids it. `build_playlist.py` detects this exact failure and
+> says so. Two further dead ends already walked, for anyone tempted to retry the OAuth path:
+> - Publishing the consent screen to **In production** hard-blocks sign-in with *"has not
+>   completed the Google verification process"*, because the YouTube scope is "sensitive" and
+>   the app is unverified. Testing mode is the only usable state, and it expires refresh tokens
+>   after 7 days.
+> - `ytmusicapi oauth` itself crashes with `TypeError: ... unexpected keyword argument
+>   'refresh_token_expires_in'` on ytmusicapi 1.10.3 (the latest release).
+>   `scripts/ytmusic_login.py` works around that crash and is kept for if upstream restores
+>   OAuth — but its tokens still hit the 400 above, so it is not a usable path today.
+
+The `ytmusicapi` CLI installs to a user bin directory that is often not on `PATH`
+(`~/Library/Python/3.9/bin` on this Mac); call it by full path if the bare name doesn't resolve.
+`python3 -m ytmusicapi` does **not** work — the package ships no `__main__`.
+
+**3. `review_youtube_urls.py` — auditing the matches.** Scoring can be confidently wrong, so this
+fetches what each stored URL *actually* points at and compares it back against the database:
+```bash
+python3 scripts/review_youtube_urls.py --html youtube_review.html
+```
+It flags `artist` / `version` / `title` mismatches, plus `obscure` — a play count far below the
+rest, which is the tell for a re-recording or soundalike that every other check passes. The HTML
+page lists flagged songs first with a Listen link each, for the final check by ear.
+
 ### Adding a New Song
 To add a new song to the repertoire, run the onboarding script:
 ```bash

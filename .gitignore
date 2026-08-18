@@ -3,3 +3,9 @@ scripts/__pycache__
 .*pyc
 # Ad-hoc/test setlist runs (build_setlist.py with no --date/--location)
 setlists/setlist_*/
+# YouTube Music credentials — never commit these
+ytmusic_auth.json
+browser.json
+oauth.json
+# Generated audit page
+youtube_review.html

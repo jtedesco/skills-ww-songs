@@ -1,0 +1,23 @@
+{
+  "active": {
+    "playlist_id": "PLZ3S5L7LdV3A",
+    "synced": "2026-08-18 16:55",
+    "title": "WW - Active Songs",
+    "track_count": 46,
+    "url": "https://music.youtube.com/playlist?list=PLZ3S5L7LdV3A"
+  },
+  "archived": {
+    "playlist_id": "PLHYj7O1YT8Xw",
+    "synced": "2026-08-18 16:55",
+    "title": "WW - Archived",
+    "track_count": 4,
+    "url": "https://music.youtube.com/playlist?list=PLHYj7O1YT8Xw"
+  },
+  "in_progress": {
+    "playlist_id": "PLVKD0nIHzHbg",
+    "synced": "2026-08-18 16:55",
+    "title": "WW - In Progress",
+    "track_count": 10,
+    "url": "https://music.youtube.com/playlist?list=PLVKD0nIHzHbg"
+  }
+}

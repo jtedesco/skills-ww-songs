@@ -9,3 +9,7 @@
 #       curl https://rclone.org/install.sh | sudo bash
 
 markdown
+
+# YouTube Music playlists (resolve_youtube_urls.py / build_playlist.py).
+# Searching works unauthenticated; only creating a playlist needs credentials.
+ytmusicapi
