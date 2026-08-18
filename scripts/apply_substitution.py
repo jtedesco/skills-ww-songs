@@ -42,6 +42,7 @@ from build_setlist import (
     check_absent_member_notes, format_absent_member_status,
     check_energy_flow, format_pacing_flow_status,
     TABLE_HEADER, TABLE_DIVIDER, sync_pdf_to_drive,
+    playlist_links_bullet, PLAYLIST_BULLET_PREFIX,
 )
 
 # Any of these starting a line marks the beginning of the always-regenerated
@@ -556,6 +557,30 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
     return "\n".join(out).rstrip("\n") + "\n"
 
 
+def upsert_playlist_bullet(header_lines):
+    """Keep the '- **Playlists:**' header bullet current on a revised setlist.
+    Replaces an existing line (ids change if the playlists are ever recreated)
+    or inserts one after the Breaks bullet, so setlists written before the
+    playlists existed gain the links on their next version. No playlists.json
+    means no line, and an untouched header."""
+    bullet = playlist_links_bullet()
+    if not bullet:
+        return header_lines
+    for i, line in enumerate(header_lines):
+        if line.startswith(PLAYLIST_BULLET_PREFIX):
+            header_lines[i] = bullet
+            return header_lines
+    after = next((i for i, l in enumerate(header_lines)
+                  if l.startswith("- **Breaks:**")), None)
+    if after is None:  # no Breaks bullet: fall back to the last header bullet
+        after = max((i for i, l in enumerate(header_lines) if l.startswith("- **")),
+                    default=None)
+    if after is None:
+        return header_lines
+    header_lines.insert(after + 1, bullet)
+    return header_lines
+
+
 def main():
     parser = argparse.ArgumentParser(description="Apply targeted song swaps/removals to an existing setlist")
     parser.add_argument("md_path", help="Path to the existing setlist .md file")
@@ -625,6 +650,7 @@ def main():
     energy_drops = check_energy_flow(labeled_sections)
     absent_flags = check_absent_member_notes(
         [s for songs in songs_by_section for s in songs], missing_names)
+    header_lines = upsert_playlist_bullet(header_lines)
     header_lines = upsert_constraint_rows(header_lines, {
         "Pacing Flow": format_pacing_flow_status(energy_drops),
         "Absent-Member Note Check": format_absent_member_status(absent_flags),

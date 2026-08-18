@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import csv
+import json
 import os
 import sys
 import random
@@ -200,6 +201,31 @@ SHARED_DRIVE_DIR = os.path.expanduser(
 # configured) to publish without a mounted Drive — the cloud path. See
 # SKILL.md's "Publishing from a cloud session" section.
 RCLONE_REMOTE = os.environ.get("WW_DRIVE_REMOTE", "").rstrip("/")
+
+# Short labels for the canonical playlists, in the order they're listed on a
+# setlist. Keys match playlists.json, written by scripts/sync_playlists.py.
+PLAYLIST_LABELS = [("active", "Active"), ("in_progress", "In Progress"), ("archived", "Archived")]
+PLAYLISTS_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "playlists.json")
+PLAYLIST_BULLET_PREFIX = "- **Playlists:**"
+
+
+def playlist_links_bullet(path=PLAYLISTS_PATH):
+    """The '- **Playlists:** ...' header bullet, or None if the playlists have
+    never been synced. Read from playlists.json rather than hardcoded so the
+    links can't drift from what sync_playlists.py actually created; a missing
+    or unreadable file just omits the line instead of failing a setlist build."""
+    try:
+        with open(path, encoding="utf-8") as f:
+            state = json.load(f)
+    except (OSError, ValueError):
+        return None
+    links = [f"[{label}]({state[key]['url']})"
+             for key, label in PLAYLIST_LABELS
+             if isinstance(state.get(key), dict) and state[key].get("url")]
+    if not links:
+        return None
+    return f"{PLAYLIST_BULLET_PREFIX} " + " · ".join(links)
+
 
 # 'YYYY-MM-DD Venue v13.pdf' -> ('YYYY-MM-DD Venue', '13')
 VERSIONED_PDF_RE = re.compile(r"^(?P<stem>.+) v(?P<n>\d+)\.pdf$")
@@ -1248,6 +1274,9 @@ def main():
     if filter_details:
         md(f"- **Filters:** {', '.join(filter_details)}")
     md(f"- **Breaks:** {breaks_field}")
+    playlists_bullet = playlist_links_bullet()
+    if playlists_bullet:
+        md(playlists_bullet)
     md()
 
     # Display Satisfaction Table

@@ -386,6 +386,22 @@ A comprehensive automated validation suite is provided in `scripts/test_setlist.
 python3 scripts/test_setlist.py
 ```
 
+### Playlist Links in the Header
+Every setlist carries a `- **Playlists:**` bullet in its header block, linking the three
+canonical YouTube Music playlists:
+
+```
+- **Playlists:** [Active](…) · [In Progress](…) · [Archived](…)
+```
+- The URLs are read from `playlists.json` at build time, never hardcoded, so they can't drift
+  from what `sync_playlists.py` actually created. If that file is missing (playlists never
+  synced) the line is simply omitted — a setlist build never fails over it.
+- `build_setlist.py` writes it into new setlists; `apply_substitution.py` upserts it on every
+  revision, so a setlist written before the playlists existed gains the links on its next
+  version, and stale ids get refreshed rather than duplicated.
+- It renders as clickable links in the PDF. Existing setlist versions are **not** rewritten —
+  per the versioning rule, they gain the line only when a new `vN` is created.
+
 ## Setlist Output Format
 
 ### Rich Metadata Table
