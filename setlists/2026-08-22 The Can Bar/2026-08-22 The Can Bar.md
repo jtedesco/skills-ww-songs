@@ -124,7 +124,6 @@
 ## SONGS IN PROGRESS
 Not yet gig-ready — excluded from the solver unless --include-not-ready is passed.
 
-- **Don't Know Why** (Norah Jones)
 - **Kid Charlemagne** (Steely Dan)
 - **Ride Like the Wind** (Christopher Cross)
 - **The Story** (Brandi Carlile)

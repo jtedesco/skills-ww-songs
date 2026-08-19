@@ -284,7 +284,7 @@ def test_scenario_1():
                    "Brandy", "Everybody Wants to Rule the World", "Reeling in the Years", 
                    "The Chain", "Take It Easy", "Colors", "Brass in Pocket", "Dreams", 
                    "Lights", "Roll with the Changes", "Ventura Highway", "Ooh La La",
-                   "Landslide", "Vienna", "Don't Know Why", "Listen to the Music"}
+                   "Landslide", "Vienna", "Listen to the Music"}
     
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:
@@ -308,7 +308,7 @@ def test_scenario_1():
         log_test("Show closer check ('Roll with the Changes' closer of last set)", True)
         
     # 4. Check gig-ready songs only
-    not_ready_songs = {"The Story", "Vienna", "Don't Know Why"}
+    not_ready_songs = {"The Story", "Vienna"}
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:
             if song["title"] in not_ready_songs:
