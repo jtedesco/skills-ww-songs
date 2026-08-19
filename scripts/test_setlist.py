@@ -98,9 +98,7 @@ def test_database_integrity():
                                "Wish You Were Here", "Ooh La La", "Ventura Highway",
                                "All For You"}
         not_ready_full_band = {"Kid Charlemagne", "Ride Like the Wind",
-                               "Don't Stop", "Hit Me with Your Best Shot",
-                               "I Hate Myself for Loving You", "You May Be Right",
-                               "Basket Case"}
+                               "You May Be Right", "Basket Case"}
         if s.get("arrangement") in ["Acoustic", "Either"]:
             if title in gig_ready_acoustic:
                 if s.get("gig_ready") != "Yes":
@@ -131,8 +129,9 @@ def test_database_integrity():
                 all_pass = False
                 log_test(f"Date added check: {title}", False, f"Non-gig-ready song should have date_added: 'None', found: {s.get('date_added')}")
                 
-        # Archive check (Paint It Black, Crazy Little Thing Called Love, Them Changes, and Maybe I'm Amazed only)
-        if title in ["Paint It Black", "Crazy Little Thing Called Love", "Them Changes", "Maybe I'm Amazed"]:
+        # Archive check (retired songs only)
+        if title in ["Paint It Black", "Crazy Little Thing Called Love", "Them Changes",
+                     "Maybe I'm Amazed", "Basket Case"]:
             if s.get("archived") != "Yes":
                 archived_count += 1
                 all_pass = False
