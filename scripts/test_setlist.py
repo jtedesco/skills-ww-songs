@@ -594,31 +594,31 @@ def test_scenario_6():
     if all(t not in martin_cut for t in res["breaks"]):
         log_test("Acoustic break songs are all Martin-out-safe", True)
 
-    # 3. File output: a new setlist is written as setlists/<stem>/<stem> v1.md
-    #    (PDF is best-effort). See "Setlist Versioning" in SKILL.md.
+    # 3. File output: a new setlist is written as setlists/<stem>/<stem>.md
+    #    (PDF is best-effort). See "One Canonical Setlist Per Gig" in SKILL.md.
     setlists_dir = os.path.join(SCRIPT_DIR, "..", "setlists")
     expected_stem = f"{test_date} {test_loc}"
     gig_dir = os.path.join(setlists_dir, expected_stem)
-    md_file = os.path.join(gig_dir, f"{expected_stem} v1.md")
-    pdf_file = os.path.join(gig_dir, f"{expected_stem} v1.pdf")
+    md_file = os.path.join(gig_dir, f"{expected_stem}.md")
+    pdf_file = os.path.join(gig_dir, f"{expected_stem}.pdf")
 
     if os.path.exists(md_file):
-        log_test("File output: v1 .md written to setlists/<gig>/", True)
+        log_test("File output: canonical .md written to setlists/<gig>/", True)
         os.remove(md_file)  # clean up test artifact
     else:
         all_pass = False
-        log_test("File output: v1 .md written to setlists/<gig>/", False, f"Expected: {md_file}")
+        log_test("File output: canonical .md written to setlists/<gig>/", False, f"Expected: {md_file}")
 
     if os.path.exists(pdf_file):
         os.remove(pdf_file)  # clean up test artifact (PDF rendering is best-effort)
     if os.path.isdir(gig_dir) and not os.listdir(gig_dir):
         os.rmdir(gig_dir)
 
-    # Drive sync artifacts: the versioned copy lands in a per-gig subfolder and
-    # the canonical copy at the root (see sync_pdf_to_drive).
+    # Drive sync artifacts: an unversioned filename lands at the Drive root
+    # (see sync_pdf_to_drive).
     shared_drive_dir = os.path.expanduser(
         os.environ.get("WW_SETLISTS_DIR", "~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists"))
-    for stale in (os.path.join(shared_drive_dir, expected_stem, f"{expected_stem} v1.pdf"),
+    for stale in (os.path.join(shared_drive_dir, expected_stem, f"{expected_stem}.pdf"),
                   os.path.join(shared_drive_dir, expected_stem + ".pdf")):
         if os.path.exists(stale):
             os.remove(stale)

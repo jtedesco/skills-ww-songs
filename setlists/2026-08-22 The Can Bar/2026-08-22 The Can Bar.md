@@ -1,10 +1,10 @@
-# 2026-08-22 - The Can Bar (v12)
+# 2026-08-22 - The Can Bar
 
-- **Version:** v12 — supersedes v11 (`2026-08-22 The Can Bar v11.md`); *Rikki Don't Lose That Number* reclassified as not danceable and swapped with *The Chain*, closing Set 1's no-dance stretch into one unbroken block
 - **Gig Type:** Bar
 - **Duration:** 3 sets (53:30 / 52:52 / 53:00), ~3 hrs total
 - **Missing:** David, Debo (Paul subbing on bass)
 - **Breaks:** Silent (2 × 10 min)
+- **Playlists:** [Active](https://music.youtube.com/playlist?list=PLZ3S5L7LdV3A) · [In Progress](https://music.youtube.com/playlist?list=PLVKD0nIHzHbg) · [Archived](https://music.youtube.com/playlist?list=PLHYj7O1YT8Xw)
 
 ### 📋 CONSTRAINTS SATISFACTION SUMMARY
 | Constraint | Status | Notes |
@@ -15,10 +15,10 @@
 | Dance Peak (danceable late in each set) | ⚠️ Partially Satisfied (Set 3 is 100% danceable; Set 2 carries four non-danceable songs after the v8 revert; Set 1 is the deliberate listening set and closes on *Piano Man*) |
 | Vocalist Balance | ✅ Satisfied (no vocalist leads more than 3 songs in a row in any set) |
 | Lauren Vocal Health | ✅ Satisfied (every vocally-taxing song — Me and Bobby McGee, You Oughta Know, Respect, Zombie, Roll with the Changes — is separated by ≥2 non-taxing songs; v9 had only 1 between You Oughta Know and Respect) |
-| Segue Integrity | ✅ Satisfied (Superstition→Valerie, Funkytown→Miss You→Reeling in the Years, Peg→Second Chance, Brown Eyed Girl→Hey Jealousy all intact and in canonical order) |
+| Segue Integrity | ✅ Satisfied (Superstition→Valerie, Funkytown→Miss You→Reeling in the Years→Don't Stop, Peg→Second Chance, Brown Eyed Girl→Hey Jealousy all intact and in canonical order) |
 | Target Duration | ✅ Satisfied (179:22 vs. 3hr target) |
 | Vocalist Inclusion | ✅ Satisfied (Lauren, Jon and Martin all lead; David is out) |
-| Pacing Flow | ⚠️ 2 energy drop(s): Don’t Stop Believing → Piano Man (#11→#12, SET 1); Second Chance → You Oughta Know (#8→#9, SET 2) |
+| Pacing Flow | ⚠️ 1 energy drop(s): Don’t Stop Believing → Piano Man (#11→#12, SET 1) |
 | Absent-Member Note Check | ⚠️ 1 stale reference(s): *Rikki Don't Lose That Number* mentions David ("Keys straight in (marimba omitted — David out)") |
 
 > [!WARNING]
@@ -52,19 +52,19 @@
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | **Listen to the Music** 🟢 *[Opener]* | The Doobie Brothers | E | 105 | 3:22 | Lauren | Medium | ✓ | Guitar riff |
 | 2 | **Jenny (867-5309)** | Tommy Tutone | F#m | 136 | 4:00 | Jon (L, M) | High | ✓ | Guitar riff. Stage banter about phone numbers |
-| 3 | **Take It Easy** | Eagles | G | 139 | 3:30 | Jon (L) | Medium | ✓ | Acoustic guitar intro |
-| 4 | **Lights** | Journey | D | 103 | 3:00 | Lauren | Low→Medium |  | Guitar + piano unison |
+| 3 | **I Hate Myself for Loving You** | Joan Jett & the Blackhearts | E | 118 | 4:07 | Lauren | High | ✓ | drums |
+| 4 | **Take It Easy** | Eagles | G | 139 | 3:30 | Jon (L) | Medium |  | Acoustic guitar intro |
 | 5 | **Brandy** | Looking Glass | E | 126 | 3:00 | Jon (L) | Low |  | Keys intro |
-| 6 | **Me and Bobby McGee** | Janis Joplin | G->A | 94 | 4:30 | Lauren | Low→High | ✓ | Guitar on G chord |
+| 6 | **Me and Bobby McGee** | Janis Joplin | G->A | 94 | 4:30 | Lauren | Low→High |  | Guitar on G chord |
 | 7 | **Peg** | Steely Dan | G | 116 | 4:00 | Jon (L) | Medium | ✓ | Written intro |
-| 8 | **Second Chance** | Shinedown | Cm | 140 | 3:30 | Lauren (J) | Medium→High |  | SEGUE (Cmaj7 to Cm) Jon (keys) |
+| 8 | **Brown Eyed Girl** | Van Morrison | G | 120 | 3:00 | Jon (L) | Low | ✓ | Jon starts |
 | 9 | **You Oughta Know** | Alanis Morissette | F#m | 105 | 4:00 | Lauren | Low→High |  | Mellow bass+drums, electric piano fills |
-| 10 | **Keep Your Hands to Yourself** 🛑 **[EMERGENCY CUT]** | Georgia Satellites | A | 120 | 3:30 | Lauren (for David) | Medium | ✓ | guitar, A riff |
-| 11 | **American Girl** | Tom Petty | D | 114 | 3:30 | Martin (L) | High | ✓ | Guitar hook |
+| 10 | **Hey Jealousy** | Gin Blossoms | D | 153 | 4:00 | Martin (J, L) | Medium | ✓ | SEGUE Jon piano, Martin to electric (keys) |
+| 11 | **American Girl** 🛑 **[EMERGENCY CUT]** | Tom Petty | D | 114 | 3:30 | Martin (L) | High | ✓ | Guitar hook |
 | 12 | **Respect** | Aretha Franklin | C | 115 | 2:30 | Lauren | Medium→High | ✓ | Alex counts us in, start together |
 | 13 | **Born to Run** | Bruce Springsteen | E | 147 | 4:30 | Martin (L) | High | ✓ | Drums + everyone starts, last song of Set 2 |
 
-**Set 2 Music Duration**: 46:52 | **Transitions**: 6:00 | **Total**: 52:52
+**Set 2 Music Duration**: 47:59 | **Transitions**: 6:00 | **Total**: 53:59
 ----------------------------------------
 
 ### ⏸️ BREAK 2 (Silent Break - 10 mins)
@@ -79,25 +79,25 @@
 | 3 | **Funkytown** | Lipps, Inc. | C | 122 | 2:00 | Lauren (J) | Medium | ✓ | Bass + drums |
 | 4 | **Miss You** | Rolling Stones | Am | 110 | 4:00 | Jon (L) | Medium | ✓ | SEGUE Jon |
 | 5 | **Reeling in the Years** | Steely Dan | A | 136 | 4:30 | Jon (L) | Medium | ✓ | SEGUE (E7 Resolve) Guitar hook starts |
-| 6 | **Rock This Town** | Stray Cats | D | 200 | 3:30 | Lauren | Medium | ✓ | JJ starts |
-| 7 | **Dreams** | Fleetwood Mac | C | 120 | 4:00 | Lauren (J, M) | Low | ✓ | Drums fill |
-| 8 | **Brown Eyed Girl** | Van Morrison | G | 120 | 3:00 | Jon (L) | Low | ✓ | Jon starts |
-| 9 | **Hey Jealousy** | Gin Blossoms | D | 153 | 4:00 | Martin (J, L) | Medium | ✓ | SEGUE Jon piano, Martin to electric (keys) |
+| 6 | **Don't Stop** | Fleetwood Mac | E | 119 | 3:13 | Lauren | Medium→High | ✓ | SEGUE Piano |
+| 7 | **Rock This Town** | Stray Cats | D | 200 | 3:30 | Lauren | Medium | ✓ | JJ starts |
+| 8 | **Dreams** | Fleetwood Mac | C | 120 | 4:00 | Lauren (J, M) | Low | ✓ | Drums fill |
+| 9 | **Hit Me with Your Best Shot** | Pat Benatar | E | 127 | 2:52 | Lauren | High | ✓ |  |
 | 10 | **Hook** | Blues Traveler | A | 116 | 5:00 | Lauren (J) | Medium | ✓ | keys or guitar |
 | 11 | **All Right Now** 🛑 **[EMERGENCY CUT]** | Free | A | 120 | 4:00 | Lauren (J) | Medium | ✓ | drums |
 | 12 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | C | 134 | 5:30 | Lauren (J) | High | ✓ | Drum + keys in time, stage banter thank yous |
 
-**Set 3 Music Duration**: 47:30 | **Transitions**: 5:30 | **Total**: 53:00
+**Set 3 Music Duration**: 46:35 | **Transitions**: 5:30 | **Total**: 52:05
 ----------------------------------------
 
 ## GIG SUMMARY
 
 ### 📊 Stats
 - **Total Songs Scheduled**: 37
-- **Pure Music Playtime**: 142:22
+- **Pure Music Playtime**: 142:34
 - **Transition Buffers (30s/song)**: 17:00
 - **Break Time**: 20:00
-- **Grand Total Duration**: 179:22 (Target: 180:00)
+- **Grand Total Duration**: 179:34 (Target: 180:00)
 
 ### Lead Vocalist Breakdown
 
@@ -110,24 +110,21 @@
 ### Not Selected / Archived
 | Not Selected | Archived |
 |---|---|
-| **All For You** (Sister Hazel) | **Crazy Little Thing Called Love** (Queen) |
-| **Baby Blue** (Badfinger) | **Maybe I'm Amazed** (Paul McCartney) |
-| **Blackbird** (Beatles) | **Paint It Black** (Rolling Stones) |
-| **Colors** (Black Pumas, The) | **Them Changes** (Buddy Miles) |
-| **Interstate Love Song** (Stone Temple Pilots) |  |
+| **Baby Blue** (Badfinger) | **Crazy Little Thing Called Love** (Queen) |
+| **Blackbird** (Beatles) | **Maybe I'm Amazed** (Paul McCartney) |
+| **Colors** (Black Pumas, The) | **Paint It Black** (Rolling Stones) |
+| **Keep Your Hands to Yourself** (Georgia Satellites) | **Them Changes** (Buddy Miles) |
 | **Landslide** (Stevie Nicks) |  |
+| **Lights** (Journey) |  |
 | **Ooh La La** (Faces) |  |
+| **Second Chance** (Shinedown) |  |
 | **Ventura Highway** (America) |  |
 | **Wish You Were Here** (Pink Floyd) |  |
 
 ## SONGS IN PROGRESS
 Not yet gig-ready — excluded from the solver unless --include-not-ready is passed.
 
-- **Basket Case** (Green Day)
 - **Don't Know Why** (Norah Jones)
-- **Don't Stop** (Fleetwood Mac)
-- **Hit Me with Your Best Shot** (Pat Benatar)
-- **I Hate Myself for Loving You** (Joan Jett & the Blackhearts)
 - **Kid Charlemagne** (Steely Dan)
 - **Ride Like the Wind** (Christopher Cross)
 - **The Story** (Brandi Carlile)

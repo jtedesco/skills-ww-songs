@@ -9,13 +9,11 @@ pick different recordings. Populate that column with resolve_youtube_urls.py.
 ONE PLAYLIST PER GIG, UPDATED IN PLACE. The playlist id is recorded in
 `playlist.json` inside the gig folder; later runs rewrite that same playlist
 rather than making a second one, so the link the band already has keeps
-working when a new setlist version lands. This deliberately differs from the
-`.md`/`.pdf` versioning rule — those are printed artefacts where every
-version must survive, whereas a stale playlist link is just a broken link.
+working when the setlist is revised.
 
 Usage:
-    python3 scripts/build_playlist.py "setlists/2026-08-28 Empire"       # newest version
-    python3 scripts/build_playlist.py "setlists/2026-08-28 Empire/... v2.md"
+    python3 scripts/build_playlist.py "setlists/2026-08-28 Empire"       # the gig's canonical .md
+    python3 scripts/build_playlist.py "setlists/2026-08-28 Empire/2026-08-28 Empire.md"
     python3 scripts/build_playlist.py "setlists/2026-08-28 Empire" --dry-run
 
 Auth (only needed to write; --dry-run needs none). ytmusicapi requires
@@ -64,24 +62,25 @@ BAND = "WW"
 SEP = " - "
 
 
-def newest_version(gig_dir):
-    """Pick the highest vN .md in a gig folder. Version numbers only ever
-    increment (see SKILL.md), so the highest is the current setlist."""
-    best, best_n = None, -1
-    for name in os.listdir(gig_dir):
-        m = re.search(r" v(\d+)\.md$", name)
-        if m and int(m.group(1)) > best_n:
-            best, best_n = os.path.join(gig_dir, name), int(m.group(1))
-    return best
+def canonical_setlist(gig_dir):
+    """The gig's one .md — named for the folder it sits in (see SKILL.md).
+    Falls back to a lone .md under any other name, so a hand-renamed folder
+    still resolves."""
+    stem = os.path.basename(gig_dir.rstrip("/"))
+    named = os.path.join(gig_dir, f"{stem}.md")
+    if os.path.exists(named):
+        return named
+    mds = [n for n in os.listdir(gig_dir) if n.endswith(".md")]
+    return os.path.join(gig_dir, mds[0]) if len(mds) == 1 else None
 
 
 def resolve_setlist(target):
     """Accept either a gig folder or a specific .md and return (md_path, gig_dir)."""
     target = target.rstrip("/")
     if os.path.isdir(target):
-        md = newest_version(target)
+        md = canonical_setlist(target)
         if not md:
-            print(f"Error: no versioned '<name> vN.md' found in {target}", file=sys.stderr)
+            print(f"Error: no setlist '<name>.md' found in {target}", file=sys.stderr)
             sys.exit(1)
         return md, target
     if os.path.isfile(target):
@@ -119,10 +118,8 @@ def load_urls(csv_path):
 
 
 def gig_label(md_path, gig_dir):
-    """'2026-08-28 Empire' plus the version, taken from the file itself."""
-    stem = os.path.basename(md_path)[:-3]
-    m = re.match(r"^(.*) v(\d+)$", stem)
-    return (m.group(1), f"v{m.group(2)}") if m else (stem, "")
+    """'2026-08-28 Empire', taken from the file itself."""
+    return os.path.basename(md_path)[:-3]
 
 
 def read_state(gig_dir):
@@ -222,7 +219,7 @@ def main():
     args = ap.parse_args()
 
     md_path, gig_dir = resolve_setlist(args.target)
-    name, version = gig_label(md_path, gig_dir)
+    name = gig_label(md_path, gig_dir)
     songs = ordered_titles(md_path)
     by_title = load_urls(args.csv)
 
@@ -267,11 +264,11 @@ def main():
     yt = connect()
     state = read_state(gig_dir)
     playlist_id = state.get("playlist_id")
-    desc = (f"{BAND}{SEP}{name} ({version}). Setlist order, including the acoustic "
+    desc = (f"{BAND}{SEP}{name}. Setlist order, including the acoustic "
             f"break. {len(tracks)} tracks. Updated {datetime.now():%Y-%m-%d}.")
 
     try:
-        _publish(yt, gig_dir, state, playlist_id, name, version, desc, tracks, args)
+        _publish(yt, gig_dir, state, playlist_id, name, desc, tracks, args)
     except Exception as e:
         from ytmusicapi.auth.oauth.exceptions import BadOAuthClient, UnauthorizedOAuthClient
         # A Google project left in "Testing" expires its refresh tokens after 7
@@ -306,7 +303,7 @@ def main():
         raise
 
 
-def _publish(yt, gig_dir, state, playlist_id, name, version, desc, tracks, args):
+def _publish(yt, gig_dir, state, playlist_id, name, desc, tracks, args):
     video_ids = [t["video_id"] for t in tracks]
     if playlist_id:
         # Update in place so the link already shared with the band keeps working:
@@ -337,7 +334,7 @@ def _publish(yt, gig_dir, state, playlist_id, name, version, desc, tracks, args)
 
     url = PLAYLIST_URL.format(playlist_id)
     write_state(gig_dir, {"playlist_id": playlist_id, "url": url,
-                          "gig": name, "setlist_version": version,
+                          "gig": name,
                           "track_count": len(tracks),
                           "updated": datetime.now().strftime("%Y-%m-%d %H:%M")})
     print(f"\n✅ {len(video_ids)} track(s) — {url}")

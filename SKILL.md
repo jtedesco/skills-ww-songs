@@ -72,48 +72,43 @@ Refer to the script's help menu (`--help`) for all options.
   ```
 
 * **File Output**:
-  - The script creates the gig's folder under `setlists/` and writes **v1** into it:
-    - `setlists/<YYYY-MM-DD Location>/<YYYY-MM-DD Location> v1.md` — the full Rich Metadata Table report.
-    - `…v1.pdf` — a styled PDF rendering of the `.md` report, generated automatically (see below). If PDF rendering fails (e.g. no Chromium-based browser installed), the script prints a warning and continues — the `.md` file is still written.
+  - The script creates the gig's folder under `setlists/` and writes the gig's one setlist into it:
+    - `setlists/<YYYY-MM-DD Location>/<YYYY-MM-DD Location>.md` — the full Rich Metadata Table report.
+    - `….pdf` — a styled PDF rendering of the `.md` report, generated automatically (see below). If PDF rendering fails (e.g. no Chromium-based browser installed), the script prints a warning and continues — the `.md` file is still written.
   - Pass `--date` and `--location` to control the folder and filenames, e.g. `--date 2026-07-18 --location "Local Bar & Grill"`.
   - If `--date`/`--location` are omitted the output goes to `setlists/setlist_<timestamp>/`, which is gitignored as test noise.
 
-* **Local Setlist File Storage**: every setlist lives in its own per-gig folder under `setlists/`, with every file carrying an explicit version suffix — the same shape as the shared Drive archive:
+* **Local Setlist File Storage**: every setlist lives in its own per-gig folder under `setlists/`, as a single canonical `.md`/`.pdf` pair named for the folder:
 
   ```
   setlists/
   └── 2026-08-22 The Can Bar/
-      ├── 2026-08-22 The Can Bar v3.md     ← source (edited by apply_substitution.py)
-      ├── 2026-08-22 The Can Bar v3.pdf    ← output (rendered from the .md)
-      ├── …
-      └── 2026-08-22 The Can Bar v13.md/.pdf
+      ├── 2026-08-22 The Can Bar.md     ← source (edited in place by apply_substitution.py)
+      ├── 2026-08-22 The Can Bar.pdf    ← output (rendered from the .md)
+      └── playlist.json                 ← written by build_playlist.py, once published
   ```
 
   - Folder name is `YYYY-MM-DD Location`, matching the file stem, so folder and filenames always agree. If no venue is known, use just the date.
-  - **Two files per version, and only two**: the `.md` source and the `.pdf` output. `build_setlist.py` writes `<stem> v1.md` into a new gig folder; each revision adds the next `vN` beside it.
-  - **PDF is the only output format.** The `.rtf` and `.txt` exports were removed — don't reintroduce them. The `.md` is *not* an output; it's the editable source of record that `apply_substitution.py` parses and re-renders, and that git diffs meaningfully between versions.
-  - **No canonical/unversioned duplicate is kept locally.** The Drive folder keeps one (so the band always knows what to print) but in the repo that would just be a byte-identical copy of the newest `vN` — the highest version number is unambiguous here, and git already tracks it.
+  - **Two files per gig, and only two**: the `.md` source and the `.pdf` output. Revisions rewrite that same pair — see "One Canonical Setlist Per Gig" below.
+  - **PDF is the only output format.** The `.rtf` and `.txt` exports were removed — don't reintroduce them. The `.md` is *not* an output; it's the editable source of record that `apply_substitution.py` parses and re-renders, and that git diffs meaningfully between revisions.
   - Ad-hoc runs with no `--date`/`--location` land in `setlists/setlist_<timestamp>/` and are gitignored — they're test noise, not gig records.
-  - Do **not** overwrite an existing file; create the next version or confirm with the user first.
 
-### Setlist Versioning — ENFORCED, no exceptions
+### One Canonical Setlist Per Gig
 
-Once a setlist has been generated, **every** subsequent revision of it is written to a **new versioned file**. Never edit a shared setlist in place, and never overwrite a previous version — the band prints from these and needs to be able to tell which copy someone is holding.
+Each gig has exactly **one** setlist file in the repo, named for its folder — `setlists/2026-08-22 The Can Bar/2026-08-22 The Can Bar.md` and the `.pdf` beside it. Revisions rewrite that pair in place. **Git is the version history**: `git log -p` on the file shows every revision, and the band always prints whatever is at the top of the branch, so nobody has to work out which `vN` is current.
 
-- **Filenames**: `setlists/<YYYY-MM-DD Location>/<YYYY-MM-DD Location> vN.md` (and `.pdf`) — the version suffix goes last, after the venue, inside the gig's own folder, e.g. `setlists/2026-08-22 The Can Bar/2026-08-22 The Can Bar v14.md`.
-- **Title line**: `# YYYY-MM-DD - Location (vN)`.
-- **Header block**: add a `- **Version:** vN` bullet as the *first* bullet, naming what it supersedes, e.g. `- **Version:** v4 — supersedes the 2-set v3 (\`2026-08-22 The Can Bar.md\`)`.
-- **Numbering**: `N` counts revisions of *that gig's* setlist, starts at **v1**, and only ever increments. Never reuse or reset a number, and never renumber an already-shared version. (Files predating this rule were retro-numbered when the repo moved to per-gig folders: The Can Bar's unversioned file became `v3`, since its first three revisions were unversioned; Empire's became `v1`.)
-- **Previous versions stay put.** Leave the older `.md`/`.pdf` files exactly as they are; superseding is recorded in the new file's Version bullet, not by deleting or rewriting history.
-- **Publishing**: in `setlists/` every version sits side by side; on the shared Drive they're filed into a per-gig subfolder with a single canonical copy at the root — see "Syncing PDFs to Shared Google Drive" below. `sync_pdf_to_drive()` handles both, so a new version needs no manual copying.
-- This applies to *every* kind of revision — a one-song swap via `apply_substitution.py`, a hand-edit, or a structural rebuild. `apply_substitution.py` edits its input file in place, so **copy the current version to the next `vN` filename first, then run the script against the copy**, and re-render the PDF from it.
+- **No numbered files.** Don't write `<stem> v2.md`, don't keep an old copy "just in case," and don't add a `- **Version:**` bullet or a `(vN)` title suffix — the commit message is where a revision explains itself. (The repo used to number every revision; those files were collapsed into one canonical pair per gig, and their history is in git.)
+- **Title line**: `# YYYY-MM-DD - Location`, matching the filename.
+- **Write a real commit message.** It replaces the Version bullet as the record of what changed and why, so name the songs and the reasoning — the same content the bullet used to carry.
+- This applies to *every* kind of revision — a one-song swap via `apply_substitution.py`, a hand-edit, or a structural rebuild. `apply_substitution.py` edits its input file in place, which is now exactly what's wanted: run it against the canonical `.md`, and it re-renders the PDF and re-syncs to Drive itself.
+- **Commit before revising a setlist the band already has**, so the copy they're holding is recoverable from git if a change needs backing out.
 
 ### Revising an Existing Setlist (Band Feedback)
 When the band gives feedback on a setlist that's **already been generated and shared** — "swap X for Y", "drop Z", "add W" — do **not** re-run `build_setlist.py`. It's a from-scratch randomized solver: every run re-optimizes the *entire* setlist, so even a two-song request can silently reshuffle unrelated songs, drop others, and change the emergency-cut pick. The band asked for specific changes, not a new setlist — only make the changes they named.
 
 Use `scripts/apply_substitution.py` instead. It edits the existing `.md` in place — only the named songs change, everything else (order, unrelated songs, breaks) stays byte-identical — then re-renders the `.pdf` and re-syncs to Drive, same as `build_setlist.py`:
 ```bash
-python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake/2026-07-25 Bear Cave Lake v1.md" \
+python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake/2026-07-25 Bear Cave Lake.md" \
     --swap "Rock This Town" "Valerie" \
     --swap "Brown Eyed Girl" "Reeling in the Years" \
     --remove "Ooh La La"
@@ -137,7 +132,7 @@ python3 scripts/apply_substitution.py "setlists/2026-07-25 Bear Cave Lake/2026-0
 
 To (re-)render a PDF for an existing setlist `.md` file without regenerating the setlist itself:
 ```bash
-python3 scripts/render_pdf.py "setlists/2026-07-25 Bear Cave Lake/2026-07-25 Bear Cave Lake v1.md"
+python3 scripts/render_pdf.py "setlists/2026-07-25 Bear Cave Lake/2026-07-25 Bear Cave Lake.md"
 
 # Re-render every .md under setlists/ (recursive)
 python3 scripts/render_pdf.py --all
@@ -150,21 +145,19 @@ After rendering, `build_setlist.py` and `apply_substitution.py` both publish the
 ~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists/
 ```
 
-**Layout — one canonical copy per gig, versions archived beside it.** The band prints from the root of that folder and must never have to work out which `vN` is current, so:
+**Layout — one canonical copy per gig at the root.** The band prints from the root of that folder, so a sync overwrites `<stem>.pdf` in place:
 
 ```
 Setlists/
-├── 2026-08-22 The Can Bar.pdf          <- canonical: always a copy of the newest version
-└── 2026-08-22 The Can Bar/             <- per-gig archive, named for the gig (no version suffix)
+├── 2026-08-22 The Can Bar.pdf          <- canonical: what the band prints
+└── 2026-08-22 The Can Bar/             <- frozen archive of the old numbered PDFs
     ├── 2026-08-22 The Can Bar v1.pdf
     ├── …
-    └── 2026-08-22 The Can Bar v13.pdf
+    └── 2026-08-22 The Can Bar v14.pdf
 ```
 
-- A **versioned** filename (`<stem> vN.pdf`) is copied into the `<stem>/` subfolder, which is created on demand, *and* copied to the folder root as `<stem>.pdf`.
-- The subfolder name is exactly the canonical PDF's stem, so folder and file names always agree and each is derivable from the other in code — don't introduce a separate convention (an earlier hand-made `The Can Bar - Backups` folder was renamed to match this).
-- **The canonical copy is only overwritten when the version being synced is the highest one in the archive.** Re-rendering a superseded version archives it but leaves the canonical alone, printing `↩️ Canonical left at vN` — otherwise fixing a typo in an old file would silently hand the band a stale setlist.
-- An **unversioned** filename (a gig that has never been revised) just lands at the root, as before.
+- Repo filenames carry no version suffix, so every sync now takes the **unversioned** path: a straight copy to `<stem>.pdf` at the root. Git holds the history the archive folder used to.
+- The per-gig archive subfolders are what the numbered era left behind. `sync_pdf_to_drive()` still handles a `<stem> vN.pdf` argument (archive the copy, guard the canonical against a stale overwrite with `↩️ Canonical left at vN`) so those old files can still be re-published, but nothing writes new ones. Don't reintroduce the suffix to get a Drive archive — that's what git is for.
 
 This is a plain filesystem copy (`shutil.copy2`) into the folder synced by the Google Drive Desktop app — **never use the Google Drive MCP connector for this, for any file type, even small ones.** This was tried and explicitly ruled out by the user ("forget the MCP approach altogether"), for good reason: the connector has no chunked/resumable upload, so pushing even a moderate-size binary (like a PDF) through it means base64-encoding the whole thing into a single tool call, which blows past any single-call token budget (a ~300KB PDF is ~400K base64 characters ≈ ~400K tokens). It also has no permission-write tool, so "anyone with the link" sharing can't be automated either way. The local-copy approach sidesteps all of this.
 
@@ -176,7 +169,7 @@ This is a plain filesystem copy (`shutil.copy2`) into the folder synced by the G
 2. **Local mount** — the Google Drive Desktop folder, the default on a Mac. Override the location with `WW_SETLISTS_DIR`.
 3. **Neither** — prints `⚠️ NOT PUBLISHED` and returns `False`. It does *not* fail silently: a cloud run without a target used to look like it had published.
 
-Both backends produce the identical layout (per-gig archive folder + canonical root copy) and both enforce the newest-version guard, so a file published from the cloud is indistinguishable from one published on the Mac.
+Both backends produce the identical layout (canonical copy at the root, and the same handling of a legacy `vN` filename), so a file published from the cloud is indistinguishable from one published on the Mac.
 
 **Why rclone rather than the Drive MCP connector**: the connector only accepts `base64Content`, and a setlist PDF is ~500KB — about **225K tokens** as base64, more than a whole context window per file. Ghostscript at maximum compression only gets it to ~323KB (~144K tokens), so it isn't a fixable problem. Markdown is a different story: the `.md` files are ~8–10KB and go through as `textContent` for ~3–4K tokens, so pushing a *text* copy via the connector is perfectly reasonable — just never the PDF.
 
@@ -201,10 +194,10 @@ WW_DRIVE_REMOTE=wwdrive:Setlists
 
 Copy those values out of `rclone config show wwdrive` and store them as **secrets** in the cloud environment — the token grants write access to the Shared Drive, so it never belongs in this repo. The refresh token is long-lived; rclone renews the access token itself.
 
-To manually re-publish an existing file, call the helper rather than `cp` — a bare copy would drop a `vN` file at the root and leave the canonical stale:
+To manually re-publish an existing file, call the helper rather than `cp` — it handles both filename shapes and the canonical guard:
 ```bash
 python3 -c "import sys; sys.path.insert(0,'scripts'); from build_setlist import sync_pdf_to_drive; \
-    sync_pdf_to_drive('setlists/2026-08-22 The Can Bar/2026-08-22 The Can Bar v13.pdf')"
+    sync_pdf_to_drive('setlists/2026-08-22 The Can Bar/2026-08-22 The Can Bar.pdf')"
 ```
 
 ### YouTube Music Playlists
@@ -397,10 +390,10 @@ canonical YouTube Music playlists:
   from what `sync_playlists.py` actually created. If that file is missing (playlists never
   synced) the line is simply omitted — a setlist build never fails over it.
 - `build_setlist.py` writes it into new setlists; `apply_substitution.py` upserts it on every
-  revision, so a setlist written before the playlists existed gains the links on its next
-  version, and stale ids get refreshed rather than duplicated.
-- It renders as clickable links in the PDF. Existing setlist versions are **not** rewritten —
-  per the versioning rule, they gain the line only when a new `vN` is created.
+  revision, so a setlist written before the playlists existed gains the links the next time it
+  is revised, and stale ids get refreshed rather than duplicated.
+- It renders as clickable links in the PDF. A gig's setlist is **not** rewritten just to add the
+  line — it picks it up on its next revision.
 
 ## Setlist Output Format
 
