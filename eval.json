@@ -134,7 +134,7 @@
         },
         {
           "id": "martin_out_acoustic_break_pool",
-          "assertion": "Verify that acoustic breaks do not contain 'Landslide' or 'Blackbird' (cut songs), and do contain Martin-out-safe acoustic songs such as 'Wish You Were Here', 'Ventura Highway', 'Ooh La La', or 'All For You'.",
+          "assertion": "Verify that acoustic breaks do not contain 'Landslide' or 'Blackbird' (cut songs), and do contain Martin-out-safe acoustic songs such as 'Wish You Were Here', 'Ventura Highway', or 'Ooh La La'.",
           "type": "break_content"
         }
       ]
@@ -154,7 +154,7 @@
       "validation_criteria": [
         {
           "id": "martin_out_acoustic_breaks_work",
-          "assertion": "Verify that acoustic breaks are populated (not silently fallen back to silent) by using surviving acoustic songs (Wish You Were Here, Ventura Highway, Ooh La La, All For You, Interstate Love Song).",
+          "assertion": "Verify that acoustic breaks are populated (not silently fallen back to silent) by using surviving acoustic songs (Wish You Were Here, Ventura Highway, Ooh La La).",
           "type": "break_content"
         },
         {

@@ -514,7 +514,7 @@ def main():
     parser.add_argument("--bass-sub", type=str, default=None, help="Name of a substitute bass player covering for Debo (e.g. --bass-sub Paul). Only meaningful with --debo-out; overrides the default 'David switches to bass' note.")
     parser.add_argument("--breaks", choices=["acoustic", "silent", "none"], default="acoustic", help="Break format: acoustic (filled with 2 acoustic songs), silent, or none")
     parser.add_argument("--include-not-ready", action="store_true", help="Include not-yet-gig-ready songs in sets and breaks")
-    parser.add_argument("--skip-country-grunge", action="store_true", help="Skip country (Keep Your Hands to Yourself, Take It Easy, Me and Bobby McGee) and grunge (Zombie, You Oughta Know, Interstate Love Song) songs")
+    parser.add_argument("--skip-country-grunge", action="store_true", help="Skip country (Keep Your Hands to Yourself, Take It Easy, Me and Bobby McGee) and grunge (Zombie, You Oughta Know) songs")
     parser.add_argument("--genre", type=str, default=None, help="Filter songs by genre (case-insensitive, e.g. 'Rock', 'Pop', 'Soul')")
     parser.add_argument("--era", type=str, default=None, help="Filter songs by era / decade (e.g. '70s', '80s', '90s', '1970s', '1980s')")
     parser.add_argument("--mood", type=str, default=None, help="Filter songs by mood (case-insensitive, e.g. 'Upbeat', 'Energetic', 'Chill')")
@@ -621,7 +621,7 @@ def main():
         # Skip Country and Grunge if requested
         country_grunge = {
             "keep your hands to yourself", "take it easy", "me and bobby mcgee",
-            "zombie", "you oughta know", "interstate love song"
+            "zombie", "you oughta know"
         }
         if args.skip_country_grunge and title.lower() in country_grunge:
             continue

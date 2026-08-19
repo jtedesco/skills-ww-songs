@@ -94,11 +94,10 @@ def test_database_integrity():
         #     and the default assumption for every OTHER full-band song here is gig_ready="Yes".
         #   - Removing a title from either set (because the song became ready, or was retired)
         #     also requires an edit here — these lists are never derived from the CSV automatically.
-        gig_ready_acoustic = {"Landslide", "Blackbird", "Interstate Love Song",
-                               "Wish You Were Here", "Ooh La La", "Ventura Highway",
-                               "All For You"}
+        gig_ready_acoustic = {"Landslide", "Blackbird", "Wish You Were Here",
+                               "Ooh La La", "Ventura Highway"}
         not_ready_full_band = {"Kid Charlemagne", "Ride Like the Wind",
-                               "You May Be Right", "Basket Case"}
+                               "You May Be Right"}
         if s.get("arrangement") in ["Acoustic", "Either"]:
             if title in gig_ready_acoustic:
                 if s.get("gig_ready") != "Yes":
@@ -131,7 +130,7 @@ def test_database_integrity():
                 
         # Archive check (retired songs only)
         if title in ["Paint It Black", "Crazy Little Thing Called Love", "Them Changes",
-                     "Maybe I'm Amazed", "Basket Case"]:
+                     "Maybe I'm Amazed"]:
             if s.get("archived") != "Yes":
                 archived_count += 1
                 all_pass = False
