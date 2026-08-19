@@ -14,8 +14,8 @@
 | Equal Set Lengths | ✅ Satisfied (53:30 / 52:52 / 53:00 — 0:38 spread across the three sets) |
 | Dance Peak (danceable late in each set) | ⚠️ Partially Satisfied (Set 3 is 100% danceable; Set 2 carries four non-danceable songs after the v8 revert; Set 1 is the deliberate listening set and closes on *Piano Man*) |
 | Vocalist Balance | ✅ Satisfied (no vocalist leads more than 3 songs in a row in any set) |
-| Lauren Vocal Health | ✅ Satisfied (every vocally-taxing song — Me and Bobby McGee, You Oughta Know, Respect, Zombie, Roll with the Changes — is separated by ≥2 non-taxing songs; v9 had only 1 between You Oughta Know and Respect) |
-| Segue Integrity | ✅ Satisfied (Superstition→Valerie, Funkytown→Miss You→Reeling in the Years→Don't Stop, Peg→Second Chance, Brown Eyed Girl→Hey Jealousy all intact and in canonical order) |
+| Lauren Vocal Health | ⚠️ Partially Satisfied (only *American Girl* now separates *You Oughta Know* (#10) from *Respect* (#12) in Set 2 — 1 non-taxing song, short of the ≥2 target; the cost of pulling *Hey Jealousy* up to close the segue. Me and Bobby McGee, Zombie and Roll with the Changes all clear it) |
+| Segue Integrity | ✅ Satisfied (Superstition→Valerie, Brown Eyed Girl→Hey Jealousy, and Funkytown→Miss You→Reeling in the Years→Don't Stop are all back-to-back and in canonical order; *Second Chance* isn't scheduled, so Peg's segue doesn't apply here) |
 | Target Duration | ✅ Satisfied (179:22 vs. 3hr target) |
 | Vocalist Inclusion | ✅ Satisfied (Lauren, Jon and Martin all lead; David is out) |
 | Pacing Flow | ⚠️ 1 energy drop(s): Don’t Stop Believing → Piano Man (#11→#12, SET 1) |
@@ -34,9 +34,9 @@
 | 5 | **Valerie** | Amy Winehouse | E | 106 | 3:30 | Lauren | Medium | ✓ | Bass and drums |
 | 6 | **Everybody Wants to Rule the World** | Tears for Fears | D | 112 | 4:00 | Jon (L) | Medium |  | Keys intro |
 | 7 | **Brass in Pocket** | Pretenders | A | 98 | 3:00 | Lauren (J, M) | Low |  | Guitar riff |
-| 8 | **Zombie** 🛑 **[EMERGENCY CUT]** | The Cranberries | G | 83 | 5:00 | Lauren | Medium |  | All together (bass+drums+gtr) |
+| 8 | **Zombie** | The Cranberries | G | 83 | 5:00 | Lauren | Medium |  | All together (bass+drums+gtr) |
 | 9 | **Rikki Don't Lose That Number** | Steely Dan | D | 122 | 4:30 | Jon (L) | Medium |  | Keys straight in (marimba omitted — David out) |
-| 10 | **The Chain** | Fleetwood Mac | Em | 152 | 4:30 | Lauren (J) | Medium→High |  | Drums (4 on the floor) |
+| 10 | **The Chain** 🛑 **[EMERGENCY CUT]** | Fleetwood Mac | Em | 152 | 4:30 | Lauren (J) | Medium→High |  | Drums (4 on the floor) |
 | 11 | **Don’t Stop Believing** | Journey | E | 118 | 4:00 | Lauren (J) | High | ✓ | Piano riff |
 | 12 | **Piano Man** 🔴 *[Closer]* | Billy Joel | C | 89 | 5:30 | Jon (L) | Low→Medium |  | Keys intro — big singalong, last song of Set 1 |
 
@@ -58,10 +58,10 @@
 | 6 | **Me and Bobby McGee** | Janis Joplin | G->A | 94 | 4:30 | Lauren | Low→High |  | Guitar on G chord |
 | 7 | **Peg** | Steely Dan | G | 116 | 4:00 | Jon (L) | Medium | ✓ | Written intro |
 | 8 | **Brown Eyed Girl** | Van Morrison | G | 120 | 3:00 | Jon (L) | Low | ✓ | Jon starts |
-| 9 | **You Oughta Know** | Alanis Morissette | F#m | 105 | 4:00 | Lauren | Low→High |  | Mellow bass+drums, electric piano fills |
-| 10 | **Hey Jealousy** | Gin Blossoms | D | 153 | 4:00 | Martin (J, L) | Medium | ✓ | SEGUE Jon piano, Martin to electric (keys) |
-| 11 | **American Girl** 🛑 **[EMERGENCY CUT]** | Tom Petty | D | 114 | 3:30 | Martin (L) | High | ✓ | Guitar hook |
-| 12 | **Respect** | Aretha Franklin | C | 115 | 2:30 | Lauren | Medium→High | ✓ | Alex counts us in, start together |
+| 9 | **Hey Jealousy** | Gin Blossoms | D | 153 | 4:00 | Martin (J, L) | Medium | ✓ | SEGUE Jon piano, Martin to electric (keys) |
+| 10 | **You Oughta Know** | Alanis Morissette | F#m | 105 | 4:00 | Lauren | Low→High |  | Mellow bass+drums, electric piano fills |
+| 11 | **American Girl** | Tom Petty | D | 114 | 3:30 | Martin (L) | High | ✓ | Guitar hook |
+| 12 | **Respect** 🛑 **[EMERGENCY CUT]** | Aretha Franklin | C | 115 | 2:30 | Lauren | Medium→High | ✓ | Alex counts us in, start together |
 | 13 | **Born to Run** | Bruce Springsteen | E | 147 | 4:30 | Martin (L) | High | ✓ | Drums + everyone starts, last song of Set 2 |
 
 **Set 2 Music Duration**: 47:59 | **Transitions**: 6:00 | **Total**: 53:59
