@@ -448,7 +448,7 @@ Segue groups (songs performed with no gap between them) are defined by the `orde
   | **Superstition** → **Valerie** | `Alex starts, Lauren welcomes` | `SEGUE Bass sets tempo` |
   | **Brown Eyed Girl** → **Hey Jealousy** | `Jon starts` | `SEGUE Jon piano, Martin to electric` |
   | **Peg** → **Second Chance** | `Alex counts us in` | `SEGUE (Cmaj7 to Cm) Jon` |
-  | **Funkytown** → **Miss You** → **Reeling in the Years** | `Jon starts` | `SEGUE Jon` → `SEGUE (E7 Resolve) JJ starts` |
+  | **Funkytown** → **Miss You** → **Reeling in the Years** → **Don't Stop** | `Jon starts` | `SEGUE Jon` → `SEGUE (E7 Resolve) JJ starts` → `SEGUE Piano` |
 - **Never invent or infer segue transitions** — only use what is explicitly in `intro_notes`.
 
 ## Setlist Programming Strategies

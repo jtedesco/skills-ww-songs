@@ -627,18 +627,18 @@ def test_scenario_6():
     if os.path.isdir(stale_dir) and not os.listdir(stale_dir):
         os.rmdir(stale_dir)
 
-    # 4. Segue ordering: Funkytown -> Miss You -> Reeling in the Years
+    # 4. Segue ordering: Funkytown -> Miss You -> Reeling in the Years -> Don't Stop
     all_songs_flat = [s for set_songs in res["sets"] for s in set_songs]
     all_titles = [s["title"] for s in all_songs_flat]
-    segue_trio = ["Funkytown", "Miss You", "Reeling in the Years"]
-    trio_present = [t for t in segue_trio if t in all_titles]
-    if len(trio_present) >= 2:
-        indices = [all_titles.index(t) for t in trio_present]
+    segue_chain = ["Funkytown", "Miss You", "Reeling in the Years", "Don't Stop"]
+    chain_present = [t for t in segue_chain if t in all_titles]
+    if len(chain_present) >= 2:
+        indices = [all_titles.index(t) for t in chain_present]
         if indices == sorted(indices):
-            log_test(f"Segue order: {' -> '.join(trio_present)}", True)
+            log_test(f"Segue order: {' -> '.join(chain_present)}", True)
         else:
             all_pass = False
-            log_test(f"Segue order: {' -> '.join(trio_present)}", False,
+            log_test(f"Segue order: {' -> '.join(chain_present)}", False,
                      f"Order violation: indices {indices}")
 
     return all_pass

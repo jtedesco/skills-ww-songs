@@ -169,7 +169,7 @@
         },
         {
           "id": "segue_ordering_funkytown_chain",
-          "assertion": "Verify that whenever Funkytown, Miss You, and Reeling in the Years all appear in the same set, they appear in that canonical order (per order_rules).",
+          "assertion": "Verify that whenever Funkytown, Miss You, Reeling in the Years, and Don't Stop all appear in the same set, they appear in that canonical order (per order_rules).",
           "type": "segue_ordering"
         }
       ]
