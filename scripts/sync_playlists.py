@@ -122,9 +122,9 @@ def sync_one(yt, key, title, blurb, songs, state, dry_run, privacy):
     desc = f"{blurb} {len(songs)} songs. Synced {datetime.now():%Y-%m-%d} from songs_metadata.csv."
 
     existing = []
-    if playlist_id:
+    if playlist_id and yt:
         try:
-            existing = yt.get_playlist(playlist_id, limit=None).get("tracks", []) if yt else []
+            existing = yt.get_playlist(playlist_id, limit=None).get("tracks", [])
         except Exception as e:
             print(f"  ! can't read existing playlist {playlist_id}: {e}", file=sys.stderr)
             print("    Remove its entry from playlists.json to create a fresh one.", file=sys.stderr)
@@ -206,7 +206,18 @@ def main():
         print("    Fix with: python3 scripts/resolve_youtube_urls.py", file=sys.stderr)
 
     state = read_state()
-    yt = None if args.dry_run else connect()
+    # Connect even for a dry run: without reading the playlists there is no way
+    # to tell what would actually change, and reporting every song as an
+    # addition is worse than saying nothing. Falls back to no-diff if
+    # credentials are absent, which is the one case a dry run should still work.
+    yt = None
+    try:
+        yt = connect()
+    except SystemExit:
+        if not args.dry_run:
+            raise
+        print("⚠️  No credentials — showing the target contents, not a diff "
+              "against what is live.\n", file=sys.stderr)
 
     changed = False
     for key, title, blurb in PLAYLISTS:
