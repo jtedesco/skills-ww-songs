@@ -191,6 +191,7 @@ def _song_bullet(s):
 
 
 SUMMARY_PAGE_HEADING = "## GIG SUMMARY"
+FLOOR_SHEET_HEADING = "## FLOOR SHEET"
 
 # Local Google Drive Desktop mount. Overridable so a non-default mount (or a
 # test dir) works without editing code.
@@ -382,6 +383,53 @@ def render_summary_page_lines(stats_lines, scheduled_songs, all_songs, scheduled
     lines.extend(render_vocal_breakdown_lines(scheduled_songs))
     lines.append("")
     lines.extend(render_not_selected_and_archived_lines(all_songs, scheduled_titles))
+    return lines
+
+
+def render_floor_sheet_lines(blocks):
+    """A single large-font page of the whole running order, meant to be torn
+    off and taped to the stage floor — read at a glance from standing height,
+    not studied. Deliberately carries only what's useful mid-song-change:
+    number, title, key, BPM and the intro cue. No lead/backup vocals, no
+    energy or dance marks, no emergency-cut markers, no emoji — everything
+    the main set tables already carry stays there, because each extra field
+    costs font size, and font size is the entire point of this page.
+
+    Rendered as plain paragraphs rather than a table on purpose: the PDF
+    lays this section out in CSS columns (see render_pdf.py's .floor-sheet
+    rules), and a table can't flow across a column break the way paragraphs
+    can. The three text tiers map onto markup the renderer styles by size —
+    **bold** is the title (largest), plain text is key/BPM, *italic* is the
+    intro cue (smallest) — so don't "tidy" the emphasis away.
+
+    `blocks` is an ordered [(label, songs)] list so breaks stay interleaved
+    in performance order rather than being lumped at the end; a block with
+    no songs (a silent break) is skipped entirely.
+
+    This page is REGENERATED from the final song list on every revision, the
+    same as the GIG SUMMARY page — never hand-edit it in the .md, since
+    apply_substitution.py truncates and rebuilds it (see TRAILING_HEADINGS).
+    """
+    lines = [FLOOR_SHEET_HEADING, ""]
+    for label, songs in blocks:
+        if not songs:
+            continue
+        lines.append(f"### {label}")
+        lines.append("")
+        for idx, song in enumerate(songs, 1):
+            key = str(song.get("key") or "").strip() or "-"
+            bpm = song.get("bpm")
+            bpm_str = str(bpm).strip() if bpm not in (None, "") else "-"
+            intro = str(song.get("intro_notes") or "").strip()
+            # Key/BPM stay in the small tier. Folding them into the bold with
+            # the title reads better in isolation but costs ~2pt of title size
+            # to still fit one page, and the title is what actually gets read
+            # from standing height — so the title keeps the budget.
+            line = f"**{idx}. {song['title']}** {key} · {bpm_str}"
+            if intro:
+                line += f" — *{intro}*"
+            lines.append(line)
+            lines.append("")
     return lines
 
 
@@ -1385,6 +1433,20 @@ def main():
     all_scheduled = [s for set_s in sets_songs for s in set_s] + encores
     for pair in break_songs_sets:
         all_scheduled.extend(pair)
+
+    # Floor sheet: the whole running order in performance order, breaks
+    # interleaved where they actually fall rather than appended at the end.
+    floor_blocks = []
+    for s_idx, set_s in enumerate(sets_songs):
+        floor_blocks.append((f"SET {s_idx + 1}", set_s))
+        if s_idx < num_sets - 1 and args.breaks == "acoustic" and s_idx < len(break_songs_sets):
+            floor_blocks.append((f"BREAK {s_idx + 1} (Acoustic)", break_songs_sets[s_idx]))
+    if encores:
+        floor_blocks.append(("ENCORES", encores))
+
+    md()
+    for line in render_floor_sheet_lines(floor_blocks):
+        md(line)
 
     md()
     for line in render_summary_page_lines(stats_lines, all_scheduled, all_songs, scheduled_titles):

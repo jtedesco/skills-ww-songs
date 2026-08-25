@@ -64,6 +64,20 @@ CSS = """
   strong { font-weight: 600; }
   code { background: #f2f2f2; padding: 1px 4px; border-radius: 3px; font-size: 0.9em; }
   .icon { width: 0.95em; height: 0.95em; vertical-align: -0.12em; margin-right: 2px; }
+  /* FLOOR SHEET — one page, read from standing height, so every rule here is
+     in service of font size. Two columns because a single column of 37 songs
+     at this size would run three pages; paragraphs (not a table) because a
+     table can't break across a column. The three tiers come straight from
+     the markdown render_floor_sheet_lines writes. */
+  .floor-sheet { column-count: 2; column-gap: 0.3in; }
+  .floor-sheet h2 { column-span: all; font-size: 15pt; margin: 0 0 6px; }
+  .floor-sheet h3 { font-size: 13pt; margin: 8px 0 5px; padding-bottom: 2px;
+                    border-bottom: 1.5px solid #222; break-after: avoid; break-inside: avoid; }
+  .floor-sheet h3:first-of-type { margin-top: 0; }
+  .floor-sheet p { margin: 0 0 6px; font-size: 10.5pt; line-height: 1.22;
+                   break-inside: avoid; orphans: 2; widows: 2; }
+  .floor-sheet p strong { font-size: 17pt; font-weight: 700; }
+  .floor-sheet p em { font-style: normal; color: #444; font-size: 10pt; }
   .callout { border-left: 4px solid #d4a017; background: #fff8e6; padding: 7px 12px; margin: 8px 0; border-radius: 3px; }
   .callout-title { font-weight: 700; margin-bottom: 3px; }
   .callout p { margin: 4px 0; }
@@ -173,6 +187,8 @@ def wrap_set_blocks(html):
     its own forced page too (kept to one page by construction — see
     render_summary_page_lines/render_not_selected_and_archived_lines in
     build_setlist.py — rather than by pagination tricks here). Other h2
+    FLOOR SHEET gets the same forced page break plus a .floor-sheet class
+    that lays it out in large-type columns (see CSS). Other h2
     sections (SONGS IN PROGRESS, or the older separate SONGS NOT SELECTED /
     ARCHIVED SONGS format) are left unwrapped so they flow naturally and can
     share a page — forcing every h2 onto its own page (the original,
@@ -186,7 +202,9 @@ def wrap_set_blocks(html):
         heading = parts[i]
         content = parts[i + 1] if i + 1 < len(parts) else ""
         heading_text = re.sub(r"<[^>]+>", "", heading).strip()
-        if re.match(r"^SET\b", heading_text, re.I) or heading_text.upper() in ("ENCORES", "GIG SUMMARY"):
+        if heading_text.upper() == "FLOOR SHEET":
+            out.append(f'<div class="set-block floor-sheet">{heading}{content}</div>')
+        elif re.match(r"^SET\b", heading_text, re.I) or heading_text.upper() in ("ENCORES", "GIG SUMMARY"):
             out.append(f'<div class="set-block">{heading}{content}</div>')
         else:
             out.append(heading + content)

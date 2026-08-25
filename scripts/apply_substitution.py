@@ -39,6 +39,7 @@ from build_setlist import (
     parse_length, format_length, get_segue_groups, tag_emergency_cuts,
     format_md_row, clean_backups, parse_covering_vocalist,
     render_in_progress_lines, render_summary_page_lines, SUMMARY_PAGE_HEADING,
+    render_floor_sheet_lines, FLOOR_SHEET_HEADING,
     check_absent_member_notes, format_absent_member_status,
     check_energy_flow, format_pacing_flow_status,
     TABLE_HEADER, TABLE_DIVIDER, sync_pdf_to_drive,
@@ -48,9 +49,11 @@ from build_setlist import (
 # Any of these starting a line marks the beginning of the always-regenerated
 # tail — old-format files (pre-dating the combined summary page) used the
 # first three as separate top-level headings; new ones use just the last two.
-TRAILING_HEADINGS = {"## SONGS NOT SELECTED", "## ARCHIVED SONGS", SUMMARY_PAGE_HEADING, "## SONGS IN PROGRESS"}
+TRAILING_HEADINGS = {"## SONGS NOT SELECTED", "## ARCHIVED SONGS", FLOOR_SHEET_HEADING,
+                     SUMMARY_PAGE_HEADING, "## SONGS IN PROGRESS"}
 GIG_STATS_HEADING = "### 📊 GIG SUMMARY STATS"
 BREAK_BULLET_RE = re.compile(r"^-\s*\*\*(.+?)\*\*\s*\(")
+BREAK_HEADING_RE = re.compile(r"^###\s*\S*\s*BREAK\s+(\d+)", re.I)
 BREAK_LEAD_RE = re.compile(r"Lead:\s*(\w+)")
 
 
@@ -549,6 +552,30 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
     while out and not out[-1].strip():
         out.pop()
 
+    # Floor sheet, rebuilt from the post-edit song list. Breaks are read back
+    # out of each section's preserved extra_after so they stay interleaved in
+    # performance order; a silent break contributes no bullets and is skipped.
+    floor_blocks = []
+    for sec, songs in zip(sections, songs_by_section):
+        floor_blocks.append((sec["heading"], songs))
+        brk = []
+        brk_label = None
+        for line in sec["extra_after"]:
+            hm = BREAK_HEADING_RE.match(line.strip())
+            if hm:
+                brk_label = f"BREAK {hm.group(1)} (Acoustic)"
+            bm = BREAK_BULLET_RE.match(line.strip())
+            if bm:
+                db = by_title.get(normalize_title(bm.group(1).strip()))
+                if db:
+                    brk.append({"title": bm.group(1).strip(), "key": db.get("key", ""),
+                                "bpm": db.get("bpm"), "intro_notes": db.get("intro_notes", "")})
+        if brk:
+            floor_blocks.append((brk_label or "BREAK (Acoustic)", brk))
+
+    out.append("")
+    out.extend(render_floor_sheet_lines(floor_blocks))
+
     out.append("")
     out.extend(render_summary_page_lines(stats_lines, all_scheduled, all_songs, scheduled_titles))
     out.append("")
@@ -598,8 +625,12 @@ def main():
                               "(e.g. 'last song of first set'), so each overwrite is printed for review.")
     args = parser.parse_args()
 
-    if not args.swap and not args.remove and not args.add and not args.refresh_intro_notes:
-        print("Error: nothing to do — pass at least one --swap, --remove, --add, or --refresh-intro-notes", file=sys.stderr)
+    # --set-length counts as an operation too: it's a real edit, and it's also
+    # the only no-op-shaped way to force a full re-render of the regenerated
+    # tail (floor sheet, gig summary) onto a setlist written before that
+    # section existed — re-setting a song to the length it already has.
+    if not (args.swap or args.remove or args.add or args.set_length or args.refresh_intro_notes):
+        print("Error: nothing to do — pass at least one --swap, --remove, --add, --set-length, or --refresh-intro-notes", file=sys.stderr)
         sys.exit(1)
 
     md_path = args.md_path
