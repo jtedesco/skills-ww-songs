@@ -74,7 +74,7 @@ CSS = """
   .floor-sheet h3 { font-size: 13pt; margin: 8px 0 5px; padding-bottom: 2px;
                     border-bottom: 1.5px solid #222; break-after: avoid; break-inside: avoid; }
   .floor-sheet h3:first-of-type { margin-top: 0; }
-  .floor-sheet p { margin: 0 0 3px; font-size: 10.5pt; line-height: 1.25;
+  .floor-sheet p { margin: 0 0 2px; font-size: 10.5pt; line-height: 1.25;
                    break-inside: avoid; orphans: 2; widows: 2; }
   /* Title on its own line: display:block rather than a <br> in the markdown,
      so the generated .md carries no trailing-whitespace line breaks (fragile,

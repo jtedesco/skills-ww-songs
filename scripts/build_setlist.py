@@ -390,10 +390,12 @@ def render_floor_sheet_lines(blocks, display_title=None):
     """A single large-font page of the whole running order, meant to be torn
     off and taped to the stage floor — read at a glance from standing height,
     not studied. Deliberately carries only what's useful mid-song-change:
-    number, title, key, BPM and the intro cue. No lead/backup vocals, no
-    energy or dance marks, no emergency-cut markers, no emoji — everything
-    the main set tables already carry stays there, because each extra field
-    costs font size, and font size is the entire point of this page.
+    number, title, key, BPM, the intro cue, and an `[X]` on the set's
+    emergency cut. No lead/backup vocals, no energy or dance marks, no emoji
+    — everything else the main set tables carry stays there, because each
+    extra field costs font size, and font size is the entire point of this
+    page. The `[X]` earns its place because dropping a song is a decision
+    made mid-set, looking down at this page, not back at the set tables.
 
     Rendered as plain paragraphs rather than a table on purpose: the PDF
     lays this section out in CSS columns (see render_pdf.py's .floor-sheet
@@ -423,6 +425,12 @@ def render_floor_sheet_lines(blocks, display_title=None):
     if display_title is None:
         display_title = lambda song: (song.get("floor_sheet_title") or "").strip() or song["title"]
     lines = [FLOOR_SHEET_HEADING, ""]
+    # Legend, only when something is actually marked. This page gets torn off
+    # and read on its own, away from the set tables that spell out the 🛑
+    # EMERGENCY CUT convention, so [X] needs to say what it means here.
+    if any(song.get("emergency_cut") for _, songs in blocks for song in songs):
+        lines.append("*[X] = emergency cut — drop this one first if running long.*")
+        lines.append("")
     for label, songs in blocks:
         if not songs:
             continue
@@ -437,7 +445,8 @@ def render_floor_sheet_lines(blocks, display_title=None):
             # the title reads better in isolation but costs ~2pt of title size
             # to still fit one page, and the title is what actually gets read
             # from standing height — so the title keeps the budget.
-            line = f"**{idx}. {display_title(song)}** {key} · {bpm_str}"
+            cut = " [X]" if song.get("emergency_cut") else ""
+            line = f"**{idx}. {display_title(song)}{cut}** {key} · {bpm_str}"
             if intro:
                 line += f" — *{intro}*"
             lines.append(line)

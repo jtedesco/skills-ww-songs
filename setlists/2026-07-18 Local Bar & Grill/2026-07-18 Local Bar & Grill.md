@@ -97,6 +97,8 @@ Everyone gets a bathroom break! No member performs in both songs.
 
 ## FLOOR SHEET
 
+*[X] = emergency cut — drop this one first if running long.*
+
 ### SET 1
 
 **1. Working for the Weekend** Bm · 147 — *Cowbell starts*
@@ -117,7 +119,7 @@ Everyone gets a bathroom break! No member performs in both songs.
 
 **9. Born to Run** E · 147 — *Alex starts*
 
-**10. Keep Your Hands to Yourself** A · 120 — *David starts*
+**10. Keep Your Hands to Yourself [X]** A · 120 — *David starts*
 
 **11. Pink Pony Club** E · 130 — *Jon starts*
 
@@ -143,7 +145,7 @@ Everyone gets a bathroom break! No member performs in both songs.
 
 **6. Me and Bobby McGee** G->A · 94 — *Martin to acoustic, starts*
 
-**7. Hook** A · 116 — *Martin starts, Lauren intros*
+**7. Hook [X]** A · 116 — *Martin starts, Lauren intros*
 
 **8. Rikki Don't Lose That Number** D · 122 — *David starts w/ marimba*
 
@@ -175,7 +177,7 @@ Everyone gets a bathroom break! No member performs in both songs.
 
 **7. American Girl** D · 114 — *JJ starts*
 
-**8. Dreams** C · 120 — *Alex starts*
+**8. Dreams [X]** C · 120 — *Alex starts*
 
 **9. Funkytown** C · 122 — *Jon starts*
 

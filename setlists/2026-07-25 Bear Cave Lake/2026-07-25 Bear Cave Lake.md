@@ -55,6 +55,8 @@
 
 ## FLOOR SHEET
 
+*[X] = emergency cut — drop this one first if running long.*
+
 ### SET 1
 
 **1. Working for the Weekend** Bm · 147 — *Cowbell starts*
@@ -85,7 +87,7 @@
 
 **14. EWTRW** D · 112 — *Jon starts*
 
-**15. Ventura Highway** G · 125 — *TBD*
+**15. Ventura Highway [X]** G · 125 — *TBD*
 
 **16. Don’t Stop Believing** E · 118 — *Jon starts*
 

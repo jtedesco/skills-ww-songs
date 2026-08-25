@@ -58,7 +58,7 @@
 | 6 | **Me and Bobby McGee** | Janis Joplin | G->A | 94 | 4:30 | Lauren | Low→High |  | Guitar on G chord |
 | 7 | **Peg** | Steely Dan | G | 116 | 4:00 | Jon (L) | Medium | ✓ | Written intro |
 | 8 | **Brown Eyed Girl** | Van Morrison | G | 120 | 3:00 | Jon (L) | Low | ✓ | Jon starts |
-| 9 | **Hey Jealousy** | Gin Blossoms | D | 153 | 4:00 | Martin (J, L) | Medium | ✓ | SEGUE Jon piano, Martin to electric (keys) |
+| 9 | **Hey Jealousy** | Gin Blossoms | D | 153 | 4:00 | Martin (J, L) | Medium | ✓ | SEGUE Jon piano, Martin to electric |
 | 10 | **You Oughta Know** | Alanis Morissette | F#m | 105 | 4:00 | Lauren | Low→High |  | Mellow bass+drums, electric piano fills |
 | 11 | **American Girl** | Tom Petty | D | 114 | 3:30 | Martin (L) | High | ✓ | Guitar hook |
 | 12 | **Respect** 🛑 **[EMERGENCY CUT]** | Aretha Franklin | C | 115 | 2:30 | Lauren | Medium→High | ✓ | Alex counts us in, start together |
@@ -92,6 +92,8 @@
 
 ## FLOOR SHEET
 
+*[X] = emergency cut — drop this one first if running long.*
+
 ### SET 1
 
 **1. Working for the Weekend** Bm · 147 — *Cowbell starts*
@@ -112,7 +114,7 @@
 
 **9. Rikki Don't Lose That Number** D · 122 — *Keys straight in (marimba omitted — David out)*
 
-**10. The Chain** Em · 152 — *Drums (4 on the floor)*
+**10. The Chain [X]** Em · 152 — *Drums (4 on the floor)*
 
 **11. Don’t Stop Believing** E · 118 — *Piano riff*
 
@@ -136,13 +138,13 @@
 
 **8. Brown Eyed Girl** G · 120 — *Jon starts*
 
-**9. Hey Jealousy** D · 153 — *SEGUE Jon piano, Martin to electric (keys)*
+**9. Hey Jealousy** D · 153 — *SEGUE Jon piano, Martin to electric*
 
 **10. You Oughta Know** F#m · 105 — *Mellow bass+drums, electric piano fills*
 
 **11. American Girl** D · 114 — *Guitar hook*
 
-**12. Respect** C · 115 — *Alex counts us in, start together*
+**12. Respect [X]** C · 115 — *Alex counts us in, start together*
 
 **13. Born to Run** E · 147 — *Drums + everyone starts, last song of Set 2*
 
@@ -168,7 +170,7 @@
 
 **10. Hook** A · 116 — *keys or guitar*
 
-**11. All Right Now** A · 120 — *drums*
+**11. All Right Now [X]** A · 120 — *drums*
 
 **12. Roll with the Changes** C · 134 — *Drum + keys in time, stage banter thank yous*
 
