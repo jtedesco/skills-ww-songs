@@ -90,6 +90,89 @@
 **Set 3 Music Duration**: 46:35 | **Transitions**: 5:30 | **Total**: 52:05
 ----------------------------------------
 
+## FLOOR SHEET
+
+### SET 1
+
+**1. Working for the Weekend** Bm · 147 — *Cowbell starts*
+
+**2. The Middle** D · 162 — *Guitar riff, starts on F#*
+
+**3. Free Ride** D · 104 — *guitar riff*
+
+**4. Superstition** E · 100 — *drums*
+
+**5. Valerie** E · 106 — *Bass and drums*
+
+**6. EWTRW** D · 112 — *Keys intro*
+
+**7. Brass in Pocket** A · 98 — *Guitar riff*
+
+**8. Zombie** G · 83 — *All together (bass+drums+gtr)*
+
+**9. Rikki Don't Lose That Number** D · 122 — *Keys straight in (marimba omitted — David out)*
+
+**10. The Chain** Em · 152 — *Drums (4 on the floor)*
+
+**11. Don’t Stop Believing** E · 118 — *Piano riff*
+
+**12. Piano Man** C · 89 — *Keys intro — big singalong, last song of Set 1*
+
+### SET 2
+
+**1. Listen to the Music** E · 105 — *Guitar riff*
+
+**2. Jenny (867-5309)** F#m · 136 — *Guitar riff. Stage banter about phone numbers*
+
+**3. I Hate Myself for Loving You** E · 118 — *drums*
+
+**4. Take It Easy** G · 139 — *Acoustic guitar intro*
+
+**5. Brandy** E · 126 — *Keys intro*
+
+**6. Me and Bobby McGee** G->A · 94 — *Guitar on G chord*
+
+**7. Peg** G · 116 — *Written intro*
+
+**8. Brown Eyed Girl** G · 120 — *Jon starts*
+
+**9. Hey Jealousy** D · 153 — *SEGUE Jon piano, Martin to electric (keys)*
+
+**10. You Oughta Know** F#m · 105 — *Mellow bass+drums, electric piano fills*
+
+**11. American Girl** D · 114 — *Guitar hook*
+
+**12. Respect** C · 115 — *Alex counts us in, start together*
+
+**13. Born to Run** E · 147 — *Drums + everyone starts, last song of Set 2*
+
+### SET 3
+
+**1. Pink Pony Club** E · 130 — *Piano (B7) intro*
+
+**2. Gold on the Ceiling** G · 130 — *guitar intro, heavy keys*
+
+**3. Funkytown** C · 122 — *Bass + drums*
+
+**4. Miss You** Am · 110 — *SEGUE Jon*
+
+**5. Reeling in the Years** A · 136 — *SEGUE (E7 Resolve) Guitar hook starts*
+
+**6. Don't Stop** E · 119 — *SEGUE Piano*
+
+**7. Rock This Town** D · 200 — *JJ starts*
+
+**8. Dreams** C · 120 — *Drums fill*
+
+**9. Hit Me with Your Best Shot** E · 127
+
+**10. Hook** A · 116 — *keys or guitar*
+
+**11. All Right Now** A · 120 — *drums*
+
+**12. Roll with the Changes** C · 134 — *Drum + keys in time, stage banter thank yous*
+
+
 ## GIG SUMMARY
 
 ### 📊 Stats

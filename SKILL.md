@@ -19,6 +19,14 @@ Martin switches between `electric_guitar` (his default) and `acoustic_guitar` on
 
 `keys_2`, `percussion`, `harmonica`, and `accordion` are David's remaining parts (he also covers `electric_guitar`/`acoustic_guitar` and vocals per-song) and `sax` has no assigned player yet — all left blank for now, to be backfilled per-song rather than guessed.
 
+## Floor Sheet Title Column
+
+`songs_metadata.csv` has a `floor_sheet_title` column: an optional short form used **only** on the setlist's large-type FLOOR SHEET page, where a title too long for the column wraps to a second line and costs a slot. Blank (the normal case) means print the real `title`.
+
+It is deliberately scoped to that one page — the set tables, the YouTube playlists, the gig summary and the "Not Selected" list all keep the full title, so an abbreviation can't leak into a surface where nobody would recognise it. `render_floor_sheet_lines()` in `build_setlist.py` reads it directly for CSV-sourced songs; `apply_substitution.py` passes its own resolver, because its song dicts are parsed back out of the printed `.md` table and don't carry the column.
+
+See the FLOOR SHEET bullet under "Setlist Output Format" for when to set one and how to measure which titles actually wrap.
+
 ## Danceable Column
 
 `songs_metadata.csv` has a `danceable` column (`Yes`/`No`) marking whether a song holds a dance floor. It's stored as `Yes`/`No` to match every other boolean column in the database, but renders as a `✓` (danceable) or blank (not) in the setlist table's **Dance** column — blank rather than `✗` on purpose, so the checkmarks are what the eye catches when reading the floor.
@@ -427,7 +435,21 @@ All "who's missing" and event-detail info lives here — do not restate it in th
   - **Only four fields per song**: number, title, key, BPM, and the intro cue. No lead/backup vocals, no energy or dance marks, no emergency-cut markers, no emoji. Every extra field costs font size, and font size is the whole point of the page. Don't add columns to it "for completeness" — that information is already in the set tables two pages earlier.
   - **Three text tiers, driven by markup, styled by CSS**: `**bold**` is the number + title (largest, 15.5pt, on its own line), plain text is key/BPM, `*italic*` is the intro cue (smallest, on the line below). `render_pdf.py`'s `.floor-sheet` rules key off exactly that markup, so don't "tidy" the emphasis out of the generated markdown.
   - **The title's own line comes from CSS (`display: block` on the `strong`), not a `<br>` in the markdown.** Markdown line breaks mean trailing double-spaces — invisible in a diff and easily stripped by an editor — so the generated `.md` deliberately has none.
-  - **A title that wraps wants an abbreviation.** With the title on its own line at 15.5pt, a song title has roughly one column-width to play with; past that it takes a second line and costs a slot. To check after adding a long-titled song, measure rather than eyeball: rebuild the page's HTML with `render_pdf.CSS`, then use headless Chrome (`--dump-dom`) with a `Range.getClientRects().length > 1` test over each `.floor-sheet p strong`. As of the 2026-08-28 Empire gig only *Everybody Wants to Rule the World* wraps (105% of column width); *Rikki Don't Lose That Number* is the next closest at 90%. Abbreviating is a band-recognition call — ask before shortening a printed title.
+  - **A title that wraps wants an abbreviation — set it in the database, not in the setlist.** `songs_metadata.csv` has a **`floor_sheet_title`** column holding the short form to print on this page only (e.g. *Everybody Wants to Rule the World* → `EWTRW`). Blank means "print the real title", which is the case for all but a handful. It affects the floor sheet **and nothing else** — set tables, playlists, the gig summary and every other surface keep the full title, so shortening one can't leak into the rest of the document.
+    - Don't hand-edit the abbreviation into a setlist `.md`: the floor sheet is regenerated on every revision, so the edit would be silently discarded. Set the column and re-render.
+    - `add_song.py` doesn't prompt for it — new songs get a blank, which is the right default. Add one only when a title actually wraps.
+    - **Abbreviating is a band-recognition call.** A short form that nobody parses at a glance is worse than a wrapped line. Ask before shortening a printed title.
+
+  <a id="measuring-floor-sheet-titles"></a>
+  **Measuring which titles wrap** (repeat this after adding a long-titled song, or after any change to the floor-sheet type size — eyeballing a thumbnail is not reliable):
+
+  ```bash
+  # 1. Rebuild the floor sheet's HTML at the exact printed content width
+  #    (8.5in page - 2 x 0.5in @page margin = 7.5in), using the real stylesheet.
+  # 2. Count line boxes per title with Range.getClientRects(); >1 means it wrapped.
+  # 3. Read the answer back out of the DOM with headless Chrome's --dump-dom.
+  ```
+  Measure the `<strong>` inside each `.floor-sheet p`, since that is the title tier. A title at or above ~90% of column width has effectively no slack left and is worth watching even though it still fits on one line. Current state (2026-08-28 Empire, 15.5pt): *Everybody Wants to Rule the World* was the only one over at 105% and now prints as `EWTRW`; *Rikki Don't Lose That Number* is the next closest at 90% and is **not** abbreviated.
   - **Paragraphs, not a table, in two CSS columns.** A table can't flow across a column break; paragraphs can. Two columns is what lets ~37 songs sit on one page at that type size.
   - **One page is a hard requirement, and it's tight.** The layout was tuned against a 37-song, 3-set gig and lands one page with a little room to spare. A materially longer gig, or a bump to the title size, will spill to a second page — re-render and check the page count rather than assuming. Folding key/BPM into the bold tier reads better in isolation but costs ~2pt of title size to still fit, which is why it isn't done that way.
   - **Breaks are interleaved in performance order**, not lumped at the end — an acoustic break renders as its own `### BREAK N (Acoustic)` block between the sets it falls between. A silent break contributes no songs and is skipped entirely.

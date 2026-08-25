@@ -386,7 +386,7 @@ def render_summary_page_lines(stats_lines, scheduled_songs, all_songs, scheduled
     return lines
 
 
-def render_floor_sheet_lines(blocks):
+def render_floor_sheet_lines(blocks, display_title=None):
     """A single large-font page of the whole running order, meant to be torn
     off and taped to the stage floor — read at a glance from standing height,
     not studied. Deliberately carries only what's useful mid-song-change:
@@ -406,10 +406,22 @@ def render_floor_sheet_lines(blocks):
     in performance order rather than being lumped at the end; a block with
     no songs (a silent break) is skipped entirely.
 
+    `display_title` resolves the name to PRINT for a song, which is not
+    always its real title: a title too long for the column wraps onto a
+    second line and costs a slot, so songs_metadata.csv has a
+    `floor_sheet_title` column holding a short form for those (see
+    "Abbreviating a long title" in SKILL.md). It defaults to reading that
+    column off the song dict, which is right when songs came from the CSV;
+    apply_substitution.py passes its own resolver, because its song dicts
+    were parsed back out of the printed .md table and carry only what that
+    table prints.
+
     This page is REGENERATED from the final song list on every revision, the
     same as the GIG SUMMARY page — never hand-edit it in the .md, since
     apply_substitution.py truncates and rebuilds it (see TRAILING_HEADINGS).
     """
+    if display_title is None:
+        display_title = lambda song: (song.get("floor_sheet_title") or "").strip() or song["title"]
     lines = [FLOOR_SHEET_HEADING, ""]
     for label, songs in blocks:
         if not songs:
@@ -425,7 +437,7 @@ def render_floor_sheet_lines(blocks):
             # the title reads better in isolation but costs ~2pt of title size
             # to still fit one page, and the title is what actually gets read
             # from standing height — so the title keeps the budget.
-            line = f"**{idx}. {song['title']}** {key} · {bpm_str}"
+            line = f"**{idx}. {display_title(song)}** {key} · {bpm_str}"
             if intro:
                 line += f" — *{intro}*"
             lines.append(line)
