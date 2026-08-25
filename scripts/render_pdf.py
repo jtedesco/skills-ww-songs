@@ -74,9 +74,14 @@ CSS = """
   .floor-sheet h3 { font-size: 13pt; margin: 8px 0 5px; padding-bottom: 2px;
                     border-bottom: 1.5px solid #222; break-after: avoid; break-inside: avoid; }
   .floor-sheet h3:first-of-type { margin-top: 0; }
-  .floor-sheet p { margin: 0 0 6px; font-size: 10.5pt; line-height: 1.22;
+  .floor-sheet p { margin: 0 0 3px; font-size: 10.5pt; line-height: 1.25;
                    break-inside: avoid; orphans: 2; widows: 2; }
-  .floor-sheet p strong { font-size: 17pt; font-weight: 700; }
+  /* Title on its own line: display:block rather than a <br> in the markdown,
+     so the generated .md carries no trailing-whitespace line breaks (fragile,
+     and invisible in a diff). A title that still wraps after this is genuinely
+     too long for the column and wants an abbreviation. */
+  .floor-sheet p strong { display: block; font-size: 15.5pt; font-weight: 700;
+                          line-height: 1.12; }
   .floor-sheet p em { font-style: normal; color: #444; font-size: 10pt; }
   .callout { border-left: 4px solid #d4a017; background: #fff8e6; padding: 7px 12px; margin: 8px 0; border-radius: 3px; }
   .callout-title { font-weight: 700; margin-bottom: 3px; }
