@@ -262,7 +262,7 @@ def parse_markdown_report(stdout_str):
 # 3. Scenario Constraint Tests
 # -------------------------------------------------------------
 def run_scenario(args):
-    cmd = ["python3", BUILDER_PATH] + args
+    cmd = [sys.executable, BUILDER_PATH] + args
     res = subprocess.run(cmd, capture_output=True, text=True, cwd=SCRIPT_DIR)
     if res.returncode != 0:
         print(f"Error executing setlist builder for args {args}:")
