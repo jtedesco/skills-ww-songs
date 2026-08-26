@@ -77,10 +77,19 @@ def check_absent_member_notes(song_list, missing_names):
                 flagged.append((song["title"], name, notes))
     return flagged
 
+def _plain(text):
+    """Strip inline emphasis markers so a printed note can be quoted inside
+    other prose. Intro notes may legitimately carry markup — a bold
+    "[Vamp]"-style tag, for instance — and re-emitting that inside a
+    constraints-table sentence renders as bold mid-sentence, drawing the eye
+    to the tag rather than to what the constraint is actually reporting."""
+    return re.sub(r"\*{1,3}(.+?)\*{1,3}", r"\1", text or "")
+
+
 def format_absent_member_status(flags):
     if not flags:
         return "✅ Satisfied (No absent-member references in intro notes)"
-    detail = "; ".join(f'*{title}* mentions {name} ("{notes}")' for title, name, notes in flags)
+    detail = "; ".join(f'*{title}* mentions {name} ("{_plain(notes)}")' for title, name, notes in flags)
     return f"⚠️ {len(flags)} stale reference(s): {detail}"
 
 def check_energy_flow(labeled_song_lists):
@@ -448,7 +457,14 @@ def render_floor_sheet_lines(blocks, display_title=None):
             cut = " [X]" if song.get("emergency_cut") else ""
             line = f"**{idx}. {display_title(song)}{cut}** {key} · {bpm_str}"
             if intro:
-                line += f" — *{intro}*"
+                # Explicit <em>, not *...*: an intro note can itself carry
+                # markup (a bold "[Vamp]"-style tag), and "***[Vamp]***" —
+                # what a bold-only note collapses to — parses as a TOP-LEVEL
+                # <strong>, which would inherit the title tier's display:block
+                # and print the tag as a full-size line of its own. Wrapping
+                # explicitly keeps everything after the key/BPM inside <em>,
+                # so `.floor-sheet p > strong` reliably means "the title".
+                line += f" — <em>{intro}</em>"
             lines.append(line)
             lines.append("")
     return lines

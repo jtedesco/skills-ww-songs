@@ -80,9 +80,13 @@ CSS = """
      so the generated .md carries no trailing-whitespace line breaks (fragile,
      and invisible in a diff). A title that still wraps after this is genuinely
      too long for the column and wants an abbreviation. */
-  .floor-sheet p strong { display: block; font-size: 15.5pt; font-weight: 700;
-                          line-height: 1.12; }
+  /* Direct child only: the title. A bold tag inside the cue (e.g. [Vamp]) is
+     nested in the <em>, so it must not pick up display:block / 15.5pt. */
+  .floor-sheet p > strong { display: block; font-size: 15.5pt; font-weight: 700;
+                            line-height: 1.12; }
   .floor-sheet p em { font-style: normal; color: #444; font-size: 10pt; }
+  .floor-sheet p em strong { display: inline; font-size: inherit; font-weight: 700;
+                             color: #1a1a1a; }
   .callout { border-left: 4px solid #d4a017; background: #fff8e6; padding: 7px 12px; margin: 8px 0; border-radius: 3px; }
   .callout-title { font-weight: 700; margin-bottom: 3px; }
   .callout p { margin: 4px 0; }
