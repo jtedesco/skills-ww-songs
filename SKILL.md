@@ -375,6 +375,17 @@ The same care applies to `length` when it feeds duration math, though it's lower
 
 Run `python3 scripts/test_setlist.py` after adding a song and before considering it done — this is the mechanical "did I miss a step" check.
 
+### Release Years Are Confirmed Data, Not Scraped Data
+
+`release_year` means the **original** release of the version the band plays. It is checked and signed off, not taken from a lookup — `enrich_metadata.py` therefore only ever fills a *blank* cell and never overwrites an existing one. To deliberately re-resolve a song, clear its cell first.
+
+This is not caution for its own sake. The column was once almost entirely wrong: *Brown Eyed Girl* read 2000, *Don't Stop* 2018, *All Right Now* 1999, *Wish You Were Here* 2013 — 14 of 16 spot-checked values were off, most by decades. Two separate causes, both worth knowing before trusting any MusicBrainz year:
+
+1. **Searching release-groups by song title finds the wrong thing.** It ranks by match score, so a compilation *named after the song* beats the original — that is how *Respect* resolved to a 2009 reissue single. And a song that was only ever an album track (*Roll with the Changes*, *Blackbird*, *Vienna*, *Ventura Highway*) has no release-group of its own, so the search returns nothing at all.
+2. **Searching recordings and taking the earliest release is also unsafe.** It handles album tracks, but the releases attached to a recording include remasters and re-recordings, and the API returns only a subset — which yielded *Take It Easy* 2026, *American Girl* 2021, and *The Chain* 2001 (a Rumours remaster).
+
+Running **both** and keeping only what agrees is the useful technique: the two methods agreed on the decade for 28 of 47 songs, which isolated the ~19 genuinely needing a human. Some of those are editorial rather than factual and can only be settled by the band — *Hey Jealousy* exists on both a 1989 indie debut and the 1992 hit album (different decades); *Funkytown*'s album is Nov 1979 but its single is 1980; *Landslide* is credited to Stevie Nicks, who never recorded it.
+
 ### Database Enrichment (MusicBrainz API)
 To update or enrich the song database metadata with the latest details (original release year, album, genre, and mood) from the MusicBrainz API, run the enrichment script:
 ```bash

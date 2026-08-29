@@ -42,6 +42,12 @@ def query_musicbrainz(url):
             return None
     return None
 
+def rgs_pool(rg_data):
+    """The release-groups a search returned, or [] — kept separate so the
+    selection logic below reads as one idea."""
+    return rg_data.get('release-groups') or []
+
+
 def fetch_song_attributes(title, artist):
     artist_cleaned = clean_artist(artist)
     title_cleaned = clean_title(title)
@@ -75,20 +81,31 @@ def fetch_song_attributes(title, artist):
     album_title = ""
     
     if rg_data and rg_data.get('release-groups'):
-        rgs = rg_data['release-groups']
-        rgs_sorted = sorted(rgs, key=lambda x: (
-            0 if x.get('primary-type') == 'Album' else
-            1 if x.get('primary-type') == 'Single' else
-            2 if x.get('primary-type') == 'EP' else 3,
-            -int(x.get('score', 0))
-        ))
-        best_rg = rgs_sorted[0]
-        album_title = best_rg.get('title', '')
-        first_date = best_rg.get('first-release-date', '')
-        if first_date:
-            match = re.search(r'\d{4}', first_date)
-            if match:
-                earliest_year = match.group(0)
+        # Pick the EARLIEST plausible release-group, not the best-scoring one.
+        # Ranking by type-then-score (the original behaviour) reliably picked
+        # reissues and compilations: a 2000 compilation *titled* "Brown Eyed
+        # Girl" scores as well as the 1967 single, so the stored year became
+        # 2000. Same failure put Don't Stop at 2018 and All Right Now at 1999.
+        # release_year is meant to be the ORIGINAL release, so: drop anything
+        # secondary-typed as a compilation/live/remix, keep real albums and
+        # singles that actually matched, and take the oldest first-release-date.
+        EXCLUDED_SECONDARY = {'Compilation', 'Live', 'Remix', 'DJ-mix', 'Interview', 'Demo'}
+        candidates = []
+        for rg in rgs_pool(rg_data):
+            if int(rg.get('score', 0)) < 70:
+                continue
+            if set(rg.get('secondary-types') or []) & EXCLUDED_SECONDARY:
+                continue
+            if rg.get('primary-type') not in ('Album', 'Single', 'EP'):
+                continue
+            m = re.match(r'(\d{4})', rg.get('first-release-date') or '')
+            if m:
+                candidates.append((int(m.group(1)), rg))
+        if candidates:
+            candidates.sort(key=lambda c: c[0])
+            year, best_rg = candidates[0]
+            earliest_year = str(year)
+            album_title = best_rg.get('title', '')
 
     # 2. Query recording to get recording ID, genres, and mood tags
     rec_query = f'recording:"{title_cleaned}" AND artist:"{artist_cleaned}"'
@@ -194,7 +211,15 @@ def main():
         print(f"[{idx+1}/{len(songs)}] Querying MusicBrainz for '{title}' by '{artist}'...")
         try:
             attrs = fetch_song_attributes(title, artist)
-            song['release_year'] = attrs['release_year'] or song.get('release_year') or ""
+            # release_year is CONFIRMED DATA, so an existing value wins over a
+            # fresh lookup — the reverse of every other field here. The whole
+            # column was once wrong because MusicBrainz answers with whatever
+            # release matched (reissues, compilations, live cuts): Brown Eyed
+            # Girl came back 2000, Don't Stop 2018, All Right Now 1999. The 47
+            # active songs' years were checked against two independent lookups
+            # and signed off by the band, so this only ever FILLS A BLANK.
+            # To deliberately re-resolve one, clear its cell first.
+            song['release_year'] = song.get('release_year') or attrs['release_year'] or ""
             song['original_album'] = attrs['original_album'] or song.get('original_album') or ""
             song['musicbrainz_genre'] = attrs['musicbrainz_genre'] or song.get('musicbrainz_genre') or ""
             song['musicbrainz_mood'] = attrs['musicbrainz_mood'] or song.get('musicbrainz_mood') or ""
