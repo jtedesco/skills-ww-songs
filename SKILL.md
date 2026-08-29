@@ -377,7 +377,17 @@ Run `python3 scripts/test_setlist.py` after adding a song and before considering
 
 ### Release Years Are Confirmed Data, Not Scraped Data
 
-`release_year` means the **original** release of the version the band plays. It is checked and signed off, not taken from a lookup — `enrich_metadata.py` therefore only ever fills a *blank* cell and never overwrites an existing one. To deliberately re-resolve a song, clear its cell first.
+`release_year` exists to place a song in an **era**, so the bar it has to clear is the *decade*, not the exact year. It is checked and signed off, not taken from a lookup — `enrich_metadata.py` therefore only ever fills a *blank* cell and never overwrites an existing one. To deliberately re-resolve a song, clear its cell first.
+
+**First release vs. when it got popular is a tie-breaker, not a rule.** The two often differ by a year (album in the autumn, single charting the following spring). Where both land in the same decade — *Baby Blue* 1971/1972, *Free Ride* 1972/1973, *Gold on the Ceiling* 2011/2012, *Keep Your Hands to Yourself* 1985/1986 — either value is fine and re-litigating it is churn. Only when the two straddle a decade boundary does the choice matter, and then **the year it became popular wins**, because that's the era a listener places it in:
+
+| Song | First release | Became popular | Stored |
+| :--- | :--- | :--- | :--- |
+| *Funkytown* | Nov 1979 album | 1980 single | **1980** |
+| *Hey Jealousy* | 1989 indie debut *Dusted* | 1992 *New Miserable Experience* | **1992** |
+| *Colors* | 2019 debut album | broke 2020–21 | **2019** (see below) |
+
+*Colors* is the case that shows the seam: it is stored as **2019**, its real release, because writing a year the database knows is wrong is exactly the failure this whole column recovered from — but the band groups it under the 2020s on the song-list page. A display-only decade override was considered and deliberately rejected as not worth a column for one song; the grouping decision lives with the page, not the data.
 
 This is not caution for its own sake. The column was once almost entirely wrong: *Brown Eyed Girl* read 2000, *Don't Stop* 2018, *All Right Now* 1999, *Wish You Were Here* 2013 — 14 of 16 spot-checked values were off, most by decades. Two separate causes, both worth knowing before trusting any MusicBrainz year:
 
