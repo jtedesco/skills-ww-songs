@@ -55,6 +55,16 @@ You can execute it using:
 python3 scripts/build_setlist.py --gig-type bar --duration 3 --breaks acoustic
 ```
 Refer to the script's help menu (`--help`) for all options.
+
+* **Transition buffer**: every duration figure the skill prints — per-set totals, the grand total, and the solver's own packing decisions — budgets `TRANSITION_BUFFER_SECONDS` (currently **60s**) of wall clock between each pair of adjacent songs, for the count-in, tuning, a word to the crowd, a guitar swap. The constant lives in `build_setlist.py` and is imported by `apply_substitution.py`; the printed `Transition Buffers (Ns/song)` label is derived from it too. Change it in that one place — never re-hardcode the number, or the solver's packing and the printed totals drift apart silently.
+  - It was **30s** through the 2026-08-28 Empire gig, where every set ran ~5 minutes long. Those sets carried 11–12 transitions, so the shortfall was ~26s per song change: 30s covers a clean segue but not a normal stop-and-restart. If sets start running *early* by a similar margin, this is the dial to turn back down.
+
+* **Number of sets**: `--sets N` forces the set count; breaks are always `N - 1`. Without it the count is inferred from `--duration` (≤2h → 1 set, otherwise `ceil(hours)`), and that heuristic **can never produce 2** — it jumps from 1 straight to 3. A two-set night (the common "two 70-minute sets with a break" club booking) therefore *requires* `--sets 2`:
+  ```bash
+  # Two 70-minute sets with a 10-minute acoustic break = 150 min total
+  python3 scripts/build_setlist.py --duration 2.5 --sets 2 --breaks acoustic
+  ```
+  `--duration` stays the *total* gig length including breaks, so the per-set target is `(duration - breaks) / sets`.
 * **Genre, Era & Mood Filtering**: You can filter the setlist by genre, era, or mood:
   ```bash
   # Generate a setlist containing only rock songs
@@ -519,7 +529,7 @@ When generating setlists, consider the following programming strategies to optim
 * **Goal**: Build a sustained dance floor during the second half of the set.
 * **Approach**:
   - Group dancing-friendly songs back-to-back (e.g., *Valerie*, *Superstition*, *Funkytown*, *Pink Pony Club*) towards the end of the set (just before the closer).
-  - Minimize transitions (keep the 30-second transition buffer tight or segue them where possible) to maintain momentum.
+  - Minimize transitions (keep the transition buffer tight or segue them where possible) to maintain momentum.
 
 ### 3. Vocalist Vibe & Health Rotations
 * **Goal**: Keep the band's stage presence dynamic while protecting vocal cords.

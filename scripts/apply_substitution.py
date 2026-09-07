@@ -44,6 +44,7 @@ from build_setlist import (
     check_energy_flow, format_pacing_flow_status,
     TABLE_HEADER, TABLE_DIVIDER, sync_pdf_to_drive,
     playlist_links_bullet, PLAYLIST_BULLET_PREFIX,
+    TRANSITION_BUFFER_SECONDS, format_transition_buffer_label,
 )
 
 # Any of these starting a line marks the beginning of the always-regenerated
@@ -495,7 +496,7 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
             out.append(format_md_row(song, idx, marker))
 
         dur = sum(parse_length(s["length"]) for s in songs)
-        trans = (len(songs) - 1) * 30 if len(songs) > 1 else 0
+        trans = (len(songs) - 1) * TRANSITION_BUFFER_SECONDS if len(songs) > 1 else 0
         label = "Set" if is_main_set else "Encore"
         set_num = "".join(c for c in sec["heading"] if c.isdigit())
         label_str = f"Set {set_num}" if is_main_set else "Encore"
@@ -510,7 +511,10 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
     # fresh from the database via each break song's title, since breaks
     # aren't structured data here, just preserved bullet text.
     total_music = sum(parse_length(sg["length"]) for songs in songs_by_section for sg in songs)
-    total_trans = sum((len(songs) - 1) * 30 if len(songs) > 1 else 0 for songs in songs_by_section)
+    total_trans = sum(
+        (len(songs) - 1) * TRANSITION_BUFFER_SECONDS if len(songs) > 1 else 0
+        for songs in songs_by_section
+    )
 
     break_seconds = 0
     for bs in break_songs:
@@ -518,7 +522,7 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
         if key in by_title:
             break_seconds += parse_length(by_title[key]["length"])
     if len(break_songs) > 1:
-        break_seconds += (len(break_songs) - 1) * 30
+        break_seconds += (len(break_songs) - 1) * TRANSITION_BUFFER_SECONDS
 
     # An acoustic break is measured by its songs (above), but a SILENT break
     # has no song bullets at all — so deriving break time purely from bullets
@@ -535,7 +539,7 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
     stats_lines = [
         f"- **Total Songs Scheduled**: {total_songs}",
         f"- **Pure Music Playtime**: {format_length(total_music)}",
-        f"- **Transition Buffers (30s/song)**: {format_length(total_trans)}",
+        f"- **Transition Buffers ({format_transition_buffer_label()})**: {format_length(total_trans)}",
         f"- **Break Time**: {format_length(break_seconds)}",
         f"- **Grand Total Duration**: {format_length(grand_total)}{target_str}",
     ]

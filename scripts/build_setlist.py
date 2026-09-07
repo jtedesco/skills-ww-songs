@@ -31,6 +31,24 @@ def parse_length(length_str):
 def format_length(seconds):
     return f"{int(seconds // 60)}:{int(seconds % 60):02d}"
 
+# Wall-clock slack budgeted between two adjacent songs: count-in, tuning, a
+# word to the crowd, someone swapping a guitar. Every duration figure in this
+# script and in apply_substitution.py derives from this one number, so the
+# solver's packing and the printed totals can never drift apart.
+#
+# Raised 30s -> 60s after the 2026-08-28 Empire gig, where each set ran ~5
+# minutes long against a 30s/song plan. Those sets carried 11-12 transitions,
+# so the miss was ~26s per song change: 30s covered a clean segue but not a
+# normal stop-and-restart. 60s reproduces the ~5:30-6:00 per set that was
+# actually being spent.
+TRANSITION_BUFFER_SECONDS = 60
+
+
+def format_transition_buffer_label():
+    """Human label for the stats bullet, e.g. '60s/song'."""
+    return f"{TRANSITION_BUFFER_SECONDS}s/song"
+
+
 def parse_covering_vocalist(notes, default):
     """Extract the per-song covering lead vocalist from substitution_notes.
 
@@ -121,7 +139,7 @@ class Item:
         
         total_seconds = sum(parse_length(s["length"]) for s in songs_list)
         if len(songs_list) > 1:
-            total_seconds += (len(songs_list) - 1) * 30
+            total_seconds += (len(songs_list) - 1) * TRANSITION_BUFFER_SECONDS
         self.duration_seconds = total_seconds
         
         self.vocals_sequence = [s["lead_vocals"] for s in songs_list]
@@ -542,7 +560,7 @@ def format_md_row(song, idx, marker=""):
     dance = dance_display_string(song)
     return f"| {idx+1} | **{song['title']}**{marker} | {song['artist']} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
 
-def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, num_breaks, acoustic_pool, martin_out, david_out, forced_encore_songs=None):
+def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, num_breaks, acoustic_pool, martin_out, david_out, forced_encore_songs=None, no_encore=False):
     break_songs_sets = []
     if breaks_opt == "acoustic" and num_breaks > 0:
         used_song_titles = {s["title"] for set_songs in sets_songs for s in set_songs}
@@ -575,17 +593,22 @@ def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, nu
             used_song_titles.add(pair[0]["title"])
             used_song_titles.add(pair[1]["title"])
 
-    remaining_songs = [s for s in available_songs if s["title"] not in used_song_titles]
-    encore_options = ["All Right Now", "Crazy Little Thing Called Love"]
-    for opt in encore_options:
-        match = next((s for s in remaining_songs if s["title"].lower() == opt.lower()), None)
-        if match:
-            encores.append(match)
-            remaining_songs.remove(match)
+    # Mirror main()'s encore rule exactly. If this simulation invented two
+    # encore songs that --no-encore is going to drop, a vocalist whose
+    # "must lead at least one song" requirement is only met by an encore
+    # would validate here and then not sing at the actual gig.
+    if not no_encore:
+        remaining_songs = [s for s in available_songs if s["title"] not in used_song_titles]
+        encore_options = ["All Right Now", "Crazy Little Thing Called Love"]
+        for opt in encore_options:
+            match = next((s for s in remaining_songs if s["title"].lower() == opt.lower()), None)
+            if match:
+                encores.append(match)
+                remaining_songs.remove(match)
 
-    while len(encores) < 2 and remaining_songs:
-        remaining_songs.sort(key=lambda s: s["bpm"] or 0, reverse=True)
-        encores.append(remaining_songs.pop(0))
+        while len(encores) < 2 and remaining_songs:
+            remaining_songs.sort(key=lambda s: s["bpm"] or 0, reverse=True)
+            encores.append(remaining_songs.pop(0))
 
     return [s for set_s in sets_songs for s in set_s] + encores
 
@@ -597,6 +620,8 @@ def main():
     parser.add_argument("--david-out", action="store_true", help="David is out (Lauren covers David's lead parts, keys/marimba omitted/covered)")
     parser.add_argument("--debo-out", action="store_true", help="Debo is out (non-vocal role — only affects the header's Missing field and the bass-coverage note)")
     parser.add_argument("--bass-sub", type=str, default=None, help="Name of a substitute bass player covering for Debo (e.g. --bass-sub Paul). Only meaningful with --debo-out; overrides the default 'David switches to bass' note.")
+    parser.add_argument("--no-encore", action="store_true", help="Do not reserve or schedule an encore. On a multi-set gig the solver otherwise holds back ~8 min for 2 encore songs, which shrinks every set by that much (e.g. a 150-min two-set night yields ~63-min sets instead of 70).")
+    parser.add_argument("--sets", type=int, default=None, help="Force the number of main sets, overriding the duration heuristic (e.g. --sets 2 for a 2x70min gig). Breaks = sets - 1.")
     parser.add_argument("--breaks", choices=["acoustic", "silent", "none"], default="acoustic", help="Break format: acoustic (filled with 2 acoustic songs), silent, or none")
     parser.add_argument("--include-not-ready", action="store_true", help="Include not-yet-gig-ready songs in sets and breaks")
     parser.add_argument("--skip-country-grunge", action="store_true", help="Skip country (Keep Your Hands to Yourself, Take It Easy, Me and Bobby McGee) and grunge (Zombie, You Oughta Know) songs")
@@ -777,8 +802,16 @@ def main():
 
     # Calculate set structures
 
-    # Keep 2 hours or less as a single set (unless specified otherwise)
-    if args.duration <= 2.0:
+    # Keep 2 hours or less as a single set (unless specified otherwise).
+    # Note this heuristic can never yield 2: <=2h collapses to one set and
+    # anything longer rounds up to at least 3. A two-set night (the common
+    # "two 70-minute sets with a break" club booking) is only reachable via
+    # the explicit --sets override.
+    if args.sets is not None:
+        if args.sets < 1:
+            parser.error("--sets must be at least 1")
+        num_sets = args.sets
+    elif args.duration <= 2.0:
         num_sets = 1
     else:
         num_sets = max(1, int(ceil(args.duration)))
@@ -822,7 +855,7 @@ def main():
 
     total_gig_seconds = args.duration * 3600
     break_duration_seconds = 10 * 60 if num_breaks > 0 else 0
-    encore_duration_seconds = 8 * 60 if num_sets > 1 else 0
+    encore_duration_seconds = 0 if args.no_encore else (8 * 60 if num_sets > 1 else 0)
     
     total_break_seconds = num_breaks * break_duration_seconds
     total_set_music_seconds = total_gig_seconds - total_break_seconds - (encore_duration_seconds if num_sets > 1 else 0)
@@ -830,7 +863,7 @@ def main():
     # Calculate total duration of available songs matching filters to verify if we have enough music
     total_available_seconds = sum(parse_length(s["length"]) for s in available_songs)
     if len(available_songs) > 1:
-        total_available_seconds += (len(available_songs) - 1) * 30
+        total_available_seconds += (len(available_songs) - 1) * TRANSITION_BUFFER_SECONDS
         
     insufficient_music = False
     if total_available_seconds < total_set_music_seconds:
@@ -1033,9 +1066,9 @@ def main():
                 current_closer = sets_items[s_idx][1]
                 
                 middle_items = list(required_by_set[s_idx])
-                current_dur = current_opener.duration_seconds + current_closer.duration_seconds + 30
+                current_dur = current_opener.duration_seconds + current_closer.duration_seconds + TRANSITION_BUFFER_SECONDS
                 for it in middle_items:
-                    current_dur += it.duration_seconds + 30
+                    current_dur += it.duration_seconds + TRANSITION_BUFFER_SECONDS
 
                 remaining_candidates = [
                     (idx, it) for idx, it in enumerate(prioritized_pool)
@@ -1054,7 +1087,7 @@ def main():
                 sorted_rem = high_rem + med_rem + low_rem
                 
                 for idx, it in sorted_rem:
-                    potential_dur = current_dur + it.duration_seconds + 30
+                    potential_dur = current_dur + it.duration_seconds + TRANSITION_BUFFER_SECONDS
                     if potential_dur <= target_set_seconds + duration_tolerance:
                         middle_items.append(it)
                         used_item_indices.add(idx)
@@ -1117,7 +1150,8 @@ def main():
             sim_scheduled = simulate_all_scheduled(
                 candidate_sets_songs, available_songs, num_sets,
                 args.breaks, num_breaks, acoustic_pool,
-                args.martin_out, args.david_out, forced_encore_songs
+                args.martin_out, args.david_out, forced_encore_songs,
+                no_encore=args.no_encore
             )
             sim_counts = {}
             for s in sim_scheduled:
@@ -1222,17 +1256,22 @@ def main():
             used_song_titles.add(pair[0]["title"])
             used_song_titles.add(pair[1]["title"])
 
-    remaining_songs = [s for s in available_songs if s["title"] not in used_song_titles]
-    encore_options = ["All Right Now", "Crazy Little Thing Called Love"]
-    for opt in encore_options:
-        match = next((s for s in remaining_songs if s["title"].lower() == opt.lower()), None)
-        if match:
-            encores.append(match)
-            remaining_songs.remove(match)
+    # --no-encore suppresses the *automatic* 2-song encore. Anything named
+    # explicitly with --encore is already in `encores` and passes through
+    # untouched, so combining the two flags yields exactly the named songs
+    # and no filler.
+    if not args.no_encore:
+        remaining_songs = [s for s in available_songs if s["title"] not in used_song_titles]
+        encore_options = ["All Right Now", "Crazy Little Thing Called Love"]
+        for opt in encore_options:
+            match = next((s for s in remaining_songs if s["title"].lower() == opt.lower()), None)
+            if match:
+                encores.append(match)
+                remaining_songs.remove(match)
 
-    while len(encores) < 2 and remaining_songs:
-        remaining_songs.sort(key=lambda s: s["bpm"] or 0, reverse=True)
-        encores.append(remaining_songs.pop(0))
+        while len(encores) < 2 and remaining_songs:
+            remaining_songs.sort(key=lambda s: s["bpm"] or 0, reverse=True)
+            encores.append(remaining_songs.pop(0))
 
     sets_songs = tag_emergency_cuts(sets_songs, segue_raw_groups)
 
@@ -1418,7 +1457,7 @@ def main():
             md(format_md_row(song, idx, marker))
 
         set_dur = sum(parse_length(s["length"]) for s in set_songs)
-        set_trans = (len(set_songs) - 1) * 30
+        set_trans = (len(set_songs) - 1) * TRANSITION_BUFFER_SECONDS
         total_music_seconds += set_dur
         total_trans_seconds += set_trans
         
@@ -1446,7 +1485,7 @@ def main():
             md(format_md_row(song, idx))
 
         encore_dur = sum(parse_length(s["length"]) for s in encores)
-        encore_trans = (len(encores) - 1) * 30
+        encore_trans = (len(encores) - 1) * TRANSITION_BUFFER_SECONDS
         total_music_seconds += encore_dur
         total_trans_seconds += encore_trans
         md(f"\n**Encore Music Duration**: {format_length(encore_dur)} | **Transitions**: {format_length(encore_trans)} | **Total**: {format_length(encore_dur + encore_trans)}")
@@ -1457,7 +1496,7 @@ def main():
     stats_lines = [
         f"- **Total Songs Scheduled**: {sum(len(s) for s in sets_songs) + len(encores) + len(break_songs_sets)*2}",
         f"- **Pure Music Playtime**: {format_length(total_music_seconds)}",
-        f"- **Transition Buffers (30s/song)**: {format_length(total_trans_seconds)}",
+        f"- **Transition Buffers ({format_transition_buffer_label()})**: {format_length(total_trans_seconds)}",
         f"- **Break Time**: {format_length(total_breaks_sec)}",
         f"- **Grand Total Duration**: {format_length(grand_total_sec)} (Target: {format_length(total_gig_seconds)})",
     ]
