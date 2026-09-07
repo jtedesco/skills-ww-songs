@@ -96,8 +96,7 @@ def test_database_integrity():
         #     also requires an edit here — these lists are never derived from the CSV automatically.
         gig_ready_acoustic = {"Landslide", "Blackbird", "Wish You Were Here",
                                "Ooh La La", "Ventura Highway"}
-        not_ready_full_band = {"Kid Charlemagne", "Ride Like the Wind",
-                               "You May Be Right"}
+        not_ready_full_band = {"Kid Charlemagne", "You May Be Right"}
         if s.get("arrangement") in ["Acoustic", "Either"]:
             if title in gig_ready_acoustic:
                 if s.get("gig_ready") != "Yes":
@@ -284,7 +283,7 @@ def test_scenario_1():
                    "Brandy", "Everybody Wants to Rule the World", "Reeling in the Years", 
                    "The Chain", "Take It Easy", "Colors", "Brass in Pocket", "Dreams", 
                    "Lights", "Roll with the Changes", "Ventura Highway", "Ooh La La",
-                   "Landslide", "Vienna", "Listen to the Music"}
+                   "Landslide", "Vienna", "Listen to the Music", "Ride Like the Wind"}
     
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:

@@ -1422,7 +1422,25 @@ def main():
     if args.david_out:
         md("> [!WARNING]")
         david_cut_str = f" and {', '.join(f'*{t}*' for t in david_cut_songs)} are cut from the sets (require David per database)" if david_cut_songs else ""
-        md(f"> **Substitutions**: Keyboard/marimba parts are covered by Jon (piano) or omitted, and Lauren covers David's lead vocal parts on *Keep Your Hands to Yourself*, *Ventura Highway*, and *Ooh La La*{david_cut_str}.\n")
+        # Derive the covered songs from what is actually scheduled rather than
+        # naming a fixed three. Excluding a David-led song (or simply not
+        # drawing one) otherwise left the callout telling a singer to prepare
+        # a cover for a song that isn't in the setlist. Group by whoever picks
+        # it up, since substitution_notes can hand a song to someone other
+        # than the default Lauren.
+        covered = {}
+        for song in ([s for set_s in sets_songs for s in set_s]
+                     + [s for pair in break_songs_sets for s in pair]
+                     + encores):
+            if song.get("covering_for") == "David":
+                covered.setdefault(song["lead_vocals"], []).append(song["title"])
+        if covered:
+            clauses = [f"{singer} covers David's lead on {', '.join(f'*{t}*' for t in titles)}"
+                       for singer, titles in sorted(covered.items())]
+            cover_str = ", and " + "; ".join(clauses)
+        else:
+            cover_str = ", and no scheduled song needs a David vocal cover"
+        md(f"> **Substitutions**: Keyboard/marimba parts are covered by Jon (piano) or omitted{cover_str}{david_cut_str}.\n")
 
     if args.debo_out:
         md("> [!WARNING]")
