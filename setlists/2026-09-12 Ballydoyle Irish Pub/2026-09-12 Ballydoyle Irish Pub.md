@@ -12,7 +12,7 @@
 | Show Opener (Working for the Weekend) | ✅ Satisfied |
 | Show Closer (Roll with the Changes) | ✅ Satisfied |
 | Equal Set Lengths | ✅ Satisfied (68:41 / 68:05 — 0:36 spread) |
-| Gig-Ready Songs Only | ❌ Not Satisfied (*Ride Like the Wind* is `gig_ready: No` — In Progress, not active repertoire. Marked as Set 1's emergency cut) |
+| Gig-Ready Songs Only | ✅ Satisfied (all 31 scheduled songs are gig-ready — *Ride Like the Wind* cleared into the active repertoire on 2026-09-09) |
 | No Duplicate Songs | ⚠️ Fixed from draft (*Hit Me with Your Best Shot* and *Respect* each appeared twice; the Set 1 *Hit Me* and the second *Respect* were dropped) |
 | Dance Peak (danceable late in each set) | ⚠️ Partially Satisfied (Set 2 closes danceable on *All Right Now* → *Roll with the Changes*; Set 1 ends on *Piano Man* by design) |
 | Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, Set 1 #10–#12 and Set 2 #14–#16) |
@@ -42,8 +42,8 @@
 | 8 | **I Hate Myself for Loving You** | Joan Jett & the Blackhearts | E | 118 | 4:07 | Lauren | High | ✓ | drums |
 | 9 | **Gold on the Ceiling** | Black Keys, The | G | 130 | 3:30 | Jon (L, M) | High | ✓ | guitar intro, heavy keys |
 | 10 | **Zombie** | The Cranberries | G | 83 | 5:00 | Lauren | Medium |  | All together (bass+drums+gtr) |
-| 11 | **Hook** | Blues Traveler | A | 116 | 5:00 | Lauren (J) | Medium | ✓ | keys or guitar |
-| 12 | **Ride Like the Wind** 🛑 **[EMERGENCY CUT]** | Christopher Cross | Eb | 125 | 5:12 | Lauren | Medium | ✓ | Percussion + keys |
+| 11 | **Hook** 🛑 **[EMERGENCY CUT]** | Blues Traveler | A | 116 | 5:00 | Lauren (J) | Medium | ✓ | keys or guitar |
+| 12 | **Ride Like the Wind** | Christopher Cross | Eb | 125 | 5:12 | Lauren | Medium | ✓ | Percussion + keys |
 | 13 | **Rikki Don't Lose That Number** | Steely Dan | D | 122 | 4:30 | Jon (L) | Medium |  | Keys straight in (marimba omitted) |
 | 14 | **Don’t Stop Believing** | Journey | E | 118 | 4:00 | Lauren (J) | High | ✓ | Piano riff |
 | 15 | **Piano Man** 🔴 *[Closer]* | Billy Joel | C | 89 | 5:30 | Jon (L) | Low→Medium |  | Keys intro — big singalong, last song of Set 1 |
@@ -104,9 +104,9 @@
 
 **10. Zombie** G · 83 — <em>All together (bass+drums+gtr)</em>
 
-**11. Hook** A · 116 — <em>keys or guitar</em>
+**11. Hook [X]** A · 116 — <em>keys or guitar</em>
 
-**12. Ride Like the Wind [X]** Eb · 125 — <em>Percussion + keys</em>
+**12. Ride Like the Wind** Eb · 125 — <em>Percussion + keys</em>
 
 **13. Rikki Don't Lose That Number** D · 122 — <em>Keys straight in (marimba omitted)</em>
 
@@ -191,7 +191,6 @@
 Not yet gig-ready — excluded from the solver unless --include-not-ready is passed.
 
 - **Kid Charlemagne** (Steely Dan)
-- **Ride Like the Wind** (Christopher Cross)
 - **The Story** (Brandi Carlile)
 - **Vienna** (Billy Joel)
 - **You May Be Right** (Billy Joel)
