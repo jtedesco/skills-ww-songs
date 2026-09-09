@@ -17,7 +17,7 @@
 | Dance Peak (danceable late in each set) | ⚠️ Partially Satisfied (Set 2 closes danceable on *All Right Now* → *Roll with the Changes*; Set 1 ends on *Piano Man* by design) |
 | Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, Set 1 #10–#12 and Set 2 #14–#16) |
 | Lauren Vocal Health | ✅ Satisfied (taxing songs 2–3 apart in each set; she still leads 17 of 31 — 55% of the night) |
-| Segue Integrity | ❌ Not Satisfied (*Funkytown* → *Miss You* → *Reeling in the Years* → *Don't Stop* is broken: *Funkytown* isn't scheduled, *Miss You* sits in Set 1, and *Brandy* splits the other two. Their Intro cues are de-segued for this gig. *Brown Eyed Girl* → *Hey Jealousy* is intact) |
+| Segue Integrity | ✅ Satisfied (*Brown Eyed Girl* → *Hey Jealousy* is intact, in canonical order. The *Funkytown* → *Miss You* → *Reeling in the Years* → *Don't Stop* chain isn't in play this gig — *Funkytown* is deliberately left out, so *Miss You* and *Reeling in the Years* are scheduled as standalones with de-segued intro cues) |
 | Target Duration | ✅ Satisfied (146:46 against the 150-min block; the sets land 1:19 and 1:55 under their 70-min targets, so the break can run ~13 min) |
 | Vocalist Inclusion | ✅ Satisfied (Lauren, Jon and Martin all lead; David is out) |
 | Pacing Flow | ⚠️ 2 energy drop(s): Don’t Stop Believing → Piano Man (#14→#15, Set 1); American Girl → Brown Eyed Girl (#8→#9, Set 2) |
