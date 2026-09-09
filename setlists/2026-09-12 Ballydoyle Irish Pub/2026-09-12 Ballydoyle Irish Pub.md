@@ -1,7 +1,7 @@
 # 2026-09-12 - Ballydoyle Irish Pub
 
 - **Gig Type:** Bar
-- **Duration:** 2 sets (68:41 / 68:05), ~2.5 hrs total
+- **Duration:** 3:00–5:30 PM — 2 × 70 min sets (68:41 / 68:05 scheduled), 2.5 hrs total
 - **Missing:** David
 - **Breaks:** Silent (1 × 10 min)
 - **Playlists:** [Active](https://music.youtube.com/playlist?list=PLZ3S5L7LdV3A) · [In Progress](https://music.youtube.com/playlist?list=PLVKD0nIHzHbg) · [Archived](https://music.youtube.com/playlist?list=PLHYj7O1YT8Xw)
@@ -18,7 +18,7 @@
 | Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, Set 1 #10–#12 and Set 2 #14–#16) |
 | Lauren Vocal Health | ✅ Satisfied (taxing songs 2–3 apart in each set; she still leads 17 of 31 — 55% of the night) |
 | Segue Integrity | ❌ Not Satisfied (*Funkytown* → *Miss You* → *Reeling in the Years* → *Don't Stop* is broken: *Funkytown* isn't scheduled, *Miss You* sits in Set 1, and *Brandy* splits the other two. Their Intro cues are de-segued for this gig. *Brown Eyed Girl* → *Hey Jealousy* is intact) |
-| Target Duration | ⚠️ Unverified (146:46 door-to-door incl. a 10-min break; venue block length not on file — a 3-hour block needs ~3 more songs) |
+| Target Duration | ✅ Satisfied (146:46 against the 150-min block; the sets land 1:19 and 1:55 under their 70-min targets, so the break can run ~13 min) |
 | Vocalist Inclusion | ✅ Satisfied (Lauren, Jon and Martin all lead; David is out) |
 | Pacing Flow | ⚠️ 2 energy drop(s): Don’t Stop Believing → Piano Man (#14→#15, Set 1); American Girl → Brown Eyed Girl (#8→#9, Set 2) |
 | Absent-Member Note Check | ✅ Satisfied (No absent-member references in intro notes) |
@@ -156,7 +156,7 @@
 - **Pure Music Playtime**: 122:16
 - **Transition Buffers (30s/song)**: 14:30
 - **Break Time**: 10:00
-- **Grand Total Duration**: 146:46 (Target: venue block length TBD)
+- **Grand Total Duration**: 146:46 (Target: 150:00 — 3:00–5:30 PM)
 
 ### Lead Vocalist Breakdown
 
