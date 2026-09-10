@@ -1,7 +1,7 @@
 # 2026-09-12 - Ballydoyle Irish Pub
 
 - **Gig Type:** Bar
-- **Duration:** 3:00–5:30 PM — 2 × 70 min sets (73:41 / 72:05 scheduled), 2.5 hrs block (runs long, see Target Duration)
+- **Duration:** 3:00–5:30 PM — 2 × 70 min sets (75:41 / 75:35 scheduled), 2.5 hrs block (runs long, see Target Duration)
 - **Missing:** David
 - **Breaks:** Silent (1 × 10 min)
 - **Playlists:** [Active](https://music.youtube.com/playlist?list=PLZ3S5L7LdV3A) · [In Progress](https://music.youtube.com/playlist?list=PLVKD0nIHzHbg) · [Archived](https://music.youtube.com/playlist?list=PLHYj7O1YT8Xw)
@@ -11,16 +11,16 @@
 | :--- | :--- | :--- |
 | Show Opener (Working for the Weekend) | ✅ Satisfied |
 | Show Closer (Roll with the Changes) | ✅ Satisfied |
-| Equal Set Lengths | ✅ Satisfied (73:41 / 72:05 — 1:36 spread) |
-| Gig-Ready Songs Only | ✅ Satisfied (all 33 scheduled songs are gig-ready — *Ride Like the Wind* cleared into the active repertoire on 2026-09-09) |
+| Equal Set Lengths | ✅ Satisfied (75:41 / 75:35 — 0:06 spread) |
+| Gig-Ready Songs Only | ✅ Satisfied (all 31 scheduled songs are gig-ready — *Ride Like the Wind* cleared into the active repertoire on 2026-09-09) |
 | No Duplicate Songs | ⚠️ Fixed from draft (*Hit Me with Your Best Shot* and *Respect* each appeared twice; the Set 1 *Hit Me* and the second *Respect* were dropped) |
 | Dance Peak (danceable late in each set) | ⚠️ Partially Satisfied (Set 2 closes danceable on *All Right Now* → *Roll with the Changes*; Set 1 ends on *Piano Man* by design) |
-| Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, Set 1 #10–#12; Jon, Set 2 #4–#6 (*Reeling in the Years* / *Baby Blue* / *Brandy*); Lauren, Set 2 #15–#17) |
-| Lauren Vocal Health | ✅ Satisfied (Set 1 taxing songs now 3 apart throughout — *You Oughta Know* #7, *Zombie* #10, *Me and Bobby McGee* #14; Set 2 unchanged. She still leads 18 of 33 — 54.5% of the night) |
-| Segue Integrity | ✅ Satisfied (*Brown Eyed Girl* → *Hey Jealousy* is intact, in canonical order. The *Funkytown* → *Miss You* → *Reeling in the Years* → *Don't Stop* chain isn't in play this gig — *Funkytown* is deliberately left out, so *Miss You* and *Reeling in the Years* are scheduled as standalones with de-segued intro cues) |
-| Target Duration | ⚠️ Over Target (155:46 against the 150-min block — 5:46 over, driven entirely by adding *Me and Bobby McGee* and *Baby Blue*. Holding the 10-min break pushes the room past 5:30; trimming the break to ~4 min keeps the 5:30 end time) |
+| Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, Set 1 #10–#12; Lauren, Set 2 #14–#16. The Jon run at Set 2 #4–#6 is gone: *Baby Blue* is pulled and *Don't Stop* now splits *Reeling in the Years* from *Brandy*) |
+| Lauren Vocal Health | ✅ Satisfied (Set 1 taxing songs 3 apart — *You Oughta Know* #7, *Zombie* #10; pulling *Me and Bobby McGee* removed the third. Set 2 has only *Respect* #12. She leads 17 of 31 — 54.8% of the night) |
+| Segue Integrity | ✅ Satisfied (*Brown Eyed Girl* → *Hey Jealousy* is intact, in canonical order. Moving *Don't Stop* up to Set 2 #5 restores the *Reeling in the Years* → *Don't Stop* link of the *Funkytown* chain, so its cue is back to `SEGUE Piano`. The rest of that chain is still out of play — *Funkytown* is deliberately left out, so *Miss You* stays a standalone with a de-segued cue) |
+| Target Duration | ⚠️ Over Target (161:16 against the 150-min block — 11:16 over, so the room runs past 5:30. Pulling *Me and Bobby McGee* and *Baby Blue* took 8:00 of music out, but the transition buffer widened from 30s to 60s per song change after the Empire gig ran ~5 min long per set, which adds 14:30 across 29 changes. Taking both emergency cuts — *Hook* (Set 1 #11) and *The Chain* (Set 2 #14) — saves 9:30 of music plus 2:00 of buffer and lands at 149:46, just inside the block) |
 | Vocalist Inclusion | ✅ Satisfied (Lauren, Jon and Martin all lead; David is out) |
-| Pacing Flow | ⚠️ 2 energy drop(s): Don’t Stop Believing → Piano Man (#15→#16, SET 1); American Girl → Brown Eyed Girl (#9→#10, SET 2) |
+| Pacing Flow | ⚠️ 2 energy drop(s): Don’t Stop Believing → Piano Man (#14→#15, SET 1); Don't Stop → Brandy (#5→#6, SET 2) |
 | Absent-Member Note Check | ✅ Satisfied (No absent-member references in intro notes) |
 
 > [!WARNING]
@@ -45,11 +45,10 @@
 | 11 | **Hook** 🛑 **[EMERGENCY CUT]** | Blues Traveler | A | 116 | 5:00 | Lauren (J) | Medium | ✓ | keys or guitar |
 | 12 | **Ride Like the Wind** | Christopher Cross | Eb | 125 | 5:12 | Lauren | Medium | ✓ | Percussion + keys |
 | 13 | **Rikki Don't Lose That Number** | Steely Dan | D | 122 | 4:30 | Jon (L) | Medium |  | Keys straight in (marimba omitted) |
-| 14 | **Me and Bobby McGee** | Janis Joplin | G->A | 94 | 4:30 | Lauren | Low→High |  | Guitar on G chord |
-| 15 | **Don’t Stop Believing** | Journey | E | 118 | 4:00 | Lauren (J) | High | ✓ | Piano riff |
-| 16 | **Piano Man** 🔴 *[Closer]* | Billy Joel | C | 89 | 5:30 | Jon (L) | Low→Medium |  | Keys intro — big singalong, last song of Set 1 |
+| 14 | **Don’t Stop Believing** | Journey | E | 118 | 4:00 | Lauren (J) | High | ✓ | Piano riff |
+| 15 | **Piano Man** 🔴 *[Closer]* | Billy Joel | C | 89 | 5:30 | Jon (L) | Low→Medium |  | Keys intro — big singalong, last song of Set 1 |
 
-**Set 1 Music Duration**: 66:11 | **Transitions**: 7:30 | **Total**: 73:41
+**Set 1 Music Duration**: 61:41 | **Transitions**: 14:00 | **Total**: 75:41
 ----------------------------------------
 
 ### ⏸️ BREAK 1 (Silent Break - 10 mins)
@@ -63,21 +62,20 @@
 | 2 | **Born to Run** | Bruce Springsteen | E | 147 | 4:30 | Martin (L) | High | ✓ | Drums + everyone starts |
 | 3 | **Hit Me with Your Best Shot** | Pat Benatar | E | 127 | 2:52 | Lauren | High | ✓ |  |
 | 4 | **Reeling in the Years** | Steely Dan | A | 136 | 4:30 | Jon (L) | Medium | ✓ | Guitar hook starts (no segue — Miss You is in Set 1) |
-| 5 | **Baby Blue** | Badfinger | B | 122 | 3:30 | Jon (L) | Low |  | Guitar riff |
+| 5 | **Don't Stop** | Fleetwood Mac | E | 119 | 3:13 | Lauren | Medium→High | ✓ | SEGUE Piano |
 | 6 | **Brandy** | Looking Glass | E | 126 | 3:00 | Jon (L) | Low |  | Keys intro |
-| 7 | **Don't Stop** | Fleetwood Mac | E | 119 | 3:13 | Lauren | Medium→High | ✓ | Piano starts (no segue — follows Brandy) |
-| 8 | **Valerie** | Amy Winehouse | E | 106 | 3:30 | Lauren | Medium | ✓ | Bass and drums |
-| 9 | **American Girl** | Tom Petty | D | 114 | 3:30 | Martin (L) | High | ✓ | Guitar hook |
+| 7 | **American Girl** | Tom Petty | D | 114 | 3:30 | Martin (L) | High | ✓ | Guitar hook |
+| 8 | **Jenny (867-5309)** | Tommy Tutone | F#m | 136 | 4:00 | Jon (L, M) | High | ✓ | Guitar riff. Stage banter about phone numbers |
+| 9 | **Valerie** | Amy Winehouse | E | 106 | 3:30 | Lauren | Medium | ✓ | Bass and drums |
 | 10 | **Brown Eyed Girl** | Van Morrison | G | 120 | 3:00 | Jon (L) | Low | ✓ | Jon starts |
 | 11 | **Hey Jealousy** | Gin Blossoms | D | 153 | 4:00 | Martin (J, L) | Medium | ✓ | SEGUE Jon piano, Martin to electric |
-| 12 | **Jenny (867-5309)** | Tommy Tutone | F#m | 136 | 4:00 | Jon (L, M) | High | ✓ | Guitar riff. Stage banter about phone numbers |
-| 13 | **Respect** | Aretha Franklin | C | 115 | 2:30 | Lauren | Medium→High | ✓ | Alex counts us in, start together |
-| 14 | **Take It Easy** | Eagles | G | 139 | 3:30 | Jon (L) | Medium |  | Acoustic guitar intro |
-| 15 | **The Chain** 🛑 **[EMERGENCY CUT]** | Fleetwood Mac | Em | 152 | 4:30 | Lauren (J) | Medium→High |  | Drums (4 on the floor) |
-| 16 | **All Right Now** | Free | A | 120 | 4:00 | Lauren (J) | Medium | ✓ | drums |
-| 17 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | C | 134 | 5:30 | Lauren (J) | High | ✓ | Drum + keys in time — stage banter, thank yous |
+| 12 | **Respect** | Aretha Franklin | C | 115 | 2:30 | Lauren | Medium→High | ✓ | Alex counts us in, start together |
+| 13 | **Take It Easy** | Eagles | G | 139 | 3:30 | Jon (L) | Medium |  | Acoustic guitar intro |
+| 14 | **The Chain** 🛑 **[EMERGENCY CUT]** | Fleetwood Mac | Em | 152 | 4:30 | Lauren (J) | Medium→High |  | Drums (4 on the floor) |
+| 15 | **All Right Now** | Free | A | 120 | 4:00 | Lauren (J) | Medium | ✓ | drums |
+| 16 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | C | 134 | 5:30 | Lauren (J) | High | ✓ | Drum + keys in time — stage banter, thank yous |
 
-**Set 2 Music Duration**: 64:05 | **Transitions**: 8:00 | **Total**: 72:05
+**Set 2 Music Duration**: 60:35 | **Transitions**: 15:00 | **Total**: 75:35
 ----------------------------------------
 
 ## FLOOR SHEET
@@ -112,11 +110,9 @@
 
 **13. Rikki Don't Lose That Number** D · 122 — <em>Keys straight in (marimba omitted)</em>
 
-**14. Me and Bobby McGee** G->A · 94 — <em>Guitar on G chord</em>
+**14. Don’t Stop Believing** E · 118 — <em>Piano riff</em>
 
-**15. Don’t Stop Believing** E · 118 — <em>Piano riff</em>
-
-**16. Piano Man** C · 89 — <em>Keys intro — big singalong, last song of Set 1</em>
+**15. Piano Man** C · 89 — <em>Keys intro — big singalong, last song of Set 1</em>
 
 ### SET 2
 
@@ -128,61 +124,61 @@
 
 **4. Reeling in the Years** A · 136 — <em>Guitar hook starts (no segue — Miss You is in Set 1)</em>
 
-**5. Baby Blue** B · 122 — <em>Guitar riff</em>
+**5. Don't Stop** E · 119 — <em>SEGUE Piano</em>
 
 **6. Brandy** E · 126 — <em>Keys intro</em>
 
-**7. Don't Stop** E · 119 — <em>Piano starts (no segue — follows Brandy)</em>
+**7. American Girl** D · 114 — <em>Guitar hook</em>
 
-**8. Valerie** E · 106 — <em>Bass and drums</em>
+**8. Jenny (867-5309)** F#m · 136 — <em>Guitar riff. Stage banter about phone numbers</em>
 
-**9. American Girl** D · 114 — <em>Guitar hook</em>
+**9. Valerie** E · 106 — <em>Bass and drums</em>
 
 **10. Brown Eyed Girl** G · 120 — <em>Jon starts</em>
 
 **11. Hey Jealousy** D · 153 — <em>SEGUE Jon piano, Martin to electric</em>
 
-**12. Jenny (867-5309)** F#m · 136 — <em>Guitar riff. Stage banter about phone numbers</em>
+**12. Respect** C · 115 — <em>Alex counts us in, start together</em>
 
-**13. Respect** C · 115 — <em>Alex counts us in, start together</em>
+**13. Take It Easy** G · 139 — <em>Acoustic guitar intro</em>
 
-**14. Take It Easy** G · 139 — <em>Acoustic guitar intro</em>
+**14. The Chain [X]** Em · 152 — <em>Drums (4 on the floor)</em>
 
-**15. The Chain [X]** Em · 152 — <em>Drums (4 on the floor)</em>
+**15. All Right Now** A · 120 — <em>drums</em>
 
-**16. All Right Now** A · 120 — <em>drums</em>
-
-**17. Roll with the Changes** C · 134 — <em>Drum + keys in time — stage banter, thank yous</em>
+**16. Roll with the Changes** C · 134 — <em>Drum + keys in time — stage banter, thank yous</em>
 
 
 ## GIG SUMMARY
 
 ### 📊 Stats
-- **Total Songs Scheduled**: 33
-- **Pure Music Playtime**: 130:16
-- **Transition Buffers (30s/song)**: 15:30
+- **Total Songs Scheduled**: 31
+- **Pure Music Playtime**: 122:16
+- **Transition Buffers (60s/song)**: 29:00
 - **Break Time**: 10:00
-- **Grand Total Duration**: 155:46
+- **Grand Total Duration**: 161:16
 
 ### Lead Vocalist Breakdown
 
 | Vocalist | Songs Led | % |
 |---|---|---|
-| Lauren | 18 | 54.5% |
-| Jon | 11 | 33.3% |
-| Martin | 4 | 12.1% |
+| Lauren | 17 | 54.8% |
+| Jon | 10 | 32.3% |
+| Martin | 4 | 12.9% |
 
 ### Not Selected / Archived
 | Not Selected | Archived |
 |---|---|
-| **Blackbird** (Beatles) | **Crazy Little Thing Called Love** (Queen) |
-| **Brass in Pocket** (Pretenders) | **Maybe I'm Amazed** (Paul McCartney) |
-| **Colors** (Black Pumas, The) | **Paint It Black** (Rolling Stones) |
-| **Dreams** (Fleetwood Mac) | **Them Changes** (Buddy Miles) |
+| **Baby Blue** (Badfinger) | **Crazy Little Thing Called Love** (Queen) |
+| **Blackbird** (Beatles) | **Maybe I'm Amazed** (Paul McCartney) |
+| **Brass in Pocket** (Pretenders) | **Paint It Black** (Rolling Stones) |
+| **Colors** (Black Pumas, The) | **Them Changes** (Buddy Miles) |
+| **Dreams** (Fleetwood Mac) |  |
 | **Funkytown** (Lipps, Inc.) |  |
 | **Keep Your Hands to Yourself** (Georgia Satellites) |  |
 | **Landslide** (Stevie Nicks) |  |
 | **Lights** (Journey) |  |
+| **Me and Bobby McGee** (Janis Joplin) |  |
 | **Ooh La La** (Faces) |  |
 | **Peg** (Steely Dan) |  |
 | **Rock This Town** (Stray Cats) |  |
