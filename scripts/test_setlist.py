@@ -283,7 +283,8 @@ def test_scenario_1():
                    "Brandy", "Everybody Wants to Rule the World", "Reeling in the Years", 
                    "The Chain", "Take It Easy", "Colors", "Brass in Pocket", "Dreams", 
                    "Lights", "Roll with the Changes", "Ventura Highway", "Ooh La La",
-                   "Landslide", "Vienna", "Listen to the Music", "Ride Like the Wind"}
+                   "Landslide", "Vienna", "Listen to the Music",
+                   "Ride Like the Wind"}
     
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:
