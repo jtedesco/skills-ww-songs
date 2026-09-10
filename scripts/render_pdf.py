@@ -87,6 +87,20 @@ CSS = """
   .floor-sheet p em { font-style: normal; color: #444; font-size: 10pt; }
   .floor-sheet p em strong { display: inline; font-size: inherit; font-weight: 700;
                              color: #1a1a1a; }
+  /* SHADED BLOCKS — a run of songs the band reads as one unit (a themed
+     stretch, a medley, a dance run), marked in the .md with an invisible
+     <!--shade:LABEL--> comment on each song. Deliberately a flat wash plus a
+     left rule rather than a border box: a box around N rows can't survive a
+     page or column break, a background can. Must out-specify the
+     tr:nth-child(even) zebra above, which it does on class count. */
+  .song-table tr.shaded td { background: #f4efe6; }
+  .song-table tr.shaded td:first-child { border-left: 3px solid #c8922a; }
+  .song-table tr.shaded-start td { border-top: 1.5px solid #c8922a; }
+  .song-table tr.shaded-end td { border-bottom: 1.5px solid #c8922a; }
+  /* Floor sheet: same wash, but the padding is kept to 1px vertical — this
+     page is one-page-or-bust, and each shaded entry that grows costs a slot. */
+  .floor-sheet p.shaded { background: #f4efe6; border-left: 3px solid #c8922a;
+                          padding: 1px 4px; margin-left: -4px; }
   .callout { border-left: 4px solid #d4a017; background: #fff8e6; padding: 7px 12px; margin: 8px 0; border-radius: 3px; }
   .callout-title { font-weight: 700; margin-bottom: 3px; }
   .callout p { margin: 4px 0; }
@@ -188,6 +202,50 @@ def tag_song_tables(html):
     )
 
 
+SHADE_RE = re.compile(r"<!--shade:(.*?)-->")
+
+
+def apply_shading(html):
+    """Turn the <!--shade:LABEL--> markers build_setlist.py writes into shaded
+    table rows and floor-sheet paragraphs, then strip them.
+
+    One marker serves both surfaces, so this is the only place that knows what
+    shading looks like. Rows also get shaded-start / shaded-end when the run
+    begins or ends, which is what draws the block's top and bottom rules —
+    computed here from adjacency rather than trusted from the markdown, so a
+    reorder can't leave a rule stranded mid-block."""
+    def do_rows(m):
+        rows = re.findall(r"<tr>.*?</tr>", m.group(0), flags=re.S)
+        if not rows:
+            return m.group(0)
+        labels = [(SHADE_RE.search(r).group(1) if SHADE_RE.search(r) else None) for r in rows]
+        out = []
+        for i, (row, label) in enumerate(zip(rows, labels)):
+            row = SHADE_RE.sub("", row)
+            if label:
+                classes = ["shaded"]
+                if i == 0 or labels[i - 1] != label:
+                    classes.append("shaded-start")
+                if i == len(rows) - 1 or labels[i + 1] != label:
+                    classes.append("shaded-end")
+                row = row.replace("<tr>", f'<tr class="{" ".join(classes)}">', 1)
+            out.append(row)
+        return m.group(0)[:m.group(0).index(rows[0])] + "".join(out) + "</tbody>"
+
+    html = re.sub(r"<tbody>.*?</tbody>", do_rows, html, flags=re.S)
+
+    def do_para(m):
+        para = m.group(0)
+        if not SHADE_RE.search(para):
+            return para
+        return SHADE_RE.sub("", para).replace("<p>", '<p class="shaded">', 1)
+
+    html = re.sub(r"<p>.*?</p>", do_para, html, flags=re.S)
+    # Any marker left (e.g. in a heading or a cell shape not matched above)
+    # must not reach the page as a literal comment in printed text.
+    return SHADE_RE.sub("", html)
+
+
 def wrap_set_blocks(html):
     """Wrap each 'SET N' / 'ENCORES' / 'GIG SUMMARY' <h2> heading and
     everything up to the next h2 (its table, duration line, and following
@@ -251,6 +309,7 @@ def render(md_path, pdf_path=None):
     )
     body_html = slim_emoji(body_html)
     body_html = tag_song_tables(body_html)
+    body_html = apply_shading(body_html)
     body_html = wrap_set_blocks(body_html)
     html = f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></head><body>{body_html}</body></html>"
 

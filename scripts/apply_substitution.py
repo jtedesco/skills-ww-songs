@@ -45,6 +45,7 @@ from build_setlist import (
     TABLE_HEADER, TABLE_DIVIDER, sync_pdf_to_drive,
     playlist_links_bullet, PLAYLIST_BULLET_PREFIX,
     TRANSITION_BUFFER_SECONDS, format_transition_buffer_label,
+    parse_shade_label, assign_shade_block, shade_starts, strip_shade_markers,
 )
 
 # Any of these starting a line marks the beginning of the always-regenerated
@@ -88,7 +89,13 @@ def _cell(cells, col, name, default=""):
 
 
 def strip_row_title(cell):
-    """'**Lights** 🛑 **[EMERGENCY CUT]**' -> 'Lights'"""
+    """'**Lights** 🛑 **[EMERGENCY CUT]**' -> 'Lights'
+
+    The shaded-block marker and its visible label sit after the title's own
+    '**...**' pair, so they fall outside the slice below — but strip the
+    marker first anyway, so a label that happens to contain '**' can't move
+    where the closing delimiter is found."""
+    cell = strip_shade_markers(cell)
     start = cell.find("**")
     end = cell.find("**", start + 2)
     if start == -1 or end == -1:
@@ -275,6 +282,7 @@ def parse_md(md_path):
                         "start_energy": start_energy, "end_energy": end_energy,
                         "intro_notes": _cell(cells, col, "Intro"),
                         "emergency_cut": "EMERGENCY CUT" in title_cell,
+                        "shade": parse_shade_label(title_cell),
                     })
                 else:
                     table_end = j
@@ -484,6 +492,7 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
         out.append(TABLE_DIVIDER)
 
         is_main_set = sec["heading"].upper().startswith("SET")
+        sec_shade_starts = shade_starts(songs)
         for idx, song in enumerate(songs):
             marker = ""
             if is_main_set:
@@ -493,7 +502,7 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
                     marker = " 🟢 *[Opener]*"
                 elif song["closer"] == "Yes" and idx == len(songs) - 1:
                     marker = " 🔴 *[Closer]*"
-            out.append(format_md_row(song, idx, marker))
+            out.append(format_md_row(song, idx, marker, shade_start=idx in sec_shade_starts))
 
         dur = sum(parse_length(s["length"]) for s in songs)
         trans = (len(songs) - 1) * TRANSITION_BUFFER_SECONDS if len(songs) > 1 else 0
@@ -629,6 +638,11 @@ def main():
                          help="Insert TITLE immediately before an existing song BEFORE (repeatable)")
     parser.add_argument("--set-length", nargs=2, action="append", default=[], metavar=("TITLE", "LENGTH"),
                          help="Override a song's performed length (M:SS) for this instance only, e.g. a trimmed medley segue-in (repeatable)")
+    parser.add_argument("--shade", nargs=3, action="append", default=[],
+                        metavar=("FIRST", "LAST", "LABEL"),
+                        help="Shade the run of songs from FIRST to LAST (inclusive) as one named block, in both the set table and the floor sheet (repeatable). Both endpoints must be in the same set.")
+    parser.add_argument("--unshade", action="append", default=[], metavar="LABEL",
+                        help="Remove a shaded block by its label (repeatable).")
     parser.add_argument("--refresh-intro-notes", action="store_true",
                          help="Overwrite every printed Intro cell with the current songs_metadata.csv value. "
                               "Off by default: printed notes can carry gig-specific staging the database lacks "
@@ -639,8 +653,9 @@ def main():
     # the only no-op-shaped way to force a full re-render of the regenerated
     # tail (floor sheet, gig summary) onto a setlist written before that
     # section existed — re-setting a song to the length it already has.
-    if not (args.swap or args.remove or args.add or args.set_length or args.refresh_intro_notes):
-        print("Error: nothing to do — pass at least one --swap, --remove, --add, --set-length, or --refresh-intro-notes", file=sys.stderr)
+    if not (args.swap or args.remove or args.add or args.set_length or args.refresh_intro_notes
+            or args.shade or args.unshade):
+        print("Error: nothing to do — pass at least one --swap, --remove, --add, --set-length, --shade, --unshade, or --refresh-intro-notes", file=sys.stderr)
         sys.exit(1)
 
     md_path = args.md_path
@@ -657,6 +672,32 @@ def main():
     if args.refresh_intro_notes:
         refresh_intro_notes(sections, by_title)
     apply_length_overrides(sections, [tuple(s) for s in args.set_length])
+
+    # Shading runs last, against the post-edit running order: a --shade range
+    # given alongside a reorder means the order the band will actually read.
+    for label in args.unshade:
+        hits = 0
+        for sec in sections:
+            for song in sec["rows"]:
+                if (song.get("shade") or "").strip().lower() == label.strip().lower():
+                    song["shade"] = None
+                    hits += 1
+        if not hits:
+            print(f"Error: --unshade label not found in setlist: {label!r}", file=sys.stderr)
+            sys.exit(1)
+    for first_t, last_t, label in args.shade:
+        for sec in sections:
+            try:
+                assign_shade_block(sec["rows"], first_t, last_t, label)
+                break
+            except ValueError as e:
+                if "reversed" in str(e):
+                    print(f"Error: {e}", file=sys.stderr)
+                    sys.exit(1)
+        else:
+            print(f"Error: --shade endpoints {first_t!r}/{last_t!r} are not both in one section",
+                  file=sys.stderr)
+            sys.exit(1)
 
     songs_by_section = [sec["rows"] for sec in sections]
 
@@ -694,7 +735,7 @@ def main():
     header_lines = upsert_playlist_bullet(header_lines)
     header_lines = upsert_constraint_rows(header_lines, {
         "Pacing Flow": format_pacing_flow_status(energy_drops),
-        "Absent-Member Note Check": format_absent_member_status(absent_flags),
+        "Absent-Member Note Check": format_absent_member_status(absent_flags, missing_names),
     })
 
     break_songs = extract_break_songs(sections)

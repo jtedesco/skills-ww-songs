@@ -451,7 +451,15 @@ A full structured report including all song metadata, energy arc, and constraint
 - **Filters:** Genre: X, Era: Y, No Grunge, No Country  (omit this line entirely if no filters)
 - **Breaks:** None / Acoustic ({N} × 10 min)
 ```
-All "who's missing" and event-detail info lives here — do not restate it in the title or duplicate a full member roster elsewhere in the document. Detailed substitution effects (which songs get cut, who covers which vocal parts) still belong in a `[!WARNING]` callout below the header, since that's unique actionable info beyond just *who's* missing.
+All "who's missing" and event-detail info lives here — do not restate it in the title or duplicate a full member roster elsewhere in the document.
+
+<a id="first-page-is-one-page"></a>
+**The first page is ONE page, and that budget is what killed the substitution callouts.** Title + header bullets + the constraints table have to fit a single printed sheet; measured on the 2026-09-12 Ballydoyle gig the content came to 1148px against a 960px page (1.20 pages) and spilled. Two `[!WARNING]` callouts under the header — a "Source" note and a "Substitutions" note spelling out who covers which vocal part and which songs got cut — were 186px of that, and a "No Duplicate Songs" row explaining a fix made during drafting was most of the rest. All three are gone, and `build_setlist.py` no longer emits substitution callouts at all:
+
+- **Who's out is stated once, in the `Absent-Member Note Check` row** — `✅ Satisfied (David out)`, or `(full band)`. That row already existed to catch stale intro cues, so carrying the roster costs no new line. This is the *only* place absences are explained; the header's `Missing:` bullet names them, and nothing else restates it.
+- **Per-song substitution effects are already visible without prose.** A covered vocal prints in the Lead Vocal column as `Lauren (for David)`, and a song cut for an absent member simply isn't in the table (it shows up in GIG SUMMARY's Not Selected column). The callout was re-describing what the table already showed.
+- **Don't reintroduce a routine banner here.** The `INSUFFICIENT MUSIC FOR TARGET DURATION` callout is deliberately kept, because it only fires on a real failure and a setlist that silently came up short is worse than a spilled page. Anything that would print on a normal gig belongs in a constraints row or nowhere.
+- After any change to this area — a new constraint row, a longer note — re-measure rather than assuming. A row whose note wraps to three lines can spill the page on its own.
 
 - **Constraints satisfaction table**: One row per constraint (✅/❌), with pass/fail
 - **Song table** with columns: `#`, `Song`, `Artist`, `Lead`, `Backups`, `Key`, `BPM`, `Length`, `Energy`, `Intro`
@@ -491,6 +499,18 @@ All "who's missing" and event-detail info lives here — do not restate it in th
   - **Anything that adds a line can tip it over.** Adding the `[X]` legend alone pushed a 37-song sheet to two pages until the inter-entry margin came down from 3px to 2px. After any change here — new marker, new field, type-size bump — re-render and check the page count; don't assume. Folding key/BPM into the bold tier reads better in isolation but costs ~2pt of title size to still fit, which is why it isn't done that way.
   - **Breaks are interleaved in performance order**, not lumped at the end — an acoustic break renders as its own `### BREAK N (Acoustic)` block between the sets it falls between. A silent break contributes no songs and is skipped entirely.
   - **Regenerated on every revision, never hand-edited.** `FLOOR_SHEET_HEADING` is in `apply_substitution.py`'s `TRAILING_HEADINGS`, so `parse_md()` truncates the document there and rebuilds the page from the final song list — exactly like the GIG SUMMARY page. A hand-edit to this section is silently discarded by the next swap; edit the set tables and let it regenerate.
+<a id="shaded-blocks"></a>
+- **Shaded blocks**: a run of consecutive songs the band reads as one unit — a themed stretch, a medley, a dance run — rendered with a warm wash and a gold left rule **in both the set table and the floor sheet**. Applied with `--shade FIRST LAST LABEL` (inclusive, repeatable) on either `build_setlist.py` or `apply_substitution.py`; `apply_substitution.py --unshade LABEL` removes one. Both endpoints must be in the same set.
+  ```bash
+  python3 scripts/apply_substitution.py "setlists/<gig>/<gig>.md" \
+      --shade "Brandy" "Brown Eyed Girl" "Girls' Names"
+  ```
+  - **Carried as an invisible `<!--shade:LABEL-->` comment on every song in the run**, not as a start/end pair. Membership therefore rides along with the song through a reorder, and one marker serves both surfaces so `render_pdf.py` needs a single rule for the table row and the floor-sheet paragraph. `apply_shading()` recomputes `shaded-start` / `shaded-end` from adjacency at render time, so the block's top and bottom rules can't end up stranded mid-block after an edit.
+  - **The marker goes at the END of a floor-sheet line, never the start.** python-markdown hoists a *leading* HTML comment out of the paragraph into its own block, which silently loses the shading — the `<p>` renders unshaded and the marker is dropped downstream, with no error anywhere. A trailing comment stays inside the `<p>`.
+  - **The block's name prints once**, on the first row of the run (`🎨 *[Girls' Names]*`), and never on the floor sheet — that page is one-page-or-bust and the name is already two pages earlier. `format_md_row(..., shade_start=...)` decides this; callers get the set of starts from `shade_starts()`.
+  - **Shading must out-specify the `tr:nth-child(even)` zebra striping**, which it does on class count. If you restyle rows, check a shaded row that happens to be even still reads as shaded.
+  - **Per-gig editorial, so it lives in the setlist `.md`, never `songs_metadata.csv`** — same rule as the `[Vamp]` intro tag. A block that made sense for one night would otherwise reappear on every setlist generated thereafter.
+  - **Re-check the floor sheet's page count after adding one.** The shaded entries carry 1px of vertical padding each, deliberately minimal; a block on an already-tight sheet can tip it to two pages.
 - **Songs In Progress**: its own separate trailing page, `## SONGS IN PROGRESS` (everything with `gig_ready` not `Yes` and not archived), via `render_in_progress_lines()`. Kept separate from the Gig Summary page since it's gig-independent repertoire status (always the same regardless of which gig this is), not this gig's bookkeeping.
 
 > **Note**: Vocalist target percentages are used internally by the solver but are **not** published in the report.

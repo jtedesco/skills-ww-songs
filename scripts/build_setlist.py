@@ -104,11 +104,22 @@ def _plain(text):
     return re.sub(r"\*{1,3}(.+?)\*{1,3}", r"\1", text or "")
 
 
-def format_absent_member_status(flags):
+def format_absent_member_status(flags, missing_names=None):
+    """The constraints row that says who is not playing tonight, and whether
+    any printed intro cue still refers to them.
+
+    Absences were once spelled out in a [!WARNING] callout under the header
+    (who covers which vocal part, which songs got cut). That callout is gone:
+    it and the header block together pushed the first page onto a second
+    sheet, and the per-song truth was already carried elsewhere anyway — the
+    Lead Vocal column prints "Lauren (for David)" on a covered song, and a
+    song cut for an absent member simply isn't in the table. So the roster
+    half of that callout lives here, on a row that already existed."""
+    who = f"{', '.join(missing_names)} out" if missing_names else "full band"
     if not flags:
-        return "✅ Satisfied (No absent-member references in intro notes)"
+        return f"✅ Satisfied ({who})"
     detail = "; ".join(f'*{title}* mentions {name} ("{_plain(notes)}")' for title, name, notes in flags)
-    return f"⚠️ {len(flags)} stale reference(s): {detail}"
+    return f"⚠️ {who} — {len(flags)} stale reference(s): {detail}"
 
 def check_energy_flow(labeled_song_lists):
     """labeled_song_lists: [(label, [song, ...]), ...] — one entry per
@@ -473,6 +484,10 @@ def render_floor_sheet_lines(blocks, display_title=None):
             # to still fit one page, and the title is what actually gets read
             # from standing height — so the title keeps the budget.
             cut = " [X]" if song.get("emergency_cut") else ""
+            # Shaded blocks carry the same <!--shade:LABEL--> marker the set
+            # tables use, so render_pdf.py shades this page off one rule. No
+            # visible label here: the block name is already printed once in
+            # the set table, and every character on this page costs type size.
             line = f"**{idx}. {display_title(song)}{cut}** {key} · {bpm_str}"
             if intro:
                 # Explicit <em>, not *...*: an intro note can itself carry
@@ -483,6 +498,13 @@ def render_floor_sheet_lines(blocks, display_title=None):
                 # explicitly keeps everything after the key/BPM inside <em>,
                 # so `.floor-sheet p > strong` reliably means "the title".
                 line += f" — <em>{intro}</em>"
+            # Marker goes at the END of the line, never the start: python-
+            # markdown hoists a leading HTML comment out of the paragraph as
+            # its own block, which silently loses the shading (the <p> renders
+            # unshaded and the comment is dropped downstream). A trailing one
+            # stays inside the <p>, where render_pdf.py can find it.
+            if song.get("shade"):
+                line += shade_marker(song["shade"])
             lines.append(line)
             lines.append("")
     return lines
@@ -551,14 +573,81 @@ TABLE_COLUMNS = ["#", "Title", "Artist", "Key", "BPM", "Length", "Lead Vocal", "
 TABLE_HEADER = "| " + " | ".join(TABLE_COLUMNS) + " |"
 TABLE_DIVIDER = "|" + "|".join(["---"] * len(TABLE_COLUMNS)) + "|"
 
-def format_md_row(song, idx, marker=""):
+# A shaded block is a run of consecutive songs the band wants to read as one
+# unit — a themed stretch, a medley, a dance run. It is carried as an HTML
+# comment on every song in the run rather than as visible text, for three
+# reasons: the comment survives markdown rendering invisibly (so GitHub and
+# the PDF both stay clean), it rides along with the song if the running order
+# changes, and the SAME marker works on a table row and on a floor-sheet
+# paragraph, so render_pdf.py needs only one rule for both surfaces.
+#
+# Like the [Vamp] intro tag, this is per-gig editorial and belongs in the
+# setlist .md, never in songs_metadata.csv — a block that made sense for one
+# night would otherwise reappear on every setlist thereafter.
+SHADE_MARKER_RE = re.compile(r"<!--shade:(.*?)-->")
+
+
+def shade_marker(label):
+    return f"<!--shade:{label}-->"
+
+
+def parse_shade_label(cell):
+    """Read a shaded block's label back off a printed cell/line, or None."""
+    m = SHADE_MARKER_RE.search(cell)
+    return m.group(1).strip() if m else None
+
+
+def strip_shade_markers(text):
+    return SHADE_MARKER_RE.sub("", text)
+
+
+def assign_shade_block(songs, first_title, last_title, label):
+    """Tag songs[first..last] as one shaded block. Returns the number tagged.
+
+    Matching is by title and the range is inclusive. Raises ValueError if
+    either endpoint is missing or they're the wrong way round, because a
+    silently-unshaded block looks exactly like a rendering bug."""
+    def _idx(t):
+        for i, s in enumerate(songs):
+            if s["title"].strip().lower() == t.strip().lower():
+                return i
+        raise ValueError(f"--shade song not found in this set: {t!r}")
+    i, j = _idx(first_title), _idx(last_title)
+    if j < i:
+        raise ValueError(f"--shade range is reversed: {first_title!r} comes after {last_title!r}")
+    for s in songs[i:j + 1]:
+        s["shade"] = label
+    return j - i + 1
+
+
+def format_md_row(song, idx, marker="", shade_start=False):
     """Render one .md setlist table row. `marker` is the caller-computed
     opener/closer/emergency-cut annotation (e.g. ' 🛑 **[EMERGENCY CUT]**').
+    `shade_start` is True for the first song of a shaded run, which is the
+    only row that prints the block's name — repeating it down every row of
+    the block would just be noise next to the shading itself.
     Cell order must match TABLE_COLUMNS above."""
     v_string = vocal_display_string(song)
     energy = energy_display_string(song)
     dance = dance_display_string(song)
-    return f"| {idx+1} | **{song['title']}**{marker} | {song['artist']} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
+    shade = song.get("shade")
+    shade_bits = ""
+    if shade:
+        shade_bits = (f" 🎨 *[{shade}]*" if shade_start else "") + shade_marker(shade)
+    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
+
+
+def shade_starts(songs):
+    """Which indices begin a shaded run — a song whose block label differs
+    from the previous song's (including the first song of a set)."""
+    starts = set()
+    prev = None
+    for i, s in enumerate(songs):
+        cur = s.get("shade")
+        if cur and cur != prev:
+            starts.add(i)
+        prev = cur
+    return starts
 
 def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, num_breaks, acoustic_pool, martin_out, david_out, forced_encore_songs=None, no_encore=False):
     break_songs_sets = []
@@ -620,6 +709,9 @@ def main():
     parser.add_argument("--david-out", action="store_true", help="David is out (Lauren covers David's lead parts, keys/marimba omitted/covered)")
     parser.add_argument("--debo-out", action="store_true", help="Debo is out (non-vocal role — only affects the header's Missing field and the bass-coverage note)")
     parser.add_argument("--bass-sub", type=str, default=None, help="Name of a substitute bass player covering for Debo (e.g. --bass-sub Paul). Only meaningful with --debo-out; overrides the default 'David switches to bass' note.")
+    parser.add_argument("--shade", nargs=3, action="append", default=[],
+                        metavar=("FIRST", "LAST", "LABEL"),
+                        help="Shade the run of songs from FIRST to LAST (inclusive) as one named block, in both the set table and the floor sheet (repeatable, e.g. --shade \"Brandy\" \"Brown Eyed Girl\" \"Girls' Names\"). Both endpoints must be in the same set.")
     parser.add_argument("--no-encore", action="store_true", help="Do not reserve or schedule an encore. On a multi-set gig the solver otherwise holds back ~8 min for 2 encore songs, which shrinks every set by that much (e.g. a 150-min two-set night yields ~63-min sets instead of 70).")
     parser.add_argument("--sets", type=int, default=None, help="Force the number of main sets, overriding the duration heuristic (e.g. --sets 2 for a 2x70min gig). Breaks = sets - 1.")
     parser.add_argument("--breaks", choices=["acoustic", "silent", "none"], default="acoustic", help="Break format: acoustic (filled with 2 acoustic songs), silent, or none")
@@ -670,8 +762,6 @@ def main():
     # Apply substitutions and filter pool
     available_songs = []
     acoustic_pool = []
-    martin_cut_songs = []
-    david_cut_songs = []
     
     # Vocally-taxing songs are flagged per-song in the database (vocalist_constraints),
     # not hardcoded here, so adding/removing one only requires an edit to the CSV.
@@ -751,7 +841,9 @@ def main():
         if args.martin_out:
             notes = song.get("substitution_notes", "")
             if notes.startswith("If Martin is out:") and "Cut song" in notes:
-                martin_cut_songs.append(title)
+                # Dropped from the pool entirely. It isn't named anywhere in
+                # the report: the Absent-Member row says who's out, and the
+                # song surfaces in GIG SUMMARY's Not Selected column.
                 continue
             if song["lead_vocals"] == "Martin":
                 song["lead_vocals"] = parse_covering_vocalist(notes, "David")
@@ -763,7 +855,6 @@ def main():
         if args.david_out:
             notes = song.get("substitution_notes", "")
             if notes.startswith("If David is out:") and "Cut song" in notes:
-                david_cut_songs.append(title)
                 continue
             if song["lead_vocals"] == "David":
                 song["lead_vocals"] = parse_covering_vocalist(notes, "Lauren")
@@ -1379,7 +1470,8 @@ def main():
 
     absent_flags = check_absent_member_notes(
         [s for ss in sets_songs for s in ss] + encores, missing_names)
-    constraints_satisfied_summary["Absent-Member Note Check"] = format_absent_member_status(absent_flags)
+    constraints_satisfied_summary["Absent-Member Note Check"] = format_absent_member_status(
+        absent_flags, missing_names)
 
     filter_details = []
     if args.genre: filter_details.append(f"Genre: {args.genre}")
@@ -1415,44 +1507,22 @@ def main():
         md("> [!WARNING]")
         md(f"> **INSUFFICIENT MUSIC FOR TARGET DURATION**: The total available playtime of matching songs is only **{format_length(total_available_seconds)}**, which is less than the target set playtime of **{format_length(total_set_music_seconds + total_break_seconds + encore_duration_seconds)}** (including breaks/encores). The setlist has been filled with all matching songs but is under target.\n")
 
-    if args.martin_out:
-        md("> [!WARNING]")
-        cut_str = ", ".join(f"*{t}*" for t in martin_cut_songs) if martin_cut_songs else "none"
-        md(f"> **Substitutions**: Rhythm guitar parts are cut, David covers Martin's vocal parts, and {cut_str} are cut from the sets (require Martin per database).\n")
-    if args.david_out:
-        md("> [!WARNING]")
-        david_cut_str = f" and {', '.join(f'*{t}*' for t in david_cut_songs)} are cut from the sets (require David per database)" if david_cut_songs else ""
-        # Derive the covered songs from what is actually scheduled rather than
-        # naming a fixed three. Excluding a David-led song (or simply not
-        # drawing one) otherwise left the callout telling a singer to prepare
-        # a cover for a song that isn't in the setlist. Group by whoever picks
-        # it up, since substitution_notes can hand a song to someone other
-        # than the default Lauren.
-        covered = {}
-        for song in ([s for set_s in sets_songs for s in set_s]
-                     + [s for pair in break_songs_sets for s in pair]
-                     + encores):
-            if song.get("covering_for") == "David":
-                covered.setdefault(song["lead_vocals"], []).append(song["title"])
-        if covered:
-            clauses = [f"{singer} covers David's lead on {', '.join(f'*{t}*' for t in titles)}"
-                       for singer, titles in sorted(covered.items())]
-            cover_str = ", and " + "; ".join(clauses)
+    # Shaded blocks are applied after pacing/emergency-cut tagging, so the
+    # range refers to the running order actually printed rather than to some
+    # intermediate ordering the solver passed through.
+    for first_t, last_t, label in args.shade:
+        for candidate in sets_songs + ([encores] if encores else []):
+            try:
+                assign_shade_block(candidate, first_t, last_t, label)
+                break
+            except ValueError as e:
+                if "reversed" in str(e):
+                    print(f"Error: {e}", file=sys.stderr)
+                    sys.exit(1)
         else:
-            cover_str = ", and no scheduled song needs a David vocal cover"
-        md(f"> **Substitutions**: Keyboard/marimba parts are covered by Jon (piano) or omitted{cover_str}{david_cut_str}.\n")
-
-    if args.debo_out:
-        md("> [!WARNING]")
-        if args.bass_sub:
-            md(f"> **Substitutions**: Debo is out — {args.bass_sub} is subbing on bass.\n")
-        elif args.david_out:
-            md("> **Substitutions**: Debo is out and David is also out, so no one is covering bass — pass --bass-sub NAME if a substitute is playing.\n")
-        elif args.martin_out:
-            md("> **Substitutions**: Debo is out — David switches to bass in addition to covering Martin's vocal parts.\n")
-        else:
-            md("> **Substitutions**: Debo is out — David switches to bass.\n")
-
+            print(f"Error: --shade endpoints {first_t!r}/{last_t!r} are not both in one set",
+                  file=sys.stderr)
+            sys.exit(1)
 
     total_music_seconds = 0
     total_trans_seconds = 0
@@ -1463,6 +1533,7 @@ def main():
         md(TABLE_DIVIDER)
         
         set_songs = sets_songs[s_idx]
+        set_shade_starts = shade_starts(set_songs)
         for idx, song in enumerate(set_songs):
             marker = ""
             if song.get("emergency_cut", False):
@@ -1472,7 +1543,7 @@ def main():
             elif song["closer"] == "Yes" and idx == len(set_songs) - 1:
                 marker = " 🔴 *[Closer]*"
                 
-            md(format_md_row(song, idx, marker))
+            md(format_md_row(song, idx, marker, shade_start=idx in set_shade_starts))
 
         set_dur = sum(parse_length(s["length"]) for s in set_songs)
         set_trans = (len(set_songs) - 1) * TRANSITION_BUFFER_SECONDS
