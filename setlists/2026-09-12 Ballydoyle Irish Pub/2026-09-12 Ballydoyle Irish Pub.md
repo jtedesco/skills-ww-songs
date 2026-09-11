@@ -1,7 +1,7 @@
 # 2026-09-12 - Ballydoyle Irish Pub
 
 - **Gig Type:** Bar
-- **Duration:** 3:00–5:30 PM — 2 × 70 min sets (76:11 / 75:05 scheduled), 2.5 hrs block (runs long, see Target Duration)
+- **Duration:** 3:00–5:30 PM — 2 × 70 min sets (76:41 / 75:05 scheduled), 2.5 hrs block (runs long, see Target Duration)
 - **Missing:** David
 - **Breaks:** Silent (1 × 10 min)
 - **Playlists:** [Active](https://music.youtube.com/playlist?list=PLZ3S5L7LdV3A) · [In Progress](https://music.youtube.com/playlist?list=PLVKD0nIHzHbg) · [Archived](https://music.youtube.com/playlist?list=PLHYj7O1YT8Xw)
@@ -11,13 +11,13 @@
 | :--- | :--- | :--- |
 | Show Opener (Working for the Weekend) | ✅ Satisfied |
 | Show Closer (Roll with the Changes) | ✅ Satisfied |
-| Equal Set Lengths | ✅ Satisfied (76:11 / 75:05 — 1:06 spread) |
+| Equal Set Lengths | ✅ Satisfied (76:41 / 75:05 — 1:36 spread) |
 | Gig-Ready Songs Only | ✅ Satisfied (all 31 scheduled songs are gig-ready — *Ride Like the Wind* cleared into the active repertoire on 2026-09-09) |
 | Dance Peak (danceable late in each set) | ⚠️ Partially Satisfied (Set 2 now closes on three danceable in a row — *All Right Now* → *Don't Stop Believing* → *Roll with the Changes*; Set 1 ends on *Piano Man* by design) |
 | Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, Set 2 #14–#16. Set 1 is down to runs of 2: *The Chain* and *Ride Like the Wind* now split what was a Lauren block) |
-| Lauren Vocal Health | ✅ Satisfied (Set 1 taxing songs 3 apart — *You Oughta Know* #7, *Zombie* #10. Set 2 has only *Respect* #12. She leads 17 of 31 — 54.8% of the night, and closes Set 2 on three in a row) |
+| Lauren Vocal Health | ✅ Satisfied (Set 1 taxing songs 3 apart — *Me and Bobby McGee* #7, *Zombie* #10. Set 2 has only *Respect* #12. She leads 17 of 31 — 54.8% of the night, and closes Set 2 on three in a row) |
 | Segue Integrity | ✅ Satisfied (*Brown Eyed Girl* → *Hey Jealousy* is intact, in canonical order, and sits inside the shaded *Girls' Names* block (Set 2 #6–#10) whose shading stops at *Brown Eyed Girl*. Moving *Don't Stop* up to Set 2 #5 restores the *Reeling in the Years* → *Don't Stop* link of the *Funkytown* chain, so its cue is back to `SEGUE Piano`. The rest of that chain is still out of play — *Funkytown* is deliberately left out, so *Miss You* stays a standalone with a de-segued cue) |
-| Target Duration | ⚠️ Over Target (161:16 against the 150-min block — 11:16 over, so the room runs past 5:30. This setlist was drafted under the old 30s transition buffer; the 60s buffer adopted after Empire ran ~5 min long per set adds 14:30 across 29 song changes. Taking both emergency cuts — *Hook* (Set 1 #11) and *Take It Easy* (Set 2 #13) — saves 8:30 of music plus 2:00 of buffer and lands at 150:46, still 0:46 over. Moving *The Chain* into Set 1 is what changed this: Set 2's cut fell to the shorter *Take It Easy*) |
+| Target Duration | ⚠️ Over Target (161:46 against the 150-min block — 11:46 over, so the room runs past 5:30. This setlist was drafted under the old 30s transition buffer; the 60s buffer adopted after Empire ran ~5 min long per set adds 14:30 across 29 song changes. Taking both emergency cuts — *Hook* (Set 1 #11) and *Take It Easy* (Set 2 #13) — saves 8:30 of music plus 2:00 of buffer and lands at 151:16, still 1:16 over. Moving *The Chain* into Set 1 is what changed this: Set 2's cut fell to the shorter *Take It Easy*) |
 | Vocalist Inclusion | ✅ Satisfied (Lauren, Jon and Martin all lead; David is out) |
 | Pacing Flow | ⚠️ 1 energy drop(s): Don't Stop → Brandy (#5→#6, SET 2) |
 | Absent-Member Note Check | ✅ Satisfied (David out) |
@@ -31,17 +31,17 @@
 | 4 | **Listen to the Music** | The Doobie Brothers | E | 105 | 3:22 | Lauren | Medium | ✓ | Guitar riff |
 | 5 | **Everybody Wants to Rule the World** | Tears for Fears | D | 112 | 4:00 | Jon (L) | Medium |  | Keys intro |
 | 6 | **Miss You** | Rolling Stones | Am | 110 | 4:00 | Jon (L) | Medium | ✓ | Jon starts (no segue — Funkytown not scheduled) |
-| 7 | **You Oughta Know** | Alanis Morissette | F#m | 105 | 4:00 | Lauren | Low→High |  | Mellow bass+drums, electric piano fills |
-| 8 | **I Hate Myself for Loving You** | Joan Jett & the Blackhearts | E | 118 | 4:07 | Lauren | High | ✓ | drums |
-| 9 | **Gold on the Ceiling** | Black Keys, The | G | 130 | 3:30 | Jon (L, M) | High | ✓ | guitar intro, heavy keys |
-| 10 | **Zombie** | The Cranberries | G | 83 | 5:00 | Lauren | Medium |  | All together (bass+drums+gtr) |
+| 7 | **Me and Bobby McGee** 🎨 *[Gritty]*<!--shade:Gritty--> | Janis Joplin | G->A | 94 | 4:30 | Lauren | Low→High |  | Guitar on G chord |
+| 8 | **I Hate Myself for Loving You**<!--shade:Gritty--> | Joan Jett & the Blackhearts | E | 118 | 4:07 | Lauren | High | ✓ | drums |
+| 9 | **Gold on the Ceiling**<!--shade:Gritty--> | Black Keys, The | G | 130 | 3:30 | Jon (L, M) | High | ✓ | guitar intro, heavy keys |
+| 10 | **Zombie**<!--shade:Gritty--> | The Cranberries | G | 83 | 5:00 | Lauren | Medium |  | All together (bass+drums+gtr) |
 | 11 | **Hook** 🛑 **[EMERGENCY CUT]** | Blues Traveler | A | 116 | 5:00 | Lauren (J) | Medium | ✓ | keys or guitar |
 | 12 | **Rikki Don't Lose That Number** | Steely Dan | D | 122 | 4:30 | Jon (L) | Medium |  | Keys straight in (marimba omitted) |
 | 13 | **The Chain** | Fleetwood Mac | Em | 152 | 4:30 | Lauren (J) | Medium→High |  | Drums (4 on the floor) |
 | 14 | **Ride Like the Wind** | Christopher Cross | Eb | 125 | 5:12 | Lauren | Medium | ✓ | Percussion + keys |
 | 15 | **Piano Man** 🔴 *[Closer]* | Billy Joel | C | 89 | 5:30 | Jon (L) | Low→Medium |  | Keys intro — big singalong, last song of Set 1 |
 
-**Set 1 Music Duration**: 62:11 | **Transitions**: 14:00 | **Total**: 76:11
+**Set 1 Music Duration**: 62:41 | **Transitions**: 14:00 | **Total**: 76:41
 ----------------------------------------
 
 ### ⏸️ BREAK 1 (Silent Break - 10 mins)
@@ -89,13 +89,13 @@
 
 **6. Miss You** Am · 110 — <em>Jon starts (no segue — Funkytown not scheduled)</em>
 
-**7. You Oughta Know** F#m · 105 — <em>Mellow bass+drums, electric piano fills</em>
+**7. Me and Bobby McGee** G->A · 94 — <em>Guitar on G chord</em><!--shade:Gritty-->
 
-**8. I Hate Myself for Loving You** E · 118 — <em>drums</em>
+**8. I Hate Myself for Loving You** E · 118 — <em>drums</em><!--shade:Gritty-->
 
-**9. Gold on the Ceiling** G · 130 — <em>guitar intro, heavy keys</em>
+**9. Gold on the Ceiling** G · 130 — <em>guitar intro, heavy keys</em><!--shade:Gritty-->
 
-**10. Zombie** G · 83 — <em>All together (bass+drums+gtr)</em>
+**10. Zombie** G · 83 — <em>All together (bass+drums+gtr)</em><!--shade:Gritty-->
 
 **11. Hook [X]** A · 116 — <em>keys or guitar</em>
 
@@ -146,10 +146,10 @@
 
 ### 📊 Stats
 - **Total Songs Scheduled**: 31
-- **Pure Music Playtime**: 122:16
+- **Pure Music Playtime**: 122:46
 - **Transition Buffers (60s/song)**: 29:00
 - **Break Time**: 10:00
-- **Grand Total Duration**: 161:16
+- **Grand Total Duration**: 161:46
 
 ### Lead Vocalist Breakdown
 
@@ -171,7 +171,6 @@
 | **Keep Your Hands to Yourself** (Georgia Satellites) |  |
 | **Landslide** (Stevie Nicks) |  |
 | **Lights** (Journey) |  |
-| **Me and Bobby McGee** (Janis Joplin) |  |
 | **Ooh La La** (Faces) |  |
 | **Peg** (Steely Dan) |  |
 | **Rock This Town** (Stray Cats) |  |
@@ -179,6 +178,7 @@
 | **Superstition** (Stevie Wonder) |  |
 | **Ventura Highway** (America) |  |
 | **Wish You Were Here** (Pink Floyd) |  |
+| **You Oughta Know** (Alanis Morissette) |  |
 
 ## SONGS IN PROGRESS
 Not yet gig-ready — excluded from the solver unless --include-not-ready is passed.
