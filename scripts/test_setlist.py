@@ -96,7 +96,8 @@ def test_database_integrity():
         #     also requires an edit here — these lists are never derived from the CSV automatically.
         gig_ready_acoustic = {"Landslide", "Blackbird", "Wish You Were Here",
                                "Ooh La La", "Ventura Highway"}
-        not_ready_full_band = {"Kid Charlemagne", "You May Be Right"}
+        not_ready_full_band = {"Kid Charlemagne", "You May Be Right",
+                               "We Didn't Start the Fire"}
         if s.get("arrangement") in ["Acoustic", "Either"]:
             if title in gig_ready_acoustic:
                 if s.get("gig_ready") != "Yes":
@@ -172,7 +173,8 @@ def parse_markdown_report(stdout_str):
     current_set = None
     in_encore = False
     in_break = False
-    
+    col = {}
+
     lines = stdout_str.split("\n")
     for line in lines:
         line = line.strip()
@@ -198,43 +200,56 @@ def parse_markdown_report(stdout_str):
             in_encore = False
             continue
             
-        # Parse table row
-        if line.startswith("|") and not line.startswith("|---") and not line.startswith("| # |") and not line.startswith("| Constraint |"):
+        # Capture the song-table header so the rows below can be read by
+        # column NAME rather than position. build_setlist.py's TABLE_COLUMNS
+        # is the only definition of that layout and it does change (Dance and
+        # Genre were both added after this parser was written) — a positional
+        # read breaks silently, or loudly-but-confusingly, every time it does.
+        if line.startswith("| # |"):
+            col = {name.strip(): i for i, name in enumerate(line.split("|")[1:-1])}
+            continue
+
+        # Parse table row. `col` is only populated by a song-table header, so
+        # requiring it here also keeps the GIG SUMMARY / vocalist-breakdown
+        # tables out of this branch regardless of their width.
+        if (line.startswith("|") and not line.startswith("|---")
+                and {"Title", "BPM"} <= set(col)):
             parts = [p.strip() for p in line.split("|")]
             # Filter empty bounds
             parts = parts[1:-1]
-            
+
+            def cell(name, default=""):
+                i = col.get(name)
+                return parts[i] if i is not None and i < len(parts) else default
+
             if current_set is not None:
-                # Set song row: #, Title, Artist, Key, BPM, Length, Lead Vocal, Popularity, Intro
                 if len(parts) >= 7:
-                    title = parts[1].replace("**", "").split("🟢")[0].split("🔴")[0].split("🛑")[0].strip()
-                    emergency_cut = "🛑" in parts[1]
-                    opener = "🟢" in parts[1]
-                    closer = "🔴" in parts[1]
-                    lead = parts[6].split("(")[0].strip()
+                    title_cell = cell("Title")
+                    title = title_cell.replace("**", "").split("🟢")[0].split("🔴")[0].split("🛑")[0].strip()
+                    vocal_cell = cell("Lead Vocal")
+                    lead = vocal_cell.split("(")[0].strip()
                     backups = []
-                    if "(" in parts[6]:
-                        backups = [b.strip() for b in parts[6].split("(")[1].replace(")", "").split(",")]
+                    if "(" in vocal_cell:
+                        backups = [b.strip() for b in vocal_cell.split("(")[1].replace(")", "").split(",")]
                     current_set.append({
                         "title": title,
-                        "emergency_cut": emergency_cut,
-                        "opener": opener,
-                        "closer": closer,
+                        "emergency_cut": "🛑" in title_cell,
+                        "opener": "🟢" in title_cell,
+                        "closer": "🔴" in title_cell,
                         "lead": lead,
                         "backups": backups,
-                        "key": parts[3],
-                        "bpm": int(parts[4]),
-                        "length": parts[5]
+                        "key": cell("Key"),
+                        "bpm": int(cell("BPM")),
+                        "length": cell("Length"),
+                        "genre": cell("Genre"),
                     })
             elif in_encore:
-                # Encore song row: #, Title, Artist, Key, BPM, Length, Lead Vocal, Popularity, Intro
                 if len(parts) >= 7:
-                    title = parts[1].replace("**", "").strip()
-                    lead = parts[6].split("(")[0].strip()
                     encores.append({
-                        "title": title,
-                        "lead": lead,
-                        "length": parts[5]
+                        "title": cell("Title").replace("**", "").strip(),
+                        "lead": cell("Lead Vocal").split("(")[0].strip(),
+                        "length": cell("Length"),
+                        "genre": cell("Genre"),
                     })
             continue
                     
@@ -290,8 +305,19 @@ def test_scenario_1():
         for song in set_songs:
             if song["title"] not in yacht_songs:
                 all_pass = False
-                log_test(f"Yacht rock check: {song['title']}", False, "Song is not Yacht Rock or Yacht Rock Adjacent")
-    
+                log_test(f"Yacht rock check: {song['title']}", False, "Song is not Yacht Rock or Classic Rock")
+
+    # 1b. Every song in a yacht setlist is classified, so the Genre column
+    # must be populated on every row — a blank here means the label stopped
+    # reaching the table even though the filter still let the song through.
+    unlabelled = [s["title"] for set_songs in res["sets"] for s in set_songs
+                  if s.get("genre") not in ("Yacht Rock", "Classic Rock")]
+    if unlabelled:
+        all_pass = False
+        log_test("Genre column populated", False, f"Blank/unexpected Genre for: {unlabelled}")
+    else:
+        log_test("Genre column populated on every yacht-setlist row", True)
+
     # 2. Check duration warning
     if "INSUFFICIENT MUSIC FOR TARGET DURATION" not in res["stdout"]:
         all_pass = False

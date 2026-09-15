@@ -15,7 +15,7 @@
       "validation_criteria": [
         {
           "id": "yacht_rock_filter",
-          "assertion": "Verify that only songs marked as yacht rock or yacht rock adjacent are scheduled in the sets.",
+          "assertion": "Verify that only songs marked as yacht rock or classic rock are scheduled in the sets.",
           "type": "song_filter"
         },
         {

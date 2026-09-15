@@ -56,9 +56,17 @@ CSS = """
      each set onto a second page and the band turns a page mid-set.
      Scoped to .song-table (see tag_song_tables) — applying these widths to
      every table squeezes the constraints table's first column to 1.6em and
-     wraps each constraint name into a tower. */
+     wraps each constraint name into a tower.
+
+     nth-child() is positional, so these indices track build_setlist.py's
+     TABLE_COLUMNS: # is 1 and Dance is 10. Insert or reorder a column there
+     and these two selectors have to move with it, or the widths land on the
+     wrong columns. */
   .song-table th:nth-child(1), .song-table td:nth-child(1) { width: 1.4em; }
-  .song-table th:nth-child(9), .song-table td:nth-child(9) { width: 1.4em; text-align: center; padding-left: 2px; padding-right: 2px; }
+  .song-table th:nth-child(10), .song-table td:nth-child(10) { width: 1.4em; text-align: center; padding-left: 2px; padding-right: 2px; }
+  /* Genre ("Yacht Rock" / "Classic Rock" / blank) — nowrap so a two-word
+     label takes one line rather than stacking and growing every row. */
+  .song-table th:nth-child(4), .song-table td:nth-child(4) { white-space: nowrap; }
   th { background: #f2f2f2; font-weight: 600; }
   tr:nth-child(even) td { background: #fafafa; }
   strong { font-weight: 600; }

@@ -565,11 +565,44 @@ def dance_display_string(song):
     column existed doesn't silently render as a floor-killer."""
     return "" if str(song.get("danceable", "")).strip() == "No" else "✓"
 
+# The band's own genre classification, stored in songs_metadata.csv's
+# `yacht_adjacent` column and printed in the setlist table's Genre column.
+#
+# "Classic Rock" is the current spelling of what the column used to call
+# "Adjacent". The old spelling is still mapped here (and still counts as
+# yacht-pool eligible below) because the CSV lives in a shared Drive folder
+# where a hand-edit or a restored older copy can reintroduce it — a stale
+# value should render as the genre it always meant, not silently blank out.
+GENRE_LABELS = {
+    "Yes": "Yacht Rock",
+    "Classic Rock": "Classic Rock",
+    "Adjacent": "Classic Rock",   # legacy spelling of "Classic Rock"
+}
+
+# Which `yacht_adjacent` values are eligible for a --gig-type yacht setlist:
+# every classified song, yacht rock and classic rock alike. Derived from
+# GENRE_LABELS so adding a label can't leave the filter behind.
+YACHT_POOL_VALUES = set(GENRE_LABELS)
+
+
+def genre_display_string(song):
+    """The Genre column: the band's own classification — 'Yacht Rock',
+    'Classic Rock', or blank for an unclassified song. Blank rather than a
+    filler dash for the same reason dance_display_string() returns blank
+    rather than '✗': the labels are what the eye should catch when scanning
+    the sheet, so the unlabelled rows should recede.
+
+    Reads `yacht_adjacent` straight from the song dict, which is the CSV row
+    here and is refreshed from the CSV by apply_substitution.py's
+    enrich_static_fields() on a revision — so the label is always the
+    database's current answer, never a stale one copied off an older print."""
+    return GENRE_LABELS.get(str(song.get("yacht_adjacent", "") or "").strip(), "")
+
 # The one place the main song-table's column layout is defined. Both
 # build_setlist.py's SET/ENCORES tables and apply_substitution.py's
 # regenerated tables render from these, so the header can't drift out of
 # sync with format_md_row()'s cells.
-TABLE_COLUMNS = ["#", "Title", "Artist", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Dance", "Intro"]
+TABLE_COLUMNS = ["#", "Title", "Artist", "Genre", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Dance", "Intro"]
 TABLE_HEADER = "| " + " | ".join(TABLE_COLUMNS) + " |"
 TABLE_DIVIDER = "|" + "|".join(["---"] * len(TABLE_COLUMNS)) + "|"
 
@@ -634,7 +667,8 @@ def format_md_row(song, idx, marker="", shade_start=False):
     shade_bits = ""
     if shade:
         shade_bits = (f" 🎨 *[{shade}]*" if shade_start else "") + shade_marker(shade)
-    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
+    genre = genre_display_string(song)
+    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {genre} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
 
 
 def shade_starts(songs):
@@ -703,7 +737,7 @@ def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, nu
 
 def main():
     parser = argparse.ArgumentParser(description="Wannabe Weekenders Setlist Builder")
-    parser.add_argument("--gig-type", choices=["bar", "yacht"], default="bar", help="Gig type: bar (anything) or yacht (Yacht Rock/Adjacent only)")
+    parser.add_argument("--gig-type", choices=["bar", "yacht"], default="bar", help="Gig type: bar (anything) or yacht (Yacht Rock / Classic Rock only)")
     parser.add_argument("--duration", type=float, default=3.0, help="Total gig duration in hours (e.g. 1.0, 2.0, 3.0)")
     parser.add_argument("--martin-out", action="store_true", help="Martin is out (David covers lead/backups, Martin-required songs cut per database)")
     parser.add_argument("--david-out", action="store_true", help="David is out (Lauren covers David's lead parts, keys/marimba omitted/covered)")
@@ -867,7 +901,7 @@ def main():
         
         # Yacht rock filter
         if args.gig_type == "yacht":
-            if song["yacht_adjacent"] not in ["Yes", "Adjacent"]:
+            if song["yacht_adjacent"] not in YACHT_POOL_VALUES:
                 continue
                 
         # Separate into pools

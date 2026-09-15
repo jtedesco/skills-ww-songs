@@ -7,7 +7,7 @@ description: Master list of 50 cover band songs cross-referenced with genres, se
 
 This skill provides access to the master song database of **Wannabe Weekenders cover songs** (51+ and growing).
 
-The full structured dataset containing song titles, artists, opener/closer roles, transition sequences, key/BPM details, vocal arrangements, playtimes, cleaned intro notes, song ordering rules (segue groupings), Yacht Rock classifications, gig readiness, arrangements (Acoustic / Full / Either), vocalist constraints, date added, archive status, and substitution rules is stored in `songs_metadata.csv`.
+The full structured dataset containing song titles, artists, opener/closer roles, transition sequences, key/BPM details, vocal arrangements, playtimes, cleaned intro notes, song ordering rules (segue groupings), genre classifications (Yacht Rock / Classic Rock), gig readiness, arrangements (Acoustic / Full / Either), vocalist constraints, date added, archive status, and substitution rules is stored in `songs_metadata.csv`.
 
 ## Instrumentation Columns (Who Plays What)
 
@@ -32,6 +32,22 @@ See the FLOOR SHEET bullet under "Setlist Output Format" for when to set one and
 `songs_metadata.csv` has a `danceable` column (`Yes`/`No`) marking whether a song holds a dance floor. It's stored as `Yes`/`No` to match every other boolean column in the database, but renders as a `✓` (danceable) or blank (not) in the setlist table's **Dance** column — blank rather than `✗` on purpose, so the checkmarks are what the eye catches when reading the floor.
 
 Most of the repertoire is danceable; the exceptions are tracked in the CSV, not here (same anti-drift rule as the substitution lists). `dance_display_string()` in `build_setlist.py` treats anything other than an explicit `No` as danceable, so a song added before this column existed doesn't silently render as a floor-killer.
+
+## Genre Column
+
+`songs_metadata.csv`'s `yacht_adjacent` column carries the band's own genre classification. It holds three values:
+
+| Stored value | Prints as | Meaning |
+| :--- | :--- | :--- |
+| `Yes` | **Yacht Rock** | Yacht rock proper — Steely Dan, Christopher Cross, *Brandy* |
+| `Classic Rock` | **Classic Rock** | The wider '70s/'80s rock the band programs alongside it — Fleetwood Mac, Eagles, Doobie Brothers |
+| `No` | *(blank)* | Everything else |
+
+**`Classic Rock` was formerly spelled `Adjacent`.** The whole CSV was migrated, but `GENRE_LABELS` in `build_setlist.py` still maps the old spelling, because the database lives in a shared Drive folder where a hand-edit or a restored older copy can reintroduce it — a stale value should render as the genre it always meant rather than silently blanking out. Don't "clean up" that legacy entry.
+
+The label renders in the setlist table's **Genre** column via `genre_display_string()`, blank for `No` for the same reason the Dance column is blank rather than `✗`: the labels are what the eye should catch, so unclassified rows recede. `--gig-type yacht` draws its pool from `YACHT_POOL_VALUES`, which is derived from `GENRE_LABELS` rather than written out separately — adding a label can't leave the filter behind.
+
+The column name stays `yacht_adjacent` for now; renaming it means touching every loader plus `required_fields` in `test_setlist.py`, and that churn hasn't been worth it.
 
 Two setlist-programming ideas came out of this and are **not yet implemented** in the solver — prefer danceable songs toward the second half of the show, and never strand a single non-danceable song in the middle of a run of danceable ones. The second rule needs a definition of how long a non-danceable run has to be before it counts as a deliberate mellow pocket rather than a momentum kill (a lone song is clearly one, an adjacent pair is arguably the other), so don't implement either as a hard constraint until that's settled with the band.
 
@@ -380,7 +396,7 @@ The same care applies to `length` when it feeds duration math, though it's lower
 - New song is **Acoustic/Either** and marked `gig_ready: Yes` → add its title to `gig_ready_acoustic`.
 - New song is **Full Band** and marked `gig_ready: No` (the script's own default!) → add its title to `not_ready_full_band`, or the integrity check will fail expecting every full-band song to be ready.
 - Song is (or becomes) **archived** → add its title to the archive-check whitelist in `test_database_integrity()` (currently `["Paint It Black", "Crazy Little Thing Called Love", "Them Changes", "Maybe I'm Amazed"]`), or the integrity check will fail expecting every other song to be un-archived. `add_song.py` always writes `archived: No` for a brand-new song — flipping it to `Yes` (e.g. adding a song directly as archived/retired) is a manual CSV edit, so it's easy to forget this whitelist update at the same time.
-- Song is **Yacht Rock or Yacht-Adjacent** (`yacht_adjacent` is `Yes`/`Adjacent`) **and** gig-ready → add its title to the `yacht_songs` set in `test_yacht_scenario()`, or Scenario 1 fails the moment the solver puts it in a yacht setlist. This one bites on a *readiness flip*, not just a new song: making an already-adjacent song gig-ready is what makes it eligible for the yacht pool.
+- Song is **Yacht Rock or Classic Rock** (`yacht_adjacent` is `Yes`/`Classic Rock`) **and** gig-ready → add its title to the `yacht_songs` set in `test_yacht_scenario()`, or Scenario 1 fails the moment the solver puts it in a yacht setlist. This one bites on a *readiness flip*, not just a new song: making an already-classified song gig-ready is what makes it eligible for the yacht pool.
 - Not-yet-gig-ready songs legitimately have a **blank `key`/`bpm`** (see "NEVER guess a key or BPM" above) and `date_added: None`. All three loaders (`build_setlist.py`, `apply_substitution.py`, `test_setlist.py`) parse a blank `bpm` to `None` rather than failing — don't "fix" that by backfilling a number.
 
 Run `python3 scripts/test_setlist.py` after adding a song and before considering it done — this is the mechanical "did I miss a step" check.
@@ -462,7 +478,7 @@ All "who's missing" and event-detail info lives here — do not restate it in th
 - After any change to this area — a new constraint row, a longer note — re-measure rather than assuming. A row whose note wraps to three lines can spill the page on its own.
 
 - **Constraints satisfaction table**: One row per constraint (✅/❌), with pass/fail
-- **Song table** with columns: `#`, `Song`, `Artist`, `Lead`, `Backups`, `Key`, `BPM`, `Length`, `Energy`, `Intro`
+- **Song table** with columns: `#`, `Title`, `Artist`, `Genre`, `Key`, `BPM`, `Length`, `Lead Vocal`, `Energy`, `Dance`, `Intro`. The layout is defined once, as `TABLE_COLUMNS` in `build_setlist.py` — `apply_substitution.py` regenerates its tables from the same constant, so don't restate the column order anywhere else. Note that `render_pdf.py`'s per-column width rules are positional `nth-child()` selectors (`#` is 1, `Dance` is 10); inserting or reordering a column here means moving those with it.
 - **Duration summary**: Music time, transitions, breaks, grand total
 - **Gig Summary page**: A single trailing `## GIG SUMMARY` section (forced onto its own fresh PDF page, same as `SET N`/`ENCORES` — see PDF Export below) built by `render_summary_page_lines()` in `build_setlist.py`, combining three subsections:
   - `### 📊 Stats` — the same duration/song-count bullets that used to stand alone.

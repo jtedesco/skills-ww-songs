@@ -245,7 +245,8 @@ def gather_manual_fields(title: str, artist: str) -> dict:
     gig_ready   = prompt("Gig ready?", choices=["Yes", "No"], default="No")
     opener      = prompt("Can open a set?", choices=["Yes", "No"], default="No")
     closer      = prompt("Can close a set?", choices=["Yes", "No"], default="No")
-    yacht       = prompt("Yacht Rock adjacent?", choices=["Yes", "No", "Adjacent"], default="No")
+    yacht       = prompt("Genre classification?", choices=["Yes", "No", "Classic Rock"],
+                         default="No")  # "Yes" = Yacht Rock; see GENRE_LABELS in build_setlist.py
     # "TBD" (not "None") is the established convention for an undetermined
     # starter cue — 11 existing not-yet-ready songs use it.
     intro_notes = prompt_optional("Intro notes (who starts, e.g. 'Jon starts')", default="TBD")
