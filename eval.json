@@ -3,9 +3,9 @@
   "description": "Evaluation suite for the Wannabe Weekenders setlist builder tool and database constraints.",
   "test_cases": [
     {
-      "name": "Scenario 1: 90 Min Set, Yacht Rock Preference",
+      "name": "Scenario 1: 2 Hour Set, Yacht Rock Preference",
       "input_parameters": {
-        "duration": 1.5,
+        "duration": 2.0,
         "gig_type": "yacht",
         "martin_out": false,
         "david_out": false,
@@ -20,7 +20,7 @@
         },
         {
           "id": "duration_warning",
-          "assertion": "Verify that a warning is displayed showing that the total available music (63:30) is under the 90 min target.",
+          "assertion": "Verify that a warning is displayed showing that the total available music is under the 120 min target.",
           "type": "duration_alert"
         },
         {

@@ -285,8 +285,14 @@ def run_scenario(args):
     return parse_markdown_report(res.stdout)
 
 def test_scenario_1():
-    print("\nTesting Scenario 1 (90 Min Set, Yacht Rock Preference)...")
-    res = run_scenario(["--duration", "1.5", "--gig-type", "yacht"])
+    # 2 hours, not 90 minutes: the target has to exceed what the yacht pool
+    # can actually fill, or the insufficient-music assertion below stops
+    # testing anything. The pool grows as songs are tagged Yacht Rock /
+    # Classic Rock and shrinks as they're archived — at 22 gig-ready songs
+    # it covers ~1h46m of wall clock, so 90 minutes stopped being short.
+    # Re-measure and raise this again if that assertion starts failing.
+    print("\nTesting Scenario 1 (2 Hour Set, Yacht Rock Preference)...")
+    res = run_scenario(["--duration", "2.0", "--gig-type", "yacht"])
     if not res:
         return False
         
@@ -299,7 +305,8 @@ def test_scenario_1():
                    "The Chain", "Take It Easy", "Colors", "Brass in Pocket", "Dreams", 
                    "Lights", "Roll with the Changes", "Ventura Highway", "Ooh La La",
                    "Landslide", "Vienna", "Listen to the Music",
-                   "Ride Like the Wind"}
+                   "Ride Like the Wind", "Don't Stop", "Piano Man",
+                   "Don’t Stop Believing"}
     
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:
