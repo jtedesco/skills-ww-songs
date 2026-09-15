@@ -35,19 +35,17 @@ Most of the repertoire is danceable; the exceptions are tracked in the CSV, not 
 
 ## Genre Column
 
-`songs_metadata.csv`'s `yacht_adjacent` column carries the band's own genre classification. It holds three values:
+`songs_metadata.csv`'s `genre` column carries the band's own genre classification — which songs belong to the yacht/classic-rock pool the band programs around. It is **not** `musicbrainz_genre`, which is scraped, noisy (`Aor`, `2008 Universal Fire Victim`) and never printed on a setlist. It holds three values:
 
 | Stored value | Prints as | Meaning |
 | :--- | :--- | :--- |
-| `Yes` | **Yacht Rock** | Yacht rock proper — Steely Dan, Christopher Cross, *Brandy* |
+| `Yacht Rock` | **Yacht Rock** | Yacht rock proper — Steely Dan, Christopher Cross, *Brandy* |
 | `Classic Rock` | **Classic Rock** | The wider '70s/'80s rock the band programs alongside it — Fleetwood Mac, Eagles, Doobie Brothers |
-| `No` | *(blank)* | Everything else |
+| *(blank)* | *(blank)* | Neither — the same empty-cell spelling `key`, `bpm` and `musicbrainz_genre` use |
 
-**`Classic Rock` was formerly spelled `Adjacent`.** The whole CSV was migrated, but `GENRE_LABELS` in `build_setlist.py` still maps the old spelling, because the database lives in a shared Drive folder where a hand-edit or a restored older copy can reintroduce it — a stale value should render as the genre it always meant rather than silently blanking out. Don't "clean up" that legacy entry.
+The label renders in the setlist table's **Genre** column via `genre_display_string()`, blank for an unclassified song for the same reason the Dance column is blank rather than `✗`: the labels are what the eye should catch, so those rows recede. `--gig-type yacht` draws its pool from `YACHT_POOL_VALUES`, which is derived from `GENRE_LABELS` rather than written out separately — adding a label can't leave the filter behind.
 
-The label renders in the setlist table's **Genre** column via `genre_display_string()`, blank for `No` for the same reason the Dance column is blank rather than `✗`: the labels are what the eye should catch, so unclassified rows recede. `--gig-type yacht` draws its pool from `YACHT_POOL_VALUES`, which is derived from `GENRE_LABELS` rather than written out separately — adding a label can't leave the filter behind.
-
-The column name stays `yacht_adjacent` for now; renaming it means touching every loader plus `required_fields` in `test_setlist.py`, and that churn hasn't been worth it.
+**This column was once `yacht_adjacent`, holding `Yes`/`Adjacent`/`No`.** The whole CSV was migrated, but `GENRE_LABELS` in `build_setlist.py` still maps both old value spellings, because the database lives in a shared Drive folder where a hand-edited cell or a row pasted from an older copy can reintroduce one — a stale value should render as the genre it always meant rather than silently blanking out. Don't "clean up" those two legacy entries. A wholesale restore of a pre-rename CSV is a different and louder problem: the column itself would be back to `yacht_adjacent`, which `test_database_integrity()`'s required-fields check fails on immediately. That's deliberate — don't add a fallback that quietly accepts the old column name.
 
 Two setlist-programming ideas came out of this and are **not yet implemented** in the solver — prefer danceable songs toward the second half of the show, and never strand a single non-danceable song in the middle of a run of danceable ones. The second rule needs a definition of how long a non-danceable run has to be before it counts as a deliberate mellow pocket rather than a momentum kill (a lone song is clearly one, an adjacent pair is arguably the other), so don't implement either as a hard constraint until that's settled with the band.
 
@@ -396,7 +394,7 @@ The same care applies to `length` when it feeds duration math, though it's lower
 - New song is **Acoustic/Either** and marked `gig_ready: Yes` → add its title to `gig_ready_acoustic`.
 - New song is **Full Band** and marked `gig_ready: No` (the script's own default!) → add its title to `not_ready_full_band`, or the integrity check will fail expecting every full-band song to be ready.
 - Song is (or becomes) **archived** → add its title to the archive-check whitelist in `test_database_integrity()` (currently `["Paint It Black", "Crazy Little Thing Called Love", "Them Changes", "Maybe I'm Amazed"]`), or the integrity check will fail expecting every other song to be un-archived. `add_song.py` always writes `archived: No` for a brand-new song — flipping it to `Yes` (e.g. adding a song directly as archived/retired) is a manual CSV edit, so it's easy to forget this whitelist update at the same time.
-- Song is **Yacht Rock or Classic Rock** (`yacht_adjacent` is `Yes`/`Classic Rock`) **and** gig-ready → add its title to the `yacht_songs` set in `test_yacht_scenario()`, or Scenario 1 fails the moment the solver puts it in a yacht setlist. This one bites on a *readiness flip*, not just a new song: making an already-classified song gig-ready is what makes it eligible for the yacht pool.
+- Song is **Yacht Rock or Classic Rock** (`genre` is set) **and** gig-ready → add its title to the `yacht_songs` set in `test_yacht_scenario()`, or Scenario 1 fails the moment the solver puts it in a yacht setlist. This one bites on a *readiness flip*, not just a new song: making an already-classified song gig-ready is what makes it eligible for the yacht pool.
 - Not-yet-gig-ready songs legitimately have a **blank `key`/`bpm`** (see "NEVER guess a key or BPM" above) and `date_added: None`. All three loaders (`build_setlist.py`, `apply_substitution.py`, `test_setlist.py`) parse a blank `bpm` to `None` rather than failing — don't "fix" that by backfilling a number.
 
 Run `python3 scripts/test_setlist.py` after adding a song and before considering it done — this is the mechanical "did I miss a step" check.

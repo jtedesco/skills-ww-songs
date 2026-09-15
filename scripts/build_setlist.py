@@ -566,22 +566,31 @@ def dance_display_string(song):
     return "" if str(song.get("danceable", "")).strip() == "No" else "✓"
 
 # The band's own genre classification, stored in songs_metadata.csv's
-# `yacht_adjacent` column and printed in the setlist table's Genre column.
+# `genre` column and printed in the setlist table's Genre column. A song
+# that is neither stores "" — the same "nothing here" spelling key, bpm and
+# musicbrainz_genre already use, and what the column printed regardless.
 #
-# "Classic Rock" is the current spelling of what the column used to call
-# "Adjacent". The old spelling is still mapped here (and still counts as
-# yacht-pool eligible below) because the CSV lives in a shared Drive folder
-# where a hand-edit or a restored older copy can reintroduce it — a stale
-# value should render as the genre it always meant, not silently blank out.
+# The column was once called `yacht_adjacent` and spelled these two values
+# "Yes" and "Adjacent". Both old spellings are still mapped here (and still
+# count as yacht-pool eligible below) because the CSV lives in a shared
+# Drive folder: a hand-edited cell or a row pasted from an older copy can
+# reintroduce one, and a stale value should render as the genre it always
+# meant rather than silently blanking out. A wholesale restore of a
+# pre-rename CSV is a different, louder problem — the column itself would be
+# back to `yacht_adjacent`, which test_database_integrity()'s required-fields
+# check fails on immediately. The current values map to themselves, so this
+# stays the one place a label is spelled.
 GENRE_LABELS = {
-    "Yes": "Yacht Rock",
+    "Yacht Rock": "Yacht Rock",
     "Classic Rock": "Classic Rock",
-    "Adjacent": "Classic Rock",   # legacy spelling of "Classic Rock"
+    "Yes": "Yacht Rock",          # legacy spelling, from `yacht_adjacent`
+    "Adjacent": "Classic Rock",   # legacy spelling, from `yacht_adjacent`
 }
 
-# Which `yacht_adjacent` values are eligible for a --gig-type yacht setlist:
-# every classified song, yacht rock and classic rock alike. Derived from
-# GENRE_LABELS so adding a label can't leave the filter behind.
+# Which `genre` values are eligible for a --gig-type yacht setlist: every
+# classified song, yacht rock and classic rock alike. Derived from
+# GENRE_LABELS so adding a label can't leave the filter behind, and so a
+# legacy value stays eligible for exactly as long as it still renders.
 YACHT_POOL_VALUES = set(GENRE_LABELS)
 
 
@@ -592,11 +601,11 @@ def genre_display_string(song):
     rather than '✗': the labels are what the eye should catch when scanning
     the sheet, so the unlabelled rows should recede.
 
-    Reads `yacht_adjacent` straight from the song dict, which is the CSV row
-    here and is refreshed from the CSV by apply_substitution.py's
+    Reads `genre` straight from the song dict, which is the CSV row here and
+    is refreshed from the CSV by apply_substitution.py's
     enrich_static_fields() on a revision — so the label is always the
     database's current answer, never a stale one copied off an older print."""
-    return GENRE_LABELS.get(str(song.get("yacht_adjacent", "") or "").strip(), "")
+    return GENRE_LABELS.get(str(song.get("genre", "") or "").strip(), "")
 
 # The one place the main song-table's column layout is defined. Both
 # build_setlist.py's SET/ENCORES tables and apply_substitution.py's
@@ -901,7 +910,7 @@ def main():
         
         # Yacht rock filter
         if args.gig_type == "yacht":
-            if song["yacht_adjacent"] not in YACHT_POOL_VALUES:
+            if song["genre"] not in YACHT_POOL_VALUES:
                 continue
                 
         # Separate into pools

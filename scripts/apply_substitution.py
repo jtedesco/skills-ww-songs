@@ -442,16 +442,16 @@ def check_no_duplicates(sections):
 
 def enrich_static_fields(sections, by_title):
     """Merge in the lineup-independent fields (opener/closer/preferred_emergency_cut,
-    start_energy/end_energy, danceable, yacht_adjacent) that tag_emergency_cuts()
+    start_energy/end_energy, danceable, genre) that tag_emergency_cuts()
     and the row/tag formatters need — without touching lead_vocals/backup_vocals,
     which must stay whatever they already are (existing rows keep their already-applied lineup
     substitution; new rows already got it via build_new_song). Unlike vocals,
     energy is always refreshed from the database rather than preserved from
     the printed cell, since it's a static per-song fact, not a per-instance
-    lineup customization. Genre (`yacht_adjacent`) is refreshed for the same
-    reason — and refreshing rather than preserving is what lets a setlist
-    written before the Genre column existed pick one up on its next revision
-    instead of regenerating with the cell blank."""
+    lineup customization. `genre` is refreshed for the same reason — and
+    refreshing rather than preserving is what lets a setlist written before
+    the Genre column existed pick one up on its next revision instead of
+    regenerating with the cell blank."""
     for sec in sections:
         for row in sec["rows"]:
             key = normalize_title(row["title"])
@@ -465,7 +465,7 @@ def enrich_static_fields(sections, by_title):
             row["start_energy"] = csv_row.get("start_energy", "")
             row["end_energy"] = csv_row.get("end_energy", "")
             row["danceable"] = csv_row.get("danceable", "")
-            row["yacht_adjacent"] = csv_row.get("yacht_adjacent", "")
+            row["genre"] = csv_row.get("genre", "")
 
 
 def extract_break_songs(sections):

@@ -245,8 +245,13 @@ def gather_manual_fields(title: str, artist: str) -> dict:
     gig_ready   = prompt("Gig ready?", choices=["Yes", "No"], default="No")
     opener      = prompt("Can open a set?", choices=["Yes", "No"], default="No")
     closer      = prompt("Can close a set?", choices=["Yes", "No"], default="No")
-    yacht       = prompt("Genre classification?", choices=["Yes", "No", "Classic Rock"],
-                         default="No")  # "Yes" = Yacht Rock; see GENRE_LABELS in build_setlist.py
+    # Stored verbatim in the `genre` column (see GENRE_LABELS in
+    # build_setlist.py), except "None", which is stored as "" — the database
+    # spells "not one of ours" as an empty cell, but an empty prompt choice
+    # would be unpickable.
+    genre       = prompt("Genre?", choices=["Yacht Rock", "Classic Rock", "None"],
+                         default="None")
+    genre       = "" if genre == "None" else genre
     # "TBD" (not "None") is the established convention for an undetermined
     # starter cue — 11 existing not-yet-ready songs use it.
     intro_notes = prompt_optional("Intro notes (who starts, e.g. 'Jon starts')", default="TBD")
@@ -298,7 +303,7 @@ def gather_manual_fields(title: str, artist: str) -> dict:
         "lead_vocals": lead, "backup_vocals": backup,
         "arrangement": arrangement, "gig_ready": gig_ready,
         "opener": opener, "closer": closer,
-        "yacht_adjacent": yacht,
+        "genre": genre,
         "intro_notes": intro_notes, "order_rules": order_rules,
         "substitution_notes": sub_notes, "vocalist_constraints": constraints,
         "preferred_emergency_cut": emergency,
