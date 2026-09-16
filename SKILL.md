@@ -33,9 +33,11 @@ See the FLOOR SHEET bullet under "Setlist Output Format" for when to set one and
 
 Most of the repertoire is danceable; the exceptions are tracked in the CSV, not here (same anti-drift rule as the substitution lists). `dance_display_string()` in `build_setlist.py` treats anything other than an explicit `No` as danceable, so a song added before this column existed doesn't silently render as a floor-killer.
 
+Two setlist-programming ideas came out of this and are **not yet implemented** in the solver — prefer danceable songs toward the second half of the show, and never strand a single non-danceable song in the middle of a run of danceable ones. The second rule needs a definition of how long a non-danceable run has to be before it counts as a deliberate mellow pocket rather than a momentum kill (a lone song is clearly one, an adjacent pair is arguably the other), so don't implement either as a hard constraint until that's settled with the band.
+
 ## Genre Column
 
-`songs_metadata.csv`'s `genre` column carries the band's own genre classification — which songs belong to the yacht/classic-rock pool the band programs around. It is **not** `musicbrainz_genre`, which is scraped, noisy (`Aor`, `2008 Universal Fire Victim`) and never printed on a setlist. It holds three values:
+`songs_metadata.csv`'s `genre` column carries the band's own genre classification — which songs belong to the yacht/classic-rock pool the band programs around. It is **not** `musicbrainz_genre`, which is scraped and noisy (`Aor`, `2008 Universal Fire Victim`); that column feeds the separate **Style** column below, after filtering. It holds three values:
 
 | Stored value | Prints as | Meaning |
 | :--- | :--- | :--- |
@@ -47,7 +49,23 @@ The label renders in the setlist table's **Genre** column via `genre_display_str
 
 **This column was once `yacht_adjacent`, holding `Yes`/`Adjacent`/`No`.** The whole CSV was migrated, but `GENRE_LABELS` in `build_setlist.py` still maps both old value spellings, because the database lives in a shared Drive folder where a hand-edited cell or a row pasted from an older copy can reintroduce one — a stale value should render as the genre it always meant rather than silently blanking out. Don't "clean up" those two legacy entries. A wholesale restore of a pre-rename CSV is a different and louder problem: the column itself would be back to `yacht_adjacent`, which `test_database_integrity()`'s required-fields check fails on immediately. That's deliberate — don't add a fallback that quietly accepts the old column name.
 
-Two setlist-programming ideas came out of this and are **not yet implemented** in the solver — prefer danceable songs toward the second half of the show, and never strand a single non-danceable song in the middle of a run of danceable ones. The second rule needs a definition of how long a non-danceable run has to be before it counts as a deliberate mellow pocket rather than a momentum kill (a lone song is clearly one, an adjacent pair is arguably the other), so don't implement either as a hard constraint until that's settled with the band.
+
+## Style and Decade Columns
+
+Two further columns sit beside **Genre** in the setlist table and in the GIG SUMMARY page's Not Selected / Archived table. Both are **derived at render time, not stored** — there is no `style` or `decade` column in the CSV, on purpose:
+
+| Column | Derived by | From | Blank when |
+| :--- | :--- | :--- | :--- |
+| **Style** | `style_display_string()` | `musicbrainz_genre` | MusicBrainz has no usable tag |
+| **Decade** | `decade_display_string()` | `release_year` | `release_year` is empty |
+
+**Genre vs. Style.** Genre is the band's own umbrella — Yacht Rock, Classic Rock — and is curated by hand. Style is the fine-grained MusicBrainz genre (`Soft Rock`, `Jazz Rock`, `Disco`). They answer different questions and both print, so don't collapse them.
+
+**Why derived rather than stored.** `decade` would be a second copy of `release_year`, free to drift from it — and placing a song in its decade is exactly what that column already exists for. `style` would be a second copy of the first useful entry in `musicbrainz_genre`, free to drift from it every time `enrich_metadata.py` runs. To correct a Style, edit that song's `musicbrainz_genre`; to correct a Decade, edit its `release_year`.
+
+**`style_display_string()` filters the tag list.** MusicBrainz tags are a community free-for-all, and `musicbrainz_genre` stores the raw top three. Dropped before picking the first survivor: anything with a four-digit year or a decade in it (`2008 Universal Fire Victim`, `Late 60'S Early 70'S`), a short list of non-style community tags, and **`Rock`** — which is `enrich_metadata.py`'s literal fallback string when a lookup finds nothing usable, so a stored `Rock` always means "no data" and a blank cell says so honestly.
+
+**Watch `enrich_metadata.py`'s `stop_words`.** It drops a tag before it ever reaches the CSV, and the list includes real styles — `disco`, `funk`, `reggae`, `new wave`. That is why *Funkytown* sat at the `Rock` fallback while MusicBrainz had `disco`/`funk` for it all along (its row is now corrected by hand). A new song in one of those styles will hit the same fallback.
 
 ## Energy Arc Columns
 
@@ -476,12 +494,12 @@ All "who's missing" and event-detail info lives here — do not restate it in th
 - After any change to this area — a new constraint row, a longer note — re-measure rather than assuming. A row whose note wraps to three lines can spill the page on its own.
 
 - **Constraints satisfaction table**: One row per constraint (✅/❌), with pass/fail
-- **Song table** with columns: `#`, `Title`, `Artist`, `Genre`, `Key`, `BPM`, `Length`, `Lead Vocal`, `Energy`, `Dance`, `Intro`. The layout is defined once, as `TABLE_COLUMNS` in `build_setlist.py` — `apply_substitution.py` regenerates its tables from the same constant, so don't restate the column order anywhere else. Note that `render_pdf.py`'s per-column width rules are positional `nth-child()` selectors (`#` is 1, `Dance` is 10); inserting or reordering a column here means moving those with it.
+- **Song table** with columns: `#`, `Title`, `Artist`, `Genre`, `Style`, `Decade`, `Key`, `BPM`, `Length`, `Lead Vocal`, `Energy`, `Dance`, `Intro`. The layout is defined once, as `TABLE_COLUMNS` in `build_setlist.py` — `apply_substitution.py` regenerates its tables from the same constant, so don't restate the column order anywhere else. Note that `render_pdf.py`'s per-column width rules are positional `nth-child()` selectors (`#` is 1, `Dance` is 12); inserting or reordering a column here means moving those with it.
 - **Duration summary**: Music time, transitions, breaks, grand total
 - **Gig Summary page**: A single trailing `## GIG SUMMARY` section (forced onto its own fresh PDF page, same as `SET N`/`ENCORES` — see PDF Export below) built by `render_summary_page_lines()` in `build_setlist.py`, combining three subsections:
   - `### 📊 Stats` — the same duration/song-count bullets that used to stand alone.
   - `### Lead Vocalist Breakdown` — a table of each vocalist's led-song count and % of the night (sets + breaks + encores), via `render_vocal_breakdown_lines()`.
-  - `### Not Selected / Archived` — a two-column table (`| Not Selected | Archived |`) pairing gig-ready/non-archived songs that didn't make this setlist (any set, break, or encore) against everything with `archived: Yes`, side by side rather than stacked, via `render_not_selected_and_archived_lines()`. Rows pad to the longer column's length; a fully-empty column gets one italic placeholder row. Kept as a single compact table (rather than the older separate `### Songs Not Selected` bulleted-list-with-Full-Band/Acoustic-sub-split and `### Archived Songs` sections) specifically so the whole GIG SUMMARY page fits within one printed page — a short gig that only uses a small fraction of the repertoire (large Not Selected column) can still overflow onto a second page regardless; that's a real content-volume limit, not a formatting bug.
+  - `### Not Selected / Archived` — a two-sided table (`| Not Selected | Style | Decade | Archived | Style | Decade |`) pairing gig-ready/non-archived songs that didn't make this setlist (any set, break, or encore) against everything with `archived: Yes`, side by side rather than stacked, via `render_not_selected_and_archived_lines()`. Rows pad to the longer column's length; a fully-empty column gets one italic placeholder row. Kept as a single compact table (rather than the older separate `### Songs Not Selected` bulleted-list-with-Full-Band/Acoustic-sub-split and `### Archived Songs` sections) specifically so the whole GIG SUMMARY page fits within one printed page — a short gig that only uses a small fraction of the repertoire (large Not Selected column) can still overflow onto a second page regardless; that's a real content-volume limit, not a formatting bug.
 
   Every `apply_substitution.py` run fully regenerates this whole page from the final scheduled songs (dropping whatever was there before — including old-format documents that had these as separate top-level sections, or nested the stats inside the last set/encore), so it's never stale after a swap/remove/add, unlike the acoustic breaks (which that script leaves untouched).
 - **Floor Sheet**: a single large-type page, `## FLOOR SHEET`, built by `render_floor_sheet_lines()` in `build_setlist.py` and placed after the last set (and after `## ENCORES`, if any) but before `## GIG SUMMARY`. It's the page the band tears off and tapes to the stage floor, so it's designed for one thing — being read at a glance from standing height:

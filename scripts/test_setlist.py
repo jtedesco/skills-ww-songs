@@ -724,8 +724,12 @@ def test_scenario_8():
         all_pass = False
         log_test("Acoustic Vocalist Coverage constraint present in summary", False)
 
+    # Check the two sides are present rather than the whole header row: that
+    # table has per-side Style/Decade columns between them, and pinning the
+    # exact string here just breaks the next time a column is added.
     if ("## GIG SUMMARY" in stdout and "### Not Selected / Archived" in stdout
-            and "| Not Selected | Archived |" in stdout and "### Lead Vocalist Breakdown" in stdout):
+            and "| Not Selected |" in stdout and "| Archived |" in stdout
+            and "### Lead Vocalist Breakdown" in stdout):
         log_test("Combined GIG SUMMARY page present (stats/vocalist breakdown/not-selected/archived)", True)
     else:
         all_pass = False

@@ -59,14 +59,17 @@ CSS = """
      wraps each constraint name into a tower.
 
      nth-child() is positional, so these indices track build_setlist.py's
-     TABLE_COLUMNS: # is 1 and Dance is 10. Insert or reorder a column there
-     and these two selectors have to move with it, or the widths land on the
-     wrong columns. */
+     TABLE_COLUMNS: # is 1, Genre/Style/Decade are 4-6 and Dance is 12.
+     Insert or reorder a column there and these selectors have to move with
+     it, or the widths land on the wrong columns. */
   .song-table th:nth-child(1), .song-table td:nth-child(1) { width: 1.4em; }
-  .song-table th:nth-child(10), .song-table td:nth-child(10) { width: 1.4em; text-align: center; padding-left: 2px; padding-right: 2px; }
-  /* Genre ("Yacht Rock" / "Classic Rock" / blank) — nowrap so a two-word
-     label takes one line rather than stacking and growing every row. */
-  .song-table th:nth-child(4), .song-table td:nth-child(4) { white-space: nowrap; }
+  .song-table th:nth-child(12), .song-table td:nth-child(12) { width: 1.4em; text-align: center; padding-left: 2px; padding-right: 2px; }
+  /* Genre ("Yacht Rock"), Style ("Alternative Rock") and Decade ("1970s") —
+     nowrap so a two-word label takes one line rather than stacking and
+     growing every row of the table. */
+  .song-table th:nth-child(4), .song-table td:nth-child(4),
+  .song-table th:nth-child(5), .song-table td:nth-child(5),
+  .song-table th:nth-child(6), .song-table td:nth-child(6) { white-space: nowrap; }
   th { background: #f2f2f2; font-weight: 600; }
   tr:nth-child(even) td { background: #fafafa; }
   strong { font-weight: 600; }

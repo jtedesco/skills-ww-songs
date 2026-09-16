@@ -358,9 +358,9 @@ def sync_pdf_to_drive(pdf_path, shared_dir=None):
 
 def render_not_selected_and_archived_lines(all_songs, scheduled_titles):
     """The 'Not Selected / Archived' subsection (h3, on the combined summary
-    page): a two-column table pairing gig-ready songs that didn't make this
+    page): a two-sided table pairing gig-ready songs that didn't make this
     setlist against the repertoire's archived songs, side by side instead of
-    stacked — keeps the whole GIG SUMMARY page within one printed page (see
+    stacked, each side carrying its own Style and Decade columns — keeps the whole GIG SUMMARY page within one printed page (see
     render_pdf.py's wrap_set_blocks, which forces GIG SUMMARY onto a fresh
     page but relies on its content actually fitting on just that one).
     Rows pad out to the longer column's length; an empty column gets a
@@ -378,15 +378,23 @@ def render_not_selected_and_archived_lines(all_songs, scheduled_titles):
     )
     archived = sorted((s for s in all_songs if s.get("archived") == "Yes"), key=lambda s: s["title"])
 
-    def cell(s):
-        return f"**{s['title']}** ({s['artist']})"
+    # Each side is three cells wide (song, style, decade), so a row is built
+    # as a list and padded with blanks rather than a single string — an empty
+    # side has to occupy its columns or the markdown row loses its shape.
+    def cells(s):
+        return [f"**{s['title']}** ({s['artist']})",
+                style_display_string(s), decade_display_string(s)]
 
-    left = [cell(s) for s in not_selected] or ["*None — everything made the cut.*"]
-    right = [cell(s) for s in archived] or ["*Nothing currently archived.*"]
+    left = [cells(s) for s in not_selected] or [["*None — everything made the cut.*", "", ""]]
+    right = [cells(s) for s in archived] or [["*Nothing currently archived.*", "", ""]]
+    pad = ["", "", ""]
 
-    lines = ["### Not Selected / Archived", "| Not Selected | Archived |", "|---|---|"]
+    lines = ["### Not Selected / Archived",
+             "| Not Selected | Style | Decade | Archived | Style | Decade |",
+             "|---|---|---|---|---|---|"]
     for i in range(max(len(left), len(right))):
-        lines.append(f"| {left[i] if i < len(left) else ''} | {right[i] if i < len(right) else ''} |")
+        row = (left[i] if i < len(left) else pad) + (right[i] if i < len(right) else pad)
+        lines.append("| " + " | ".join(row) + " |")
     return lines
 
 
@@ -607,11 +615,64 @@ def genre_display_string(song):
     database's current answer, never a stale one copied off an older print."""
     return GENRE_LABELS.get(str(song.get("genre", "") or "").strip(), "")
 
+
+# MusicBrainz tags are a community free-for-all: alongside real styles they
+# carry things that aren't styles at all — an identity tag, a soundtrack
+# marker, a decade ("Late 60'S Early 70'S"), even a library-disaster marker
+# ("2008 Universal Fire Victim"). None of those belong in a Style column on
+# a sheet the band reads at a gig, so they're dropped here rather than in
+# the CSV: `musicbrainz_genre` stays the raw record of what MusicBrainz said.
+#
+# "Rock" is dropped for a different reason — it is enrich_metadata.py's
+# literal fallback when a lookup finds nothing usable (its own stop_words
+# filter already removes a genuine "rock" tag), so a stored "Rock" always
+# means "no data", and a blank cell says that honestly.
+NON_STYLE_TAGS = {"queer", "soundtrack", "film soundtrack", "aln-sh", "rock"}
+YEAR_OR_DECADE_TAG = re.compile(r"\d{4}|\d0\s*'?s", re.IGNORECASE)
+
+# MusicBrainz spellings that want fixing for print.
+STYLE_FIXUPS = {"Aor": "AOR"}
+
+
+def style_display_string(song):
+    """The Style column: the most-tagged MusicBrainz style for this song —
+    'Soft Rock', 'Jazz Rock', 'Disco'. This is the fine-grained genre, as
+    opposed to the Genre column's band-curated umbrella (Yacht Rock /
+    Classic Rock), and it is derived from `musicbrainz_genre` rather than
+    stored in its own column so that re-running enrich_metadata.py can never
+    leave the two disagreeing.
+
+    `musicbrainz_genre` holds up to three tags, most-tagged first; this takes
+    the first one that is actually a musical style. Blank when none of them
+    is (MusicBrainz has no tags at all for a few songs), same convention as
+    the Genre and Dance columns."""
+    for part in str(song.get("musicbrainz_genre", "") or "").split(";"):
+        tag = part.strip()
+        if not tag or tag.lower() in NON_STYLE_TAGS or YEAR_OR_DECADE_TAG.search(tag):
+            continue
+        return STYLE_FIXUPS.get(tag, tag)
+    return ""
+
+
+def decade_display_string(song):
+    """The Decade column: '1970s', '2010s', or blank.
+
+    Derived from `release_year` rather than stored, because placing a song in
+    its decade is precisely what that column already exists for (see "Release
+    Years Are Confirmed Data" in SKILL.md) — a stored decade would be a second
+    copy of the same fact, free to drift from it. Written in full rather than
+    as '70s so that 1970s and 2020s can't read the same way on a printed
+    sheet."""
+    year = str(song.get("release_year", "") or "").strip()
+    if not re.fullmatch(r"\d{4}", year):
+        return ""
+    return f"{year[:3]}0s"
+
 # The one place the main song-table's column layout is defined. Both
 # build_setlist.py's SET/ENCORES tables and apply_substitution.py's
 # regenerated tables render from these, so the header can't drift out of
 # sync with format_md_row()'s cells.
-TABLE_COLUMNS = ["#", "Title", "Artist", "Genre", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Dance", "Intro"]
+TABLE_COLUMNS = ["#", "Title", "Artist", "Genre", "Style", "Decade", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Dance", "Intro"]
 TABLE_HEADER = "| " + " | ".join(TABLE_COLUMNS) + " |"
 TABLE_DIVIDER = "|" + "|".join(["---"] * len(TABLE_COLUMNS)) + "|"
 
@@ -677,7 +738,9 @@ def format_md_row(song, idx, marker="", shade_start=False):
     if shade:
         shade_bits = (f" 🎨 *[{shade}]*" if shade_start else "") + shade_marker(shade)
     genre = genre_display_string(song)
-    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {genre} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
+    style = style_display_string(song)
+    decade = decade_display_string(song)
+    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {genre} | {style} | {decade} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
 
 
 def shade_starts(songs):
