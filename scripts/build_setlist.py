@@ -595,11 +595,22 @@ GENRE_LABELS = {
     "Adjacent": "Classic Rock",   # legacy spelling, from `yacht_adjacent`
 }
 
-# Which `genre` values are eligible for a --gig-type yacht setlist: every
-# classified song, yacht rock and classic rock alike. Derived from
-# GENRE_LABELS so adding a label can't leave the filter behind, and so a
-# legacy value stays eligible for exactly as long as it still renders.
-YACHT_POOL_VALUES = set(GENRE_LABELS)
+# Which `genre` values a --gig-type yacht setlist draws from.
+#
+# Listed explicitly rather than derived from GENRE_LABELS. Every label
+# defined so far does belong in the yacht pool, so `set(GENRE_LABELS)` was
+# correct while the umbrella had only these two values — but the point of an
+# umbrella column is that the band adds to it (Modern Rock is the one
+# they've named), and a derived pool would put a modern-rock song into a
+# yacht gig the moment its label existed, silently and with no code change.
+# Defining a label and making it yacht-eligible are two separate decisions.
+YACHT_POOL_VALUES = {"Yacht Rock", "Classic Rock", "Yes", "Adjacent"}
+
+# A value here that GENRE_LABELS doesn't know would be eligible for the pool
+# while rendering as a blank cell — so catch the typo at import, not at the gig.
+_unknown = YACHT_POOL_VALUES - set(GENRE_LABELS)
+if _unknown:
+    raise ValueError(f"YACHT_POOL_VALUES not in GENRE_LABELS: {sorted(_unknown)}")
 
 
 def genre_display_string(song):
