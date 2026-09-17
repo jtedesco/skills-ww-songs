@@ -443,7 +443,7 @@ def check_no_duplicates(sections):
 def enrich_static_fields(sections, by_title):
     """Merge in the lineup-independent fields (opener/closer/preferred_emergency_cut,
     start_energy/end_energy, danceable, genre, and the musicbrainz_genre /
-    release_year that Style and Decade derive from) that tag_emergency_cuts()
+    release_year that Subgenre and Decade derive from) that tag_emergency_cuts()
     and the row/tag formatters need — without touching lead_vocals/backup_vocals,
     which must stay whatever they already are (existing rows keep their already-applied lineup
     substitution; new rows already got it via build_new_song). Unlike vocals,
@@ -467,7 +467,7 @@ def enrich_static_fields(sections, by_title):
             row["end_energy"] = csv_row.get("end_energy", "")
             row["danceable"] = csv_row.get("danceable", "")
             row["genre"] = csv_row.get("genre", "")
-            # Source columns for the derived Style and Decade cells. Without
+            # Source columns for the derived Subgenre and Decade cells. Without
             # these a revision re-renders every preserved row with both
             # columns blank, since a row parsed back out of the .md carries
             # only what the table printed.

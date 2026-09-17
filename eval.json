@@ -3,9 +3,9 @@
   "description": "Evaluation suite for the Wannabe Weekenders setlist builder tool and database constraints.",
   "test_cases": [
     {
-      "name": "Scenario 1: 2 Hour Set, Yacht Rock Preference",
+      "name": "Scenario 1: Yacht Rock Preference, target past what the pool can fill",
       "input_parameters": {
-        "duration": 2.0,
+        "duration": "yacht pool wall-clock + 0.5h (computed, see yacht_pool_wall_clock_hours)",
         "gig_type": "yacht",
         "martin_out": false,
         "david_out": false,
@@ -15,7 +15,7 @@
       "validation_criteria": [
         {
           "id": "yacht_rock_filter",
-          "assertion": "Verify that only songs marked as yacht rock or classic rock are scheduled in the sets.",
+          "assertion": "Verify that only songs whose genre is in the yacht pool (Yacht Rock / Classic Rock) are scheduled in the sets.",
           "type": "song_filter"
         },
         {

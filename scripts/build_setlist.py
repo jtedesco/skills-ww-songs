@@ -360,7 +360,7 @@ def render_not_selected_and_archived_lines(all_songs, scheduled_titles):
     """The 'Not Selected / Archived' subsection (h3, on the combined summary
     page): a two-sided table pairing gig-ready songs that didn't make this
     setlist against the repertoire's archived songs, side by side instead of
-    stacked, each side carrying its own Style and Decade columns — keeps the whole GIG SUMMARY page within one printed page (see
+    stacked, each side carrying its own Subgenre and Decade columns — keeps the whole GIG SUMMARY page within one printed page (see
     render_pdf.py's wrap_set_blocks, which forces GIG SUMMARY onto a fresh
     page but relies on its content actually fitting on just that one).
     Rows pad out to the longer column's length; an empty column gets a
@@ -383,14 +383,14 @@ def render_not_selected_and_archived_lines(all_songs, scheduled_titles):
     # side has to occupy its columns or the markdown row loses its shape.
     def cells(s):
         return [f"**{s['title']}** ({s['artist']})",
-                style_display_string(s), decade_display_string(s)]
+                subgenre_display_string(s), decade_display_string(s)]
 
     left = [cells(s) for s in not_selected] or [["*None — everything made the cut.*", "", ""]]
     right = [cells(s) for s in archived] or [["*Nothing currently archived.*", "", ""]]
     pad = ["", "", ""]
 
     lines = ["### Not Selected / Archived",
-             "| Not Selected | Style | Decade | Archived | Style | Decade |",
+             "| Not Selected | Subgenre | Decade | Archived | Subgenre | Decade |",
              "|---|---|---|---|---|---|"]
     for i in range(max(len(left), len(right))):
         row = (left[i] if i < len(left) else pad) + (right[i] if i < len(right) else pad)
@@ -573,95 +573,90 @@ def dance_display_string(song):
     column existed doesn't silently render as a floor-killer."""
     return "" if str(song.get("danceable", "")).strip() == "No" else "✓"
 
-# The band's own genre classification, stored in songs_metadata.csv's
-# `genre` column and printed in the setlist table's Genre column. A song
-# that is neither stores "" — the same "nothing here" spelling key, bpm and
-# musicbrainz_genre already use, and what the column printed regardless.
+# The band's genre classification, stored in songs_metadata.csv's `genre`
+# column and printed in the setlist table's Genre column.
 #
-# The column was once called `yacht_adjacent` and spelled these two values
-# "Yes" and "Adjacent". Both old spellings are still mapped here (and still
-# count as yacht-pool eligible below) because the CSV lives in a shared
-# Drive folder: a hand-edited cell or a row pasted from an older copy can
-# reintroduce one, and a stale value should render as the genre it always
-# meant rather than silently blanking out. A wholesale restore of a
-# pre-rename CSV is a different, louder problem — the column itself would be
-# back to `yacht_adjacent`, which test_database_integrity()'s required-fields
-# check fails on immediately. The current values map to themselves, so this
-# stays the one place a label is spelled.
-GENRE_LABELS = {
-    "Yacht Rock": "Yacht Rock",
-    "Classic Rock": "Classic Rock",
-    "Yes": "Yacht Rock",          # legacy spelling, from `yacht_adjacent`
-    "Adjacent": "Classic Rock",   # legacy spelling, from `yacht_adjacent`
+# This is FREE TEXT — whatever the column holds is what prints. It was a
+# closed vocabulary (Yacht Rock / Classic Rock, everything else blank) back
+# when the column's only job was separating the yacht pool from the rest.
+# It isn't one now: songs outside that pool carry their own genre, drawn
+# from their subgenre. So don't reintroduce a whitelist here — a genre the
+# band types would silently print as an empty cell.
+#
+# These two spellings are the exception, kept because the column was once
+# called `yacht_adjacent` and spelled its values this way. The CSV lives in
+# a shared Drive folder, so a hand-edited cell or a row pasted from an older
+# copy can reintroduce one, and a stale value should render as the genre it
+# always meant.
+GENRE_LEGACY_SPELLINGS = {
+    "Yes": "Yacht Rock",
+    "Adjacent": "Classic Rock",
 }
 
-# Which `genre` values a --gig-type yacht setlist draws from.
-#
-# Listed explicitly rather than derived from GENRE_LABELS. Every label
-# defined so far does belong in the yacht pool, so `set(GENRE_LABELS)` was
-# correct while the umbrella had only these two values — but the point of an
-# umbrella column is that the band adds to it (Modern Rock is the one
-# they've named), and a derived pool would put a modern-rock song into a
-# yacht gig the moment its label existed, silently and with no code change.
-# Defining a label and making it yacht-eligible are two separate decisions.
-YACHT_POOL_VALUES = {"Yacht Rock", "Classic Rock", "Yes", "Adjacent"}
-
-# A value here that GENRE_LABELS doesn't know would be eligible for the pool
-# while rendering as a blank cell — so catch the typo at import, not at the gig.
-_unknown = YACHT_POOL_VALUES - set(GENRE_LABELS)
-if _unknown:
-    raise ValueError(f"YACHT_POOL_VALUES not in GENRE_LABELS: {sorted(_unknown)}")
+# Which `genre` values a --gig-type yacht setlist draws from. The two real
+# ones are named here rather than derived from the column's contents: now
+# that any genre can appear in that column, deriving the pool would put a
+# Synth-Pop or Motown song into a yacht gig the moment it was tagged.
+# Adding a genre and making it yacht-eligible are separate decisions, and
+# only the second one belongs here. The legacy spellings ride along because
+# they mean exactly these two genres.
+YACHT_POOL_VALUES = {"Yacht Rock", "Classic Rock"} | set(GENRE_LEGACY_SPELLINGS)
 
 
 def genre_display_string(song):
-    """The Genre column: the band's own classification — 'Yacht Rock',
-    'Classic Rock', or blank for an unclassified song. Blank rather than a
-    filler dash for the same reason dance_display_string() returns blank
-    rather than '✗': the labels are what the eye should catch when scanning
-    the sheet, so the unlabelled rows should recede.
+    """The Genre column: the band's broad classification for a song —
+    'Yacht Rock', 'Classic Rock', or, for a song outside the yacht pool,
+    its own genre ('Alternative Rock', 'Motown', 'Disco'). Blank only when
+    the column is empty, same convention as the Dance column.
 
     Reads `genre` straight from the song dict, which is the CSV row here and
     is refreshed from the CSV by apply_substitution.py's
     enrich_static_fields() on a revision — so the label is always the
     database's current answer, never a stale one copied off an older print."""
-    return GENRE_LABELS.get(str(song.get("genre", "") or "").strip(), "")
+    raw = str(song.get("genre", "") or "").strip()
+    return GENRE_LEGACY_SPELLINGS.get(raw, raw)
 
 
-# MusicBrainz tags are a community free-for-all: alongside real styles they
-# carry things that aren't styles at all — an identity tag, a soundtrack
-# marker, a decade ("Late 60'S Early 70'S"), even a library-disaster marker
-# ("2008 Universal Fire Victim"). None of those belong in a Style column on
-# a sheet the band reads at a gig, so they're dropped here rather than in
-# the CSV: `musicbrainz_genre` stays the raw record of what MusicBrainz said.
+# MusicBrainz tags are a community free-for-all: alongside real subgenres
+# they carry things that aren't subgenres at all — an identity tag, a
+# soundtrack marker, a decade ("Late 60'S Early 70'S"), even a
+# library-disaster marker ("2008 Universal Fire Victim"). None of those
+# belong in a Subgenre column on a sheet the band reads at a gig, so they're
+# dropped here rather than in the CSV: `musicbrainz_genre` stays the raw
+# record of what MusicBrainz said.
 #
 # "Rock" is dropped for a different reason — it is enrich_metadata.py's
 # literal fallback when a lookup finds nothing usable (its own stop_words
 # filter already removes a genuine "rock" tag), so a stored "Rock" always
 # means "no data", and a blank cell says that honestly.
-NON_STYLE_TAGS = {"queer", "soundtrack", "film soundtrack", "aln-sh", "rock"}
+NON_SUBGENRE_TAGS = {"queer", "soundtrack", "film soundtrack", "aln-sh", "rock"}
 YEAR_OR_DECADE_TAG = re.compile(r"\d{4}|\d0\s*'?s", re.IGNORECASE)
 
-# MusicBrainz spellings that want fixing for print.
-STYLE_FIXUPS = {"Aor": "AOR"}
+# MusicBrainz spellings that want fixing for print — including the two
+# it ships for the same thing (Singer-Songwriter / Singer/Songwriter).
+SUBGENRE_FIXUPS = {"Aor": "AOR", "Singer/Songwriter": "Singer-Songwriter"}
 
 
-def style_display_string(song):
-    """The Style column: the most-tagged MusicBrainz style for this song —
-    'Soft Rock', 'Jazz Rock', 'Disco'. This is the fine-grained genre, as
-    opposed to the Genre column's band-curated umbrella (Yacht Rock /
-    Classic Rock), and it is derived from `musicbrainz_genre` rather than
-    stored in its own column so that re-running enrich_metadata.py can never
-    leave the two disagreeing.
+def subgenre_display_string(song):
+    """The Subgenre column: the most-tagged MusicBrainz subgenre for this
+    song — 'Soft Rock', 'Jazz Rock', 'Disco'. Finer-grained than the Genre
+    column beside it, and derived from `musicbrainz_genre` rather than
+    stored in a column of its own, so re-running enrich_metadata.py can
+    never leave the two disagreeing.
+
+    A song outside the yacht pool takes its Genre from this same value, so
+    the two columns often read the same; Genre is stored and editable, this
+    one tracks MusicBrainz.
 
     `musicbrainz_genre` holds up to three tags, most-tagged first; this takes
-    the first one that is actually a musical style. Blank when none of them
-    is (MusicBrainz has no tags at all for a few songs), same convention as
-    the Genre and Dance columns."""
+    the first one that is actually a subgenre. Blank when none of them is
+    (MusicBrainz has no tags at all for a couple of songs), same convention
+    as the Dance column."""
     for part in str(song.get("musicbrainz_genre", "") or "").split(";"):
         tag = part.strip()
-        if not tag or tag.lower() in NON_STYLE_TAGS or YEAR_OR_DECADE_TAG.search(tag):
+        if not tag or tag.lower() in NON_SUBGENRE_TAGS or YEAR_OR_DECADE_TAG.search(tag):
             continue
-        return STYLE_FIXUPS.get(tag, tag)
+        return SUBGENRE_FIXUPS.get(tag, tag)
     return ""
 
 
@@ -683,7 +678,7 @@ def decade_display_string(song):
 # build_setlist.py's SET/ENCORES tables and apply_substitution.py's
 # regenerated tables render from these, so the header can't drift out of
 # sync with format_md_row()'s cells.
-TABLE_COLUMNS = ["#", "Title", "Artist", "Genre", "Style", "Decade", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Dance", "Intro"]
+TABLE_COLUMNS = ["#", "Title", "Artist", "Genre", "Subgenre", "Decade", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Dance", "Intro"]
 TABLE_HEADER = "| " + " | ".join(TABLE_COLUMNS) + " |"
 TABLE_DIVIDER = "|" + "|".join(["---"] * len(TABLE_COLUMNS)) + "|"
 
@@ -749,9 +744,9 @@ def format_md_row(song, idx, marker="", shade_start=False):
     if shade:
         shade_bits = (f" 🎨 *[{shade}]*" if shade_start else "") + shade_marker(shade)
     genre = genre_display_string(song)
-    style = style_display_string(song)
+    subgenre = subgenre_display_string(song)
     decade = decade_display_string(song)
-    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {genre} | {style} | {decade} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
+    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {genre} | {subgenre} | {decade} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
 
 
 def shade_starts(songs):

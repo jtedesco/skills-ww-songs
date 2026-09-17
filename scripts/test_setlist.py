@@ -10,6 +10,36 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(SCRIPT_DIR, "..", "songs_metadata.csv")
 BUILDER_PATH = os.path.join(SCRIPT_DIR, "build_setlist.py")
 
+# The scenarios run the builder as a subprocess on purpose — importing it here
+# is only to reuse its definition of the yacht pool and its transition budget,
+# so this file can't drift from them.
+sys.path.insert(0, SCRIPT_DIR)
+import build_setlist
+
+
+def yacht_pool_wall_clock_hours():
+    """How long a --gig-type yacht setlist could run if it played every
+    eligible song, transition buffers included.
+
+    Scenario 1 asserts the builder warns when a target exceeds this, so the
+    target has to be computed from the pool rather than written down: the
+    pool grows every time the band tags a gig-ready song with a yacht-pool
+    genre, and a hardcoded target silently stops testing the warning the
+    moment the pool outgrows it. That already happened twice."""
+    total = 0
+    count = 0
+    with open(DB_PATH, newline="", encoding="utf-8") as f:
+        for s in csv.DictReader(f):
+            if (s["genre"] in build_setlist.YACHT_POOL_VALUES
+                    and s["gig_ready"] == "Yes" and s["archived"] != "Yes"
+                    and s["length"].strip()):
+                m, sec = s["length"].split(":")
+                total += int(m) * 60 + int(sec)
+                count += 1
+    if count > 1:
+        total += build_setlist.TRANSITION_BUFFER_SECONDS * (count - 1)
+    return total / 3600.0
+
 def log_test(name, success, message=""):
     status = "PASS" if success else "FAIL"
     print(f"[{status}] {name}")
@@ -285,14 +315,11 @@ def run_scenario(args):
     return parse_markdown_report(res.stdout)
 
 def test_scenario_1():
-    # 2 hours, not 90 minutes: the target has to exceed what the yacht pool
-    # can actually fill, or the insufficient-music assertion below stops
-    # testing anything. The pool grows as songs are tagged Yacht Rock /
-    # Classic Rock and shrinks as they're archived — at 22 gig-ready songs
-    # it covers ~1h46m of wall clock, so 90 minutes stopped being short.
-    # Re-measure and raise this again if that assertion starts failing.
-    print("\nTesting Scenario 1 (2 Hour Set, Yacht Rock Preference)...")
-    res = run_scenario(["--duration", "2.0", "--gig-type", "yacht"])
+    # Half an hour past whatever the yacht pool can fill, so the
+    # insufficient-music assertion below always has something to assert.
+    duration = round(yacht_pool_wall_clock_hours() + 0.5, 1)
+    print(f"\nTesting Scenario 1 ({duration}h Set, Yacht Rock Preference)...")
+    res = run_scenario(["--duration", str(duration), "--gig-type", "yacht"])
     if not res:
         return False
         
@@ -306,7 +333,8 @@ def test_scenario_1():
                    "Lights", "Roll with the Changes", "Ventura Highway", "Ooh La La",
                    "Landslide", "Vienna", "Listen to the Music",
                    "Ride Like the Wind", "Don't Stop", "Piano Man",
-                   "Don’t Stop Believing"}
+                   "Don’t Stop Believing", "All Right Now", "Miss You",
+                   "Hit Me with Your Best Shot", "Jenny (867-5309)"}
     
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:
@@ -725,7 +753,7 @@ def test_scenario_8():
         log_test("Acoustic Vocalist Coverage constraint present in summary", False)
 
     # Check the two sides are present rather than the whole header row: that
-    # table has per-side Style/Decade columns between them, and pinning the
+    # table has per-side Subgenre/Decade columns between them, and pinning the
     # exact string here just breaks the next time a column is added.
     if ("## GIG SUMMARY" in stdout and "### Not Selected / Archived" in stdout
             and "| Not Selected |" in stdout and "| Archived |" in stdout
