@@ -22,30 +22,30 @@
 | Absent-Member Note Check | ✅ Satisfied (full band) |
 
 ## SET 1
-| # | Title | Artist | Genre | Subgenre | Decade | Key | BPM | Length | Lead Vocal | Energy | Dance | Intro |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | **Working for the Weekend** 🟢 *[Opener]* | Loverboy | Album Rock | Album Rock | 1980s | Bm | 147 | 3:30 | Lauren (J) | High | ✓ | Cowbell |
-| 2 | **Reeling in the Years** | Steely Dan | Yacht Rock | Jazz Rock | 1970s | A | 136 | 4:30 | Jon (L, D) | Medium | ✓ | Guitar lead — welcome message |
-| 3 | **Don't Stop** | Fleetwood Mac | Classic Rock | Soft Rock | 1970s | E | 119 | 3:13 | Lauren | Medium→High | ✓ | Keys |
-| 4 | **I Hate Myself for Loving You** | Joan Jett & the Blackhearts | Album Rock | Album Rock | 1980s | E | 118 | 4:07 | Lauren | High | ✓ | Drums |
-| 5 | **Hey Jealousy** | Gin Blossoms | Alternative Rock | Alternative Rock | 1990s | D | 153 | 4:00 | Martin (J, L, D) | Medium | ✓ | Piano |
-| 6 | **Peg** | Steely Dan | Yacht Rock | Jazz Rock | 1970s | G | 116 | 4:00 | Jon (L) | Medium | ✓ | All together |
-| 7 | **You Oughta Know** | Alanis Morissette | Alternative Rock | Alternative Rock | 1990s | F#m | 105 | 4:00 | Lauren | Low→High |  | Bass and drums |
-| 8 | **Jenny (867-5309)** | Tommy Tutone | Classic Rock |  | 1980s | F#m | 136 | 4:00 | Jon (D, L, M) | High | ✓ | Guitar |
-| 9 | **Don’t Stop Believing** | Journey | Classic Rock | AOR | 1980s | E | 118 | 4:00 | Lauren (J, D) | High | ✓ | Piano |
-| 10 | **Brandy** | Looking Glass | Yacht Rock | Pop Rock | 1970s | E | 126 | 3:00 | Jon (L) | Low |  | Keys |
-| 11 | **Kid Charlemagne** | Steely Dan | Yacht Rock | Jazz Rock | 1970s | C7 | 116 | 4:32 | Jon (L, D, M) | Medium | ✓ | Keys |
-| 12 | **Ventura Highway** | America | Yacht Rock | Soft Rock | 1970s | G | 125 | 3:30 | David (J, L) | Medium |  | 3 guitars, counted off by David |
-| 13 | **Rikki Don't Lose That Number** | Steely Dan | Yacht Rock | Jazz Rock | 1970s | D | 122 | 4:30 | Jon (L, D) | Medium |  | David starts w/ marimba (or keys straight in) |
-| 14 | **Baby Blue** | Badfinger | Classic Rock | Pop Rock | 1970s | B | 122 | 3:30 | Jon (L, D) | Low |  | Guitar riff |
-| 15 | **Pink Pony Club** | Chappell Roan | Synth-Pop | Synth-Pop | 2020s | E | 130 | 4:30 | Lauren (J, D) | Low→Medium | ✓ | Piano |
-| 16 | **Ride Like the Wind** | Christopher Cross | Yacht Rock | Soft Rock | 1980s | Eb | 125 | 5:12 | Lauren | Medium | ✓ | Congas |
-| 17 | **Zombie** | The Cranberries | Alternative Rock | Alternative Rock | 1990s | G | 83 | 5:00 | Lauren | Medium |  | Guitar |
-| 18 | **Everybody Wants to Rule the World** | Tears for Fears | Classic Rock | Art Pop | 1980s | D | 112 | 4:00 | Jon (L) | Medium |  | Keys |
-| 19 | **The Chain** 🛑 **[EMERGENCY CUT]** | Fleetwood Mac | Classic Rock | Soft Rock | 1970s | Em | 152 | 4:30 | Lauren (J) | Medium→High |  | Drums |
-| 20 | **Hit Me with Your Best Shot** | Pat Benatar | Classic Rock | Pop Rock | 1980s | E | 127 | 2:52 | Lauren | High | ✓ | Guitar |
-| 21 | **Born to Run** | Bruce Springsteen | Singer-Songwriter | Singer-Songwriter | 1970s | E | 147 | 4:30 | Martin (L) | High | ✓ | Drum roll |
-| 22 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | Classic Rock | Soft Rock | 1970s | C | 134 | 5:30 | Lauren (J, D) | High | ✓ | Bass — stage banter, thank yous |
+| # | Title | Artist | Genre | Decade | Key | BPM | Length | Lead Vocal | Energy | Dance | Intro |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | **Working for the Weekend** 🟢 *[Opener]* | Loverboy | Album Rock | 1980s | Bm | 147 | 3:30 | Lauren (J) | High | ✓ | Cowbell |
+| 2 | **Reeling in the Years** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | A | 136 | 4:30 | Jon (L, D) | Medium | ✓ | Guitar lead — welcome message |
+| 3 | **Don't Stop** | Fleetwood Mac | Classic Rock / Soft Rock | 1970s | E | 119 | 3:13 | Lauren | Medium→High | ✓ | Keys |
+| 4 | **I Hate Myself for Loving You** | Joan Jett & the Blackhearts | Album Rock | 1980s | E | 118 | 4:07 | Lauren | High | ✓ | Drums |
+| 5 | **Hey Jealousy** | Gin Blossoms | Alternative Rock | 1990s | D | 153 | 4:00 | Martin (J, L, D) | Medium | ✓ | Piano |
+| 6 | **Peg** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | G | 116 | 4:00 | Jon (L) | Medium | ✓ | All together |
+| 7 | **You Oughta Know** | Alanis Morissette | Alternative Rock | 1990s | F#m | 105 | 4:00 | Lauren | Low→High |  | Bass and drums |
+| 8 | **Jenny (867-5309)** | Tommy Tutone | Classic Rock | 1980s | F#m | 136 | 4:00 | Jon (D, L, M) | High | ✓ | Guitar |
+| 9 | **Don’t Stop Believing** | Journey | Classic Rock / AOR | 1980s | E | 118 | 4:00 | Lauren (J, D) | High | ✓ | Piano |
+| 10 | **Brandy** | Looking Glass | Yacht Rock / Pop Rock | 1970s | E | 126 | 3:00 | Jon (L) | Low |  | Keys |
+| 11 | **Kid Charlemagne** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | C7 | 116 | 4:32 | Jon (L, D, M) | Medium | ✓ | Keys |
+| 12 | **Ventura Highway** | America | Yacht Rock / Soft Rock | 1970s | G | 125 | 3:30 | David (J, L) | Medium |  | 3 guitars, counted off by David |
+| 13 | **Rikki Don't Lose That Number** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | D | 122 | 4:30 | Jon (L, D) | Medium |  | David starts w/ marimba (or keys straight in) |
+| 14 | **Baby Blue** | Badfinger | Classic Rock / Pop Rock | 1970s | B | 122 | 3:30 | Jon (L, D) | Low |  | Guitar riff |
+| 15 | **Pink Pony Club** | Chappell Roan | Synth-Pop | 2020s | E | 130 | 4:30 | Lauren (J, D) | Low→Medium | ✓ | Piano |
+| 16 | **Ride Like the Wind** | Christopher Cross | Yacht Rock / Soft Rock | 1980s | Eb | 125 | 5:12 | Lauren | Medium | ✓ | Congas |
+| 17 | **Zombie** | The Cranberries | Alternative Rock | 1990s | G | 83 | 5:00 | Lauren | Medium |  | Guitar |
+| 18 | **Everybody Wants to Rule the World** | Tears for Fears | Classic Rock / Art Pop | 1980s | D | 112 | 4:00 | Jon (L) | Medium |  | Keys |
+| 19 | **The Chain** 🛑 **[EMERGENCY CUT]** | Fleetwood Mac | Classic Rock / Soft Rock | 1970s | Em | 152 | 4:30 | Lauren (J) | Medium→High |  | Drums |
+| 20 | **Hit Me with Your Best Shot** | Pat Benatar | Classic Rock / Pop Rock | 1980s | E | 127 | 2:52 | Lauren | High | ✓ | Guitar |
+| 21 | **Born to Run** | Bruce Springsteen | Singer-Songwriter | 1970s | E | 147 | 4:30 | Martin (L) | High | ✓ | Drum roll |
+| 22 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | Classic Rock / Soft Rock | 1970s | C | 134 | 5:30 | Lauren (J, D) | High | ✓ | Bass — stage banter, thank yous |
 
 **Set 1 Music Duration**: 90:26 | **Transitions**: 21:00 | **Total**: 111:26
 ----------------------------------------
@@ -119,42 +119,44 @@
 | Martin | 2 | 9.1% |
 | David | 1 | 4.5% |
 
-### Not Selected / Archived
-| Not Selected | Subgenre | Decade | Archived | Subgenre | Decade |
-|---|---|---|---|---|---|
-| **All Right Now** (Free) | Blues Rock | 1970s | **Crazy Little Thing Called Love** (Queen) | Glam Rock | 1970s |
-| **American Girl** (Tom Petty) | Singer-Songwriter | 1970s | **Maybe I'm Amazed** (Paul McCartney) | Pop Rock | 1970s |
-| **Blackbird** (Beatles) | Pop Rock | 1960s | **Paint It Black** (Rolling Stones) | Blues Rock | 1960s |
-| **Brass in Pocket** (Pretenders) | Jangle Pop | 1970s | **Them Changes** (Buddy Miles) | Blues Rock | 1970s |
-| **Brown Eyed Girl** (Van Morrison) | Singer-Songwriter | 1960s |  |  |  |
-| **Colors** (Black Pumas, The) | Contemporary R&B | 2010s |  |  |  |
-| **Dreams** (Fleetwood Mac) | Soft Rock | 1970s |  |  |  |
-| **Free Ride** (Edgar Winter Group) | Blues Rock | 1970s |  |  |  |
-| **Funkytown** (Lipps, Inc.) | Disco | 1980s |  |  |  |
-| **Gold on the Ceiling** (Black Keys, The) | Alternative Rock | 2010s |  |  |  |
-| **Hook** (Blues Traveler) | Blues Rock | 1990s |  |  |  |
-| **Keep Your Hands to Yourself** (Georgia Satellites) | American Trad Rock | 1980s |  |  |  |
-| **Landslide** (Stevie Nicks) | Pop Rock | 1970s |  |  |  |
-| **Lights** (Journey) | AOR | 1970s |  |  |  |
-| **Listen to the Music** (The Doobie Brothers) | Pop Rock | 1970s |  |  |  |
-| **Me and Bobby McGee** (Janis Joplin) | Blues Rock | 1970s |  |  |  |
-| **Miss You** (Rolling Stones) | Blues Rock | 1970s |  |  |  |
-| **Ooh La La** (Faces) | Blues Rock | 1970s |  |  |  |
-| **Piano Man** (Billy Joel) | Piano Rock | 1970s |  |  |  |
-| **Respect** (Aretha Franklin) | Motown | 1960s |  |  |  |
-| **Rock This Town** (Stray Cats) | Rockabilly | 1980s |  |  |  |
-| **Second Chance** (Shinedown) | Alternative Rock | 2000s |  |  |  |
-| **Superstition** (Stevie Wonder) | Contemporary R&B | 1970s |  |  |  |
-| **Take It Easy** (Eagles) | Country Rock | 1970s |  |  |  |
-| **The Middle** (Jimmy Eat World) | Alternative Rock | 2000s |  |  |  |
-| **Valerie** (Amy Winehouse) | Contemporary R&B | 2000s |  |  |  |
-| **Wish You Were Here** (Pink Floyd) | Progressive Rock | 1970s |  |  |  |
-
-## SONGS IN PROGRESS
-Not yet gig-ready — excluded from the solver unless --include-not-ready is passed.
-
-- **Kid Charlemagne** (Steely Dan)
-- **The Story** (Brandi Carlile)
-- **Vienna** (Billy Joel)
-- **We Didn't Start the Fire** (Billy Joel)
-- **You May Be Right** (Billy Joel)
+### Repertoire Not Scheduled
+| Song | Genre | Decade | Energy |
+|---|---|---|---|
+| **Active — Not Selected** (27)<!--group--> |  |  |  |
+| **All Right Now** (Free) | Classic Rock / Blues Rock | 1970s | Medium |
+| **American Girl** (Tom Petty) | Singer-Songwriter | 1970s | High |
+| **Blackbird** (Beatles) | Pop Rock | 1960s | Low |
+| **Brass in Pocket** (Pretenders) | Classic Rock / Jangle Pop | 1970s | Low |
+| **Brown Eyed Girl** (Van Morrison) | Classic Rock / Singer-Songwriter | 1960s | Low |
+| **Colors** (Black Pumas, The) | Contemporary R&B | 2010s | Medium |
+| **Dreams** (Fleetwood Mac) | Classic Rock / Soft Rock | 1970s | Low |
+| **Free Ride** (Edgar Winter Group) | Classic Rock / Blues Rock | 1970s | High |
+| **Funkytown** (Lipps, Inc.) | Disco | 1980s | Medium |
+| **Gold on the Ceiling** (Black Keys, The) | Alternative Rock | 2010s | High |
+| **Hook** (Blues Traveler) | Blues Rock | 1990s | Medium |
+| **Keep Your Hands to Yourself** (Georgia Satellites) | American Trad Rock | 1980s | Medium |
+| **Landslide** (Stevie Nicks) | Classic Rock / Pop Rock | 1970s | Low |
+| **Lights** (Journey) | Classic Rock / AOR | 1970s | Low→Medium |
+| **Listen to the Music** (The Doobie Brothers) | Classic Rock / Pop Rock | 1970s | Medium |
+| **Me and Bobby McGee** (Janis Joplin) | Blues Rock | 1970s | Low→High |
+| **Miss You** (Rolling Stones) | Classic Rock / Blues Rock | 1970s | Medium |
+| **Ooh La La** (Faces) | Classic Rock / Blues Rock | 1970s | Medium |
+| **Piano Man** (Billy Joel) | Classic Rock / Piano Rock | 1970s | Low→Medium |
+| **Respect** (Aretha Franklin) | Motown | 1960s | Medium→High |
+| **Rock This Town** (Stray Cats) | Rockabilly | 1980s | Medium |
+| **Second Chance** (Shinedown) | Alternative Rock | 2000s | Medium→High |
+| **Superstition** (Stevie Wonder) | Contemporary R&B | 1970s | Medium |
+| **Take It Easy** (Eagles) | Classic Rock / Country Rock | 1970s | Medium |
+| **The Middle** (Jimmy Eat World) | Alternative Rock | 2000s | Medium→High |
+| **Valerie** (Amy Winehouse) | Contemporary R&B | 2000s | Medium |
+| **Wish You Were Here** (Pink Floyd) | Progressive Rock | 1970s | Low |
+| **In Progress** (4)<!--group--> |  |  |  |
+| **The Story** (Brandi Carlile) | Alternative Country | 2000s | Medium |
+| **Vienna** (Billy Joel) | Classic Rock / Piano Rock | 1970s | Low |
+| **We Didn't Start the Fire** (Billy Joel) | Classic Rock / Piano Rock | 1980s | High |
+| **You May Be Right** (Billy Joel) | Classic Rock / Pop Rock | 1980s | High |
+| **Archived** (4)<!--group--> |  |  |  |
+| **Crazy Little Thing Called Love** (Queen) | Classic Rock / Glam Rock | 1970s | Medium |
+| **Maybe I'm Amazed** (Paul McCartney) | Classic Rock / Pop Rock | 1970s | Low→Medium |
+| **Paint It Black** (Rolling Stones) | Classic Rock / Blues Rock | 1960s | Medium |
+| **Them Changes** (Buddy Miles) | Blues Rock | 1970s | Medium |
