@@ -8,7 +8,7 @@ order, unrelated songs, which acoustic songs fill the breaks — is preserved
 exactly. Duration stats and the EMERGENCY CUT marker are recomputed for the
 sections that changed, using the same logic build_setlist.py uses, so a
 substitution can't silently leave the setlist without a cut candidate or
-wrong totals. The trailing "Not Selected / Archived" table is always fully
+wrong totals. The trailing "Repertoire Not Scheduled" table is always fully
 regenerated from the final scheduled songs, so it never goes stale.
 
 Usage:
@@ -38,7 +38,7 @@ sys.path.insert(0, SCRIPT_DIR)
 from build_setlist import (
     parse_length, format_length, get_segue_groups, tag_emergency_cuts,
     format_md_row, clean_backups, parse_covering_vocalist,
-    render_in_progress_lines, render_summary_page_lines, SUMMARY_PAGE_HEADING,
+    render_summary_page_lines, SUMMARY_PAGE_HEADING,
     render_floor_sheet_lines, FLOOR_SHEET_HEADING,
     check_absent_member_notes, format_absent_member_status,
     check_energy_flow, format_pacing_flow_status,
@@ -49,8 +49,10 @@ from build_setlist import (
 )
 
 # Any of these starting a line marks the beginning of the always-regenerated
-# tail — old-format files (pre-dating the combined summary page) used the
-# first three as separate top-level headings; new ones use just the last two.
+# tail. Current files have FLOOR SHEET then GIG SUMMARY. The others only
+# appear on older files: SONGS NOT SELECTED / ARCHIVED SONGS predate the
+# combined summary page, and SONGS IN PROGRESS predates the in-progress songs
+# moving into the summary's repertoire table.
 TRAILING_HEADINGS = {"## SONGS NOT SELECTED", "## ARCHIVED SONGS", FLOOR_SHEET_HEADING,
                      SUMMARY_PAGE_HEADING, "## SONGS IN PROGRESS"}
 GIG_STATS_HEADING = "### 📊 GIG SUMMARY STATS"
@@ -479,7 +481,7 @@ def extract_break_songs(sections):
     """Break-pair songs live in each section's preserved extra_after text as
     '- **Title** (Artist) - Lead: X' bullets (breaks aren't touched by this
     script, so this just reads back what's already there) — used to keep
-    the summary stats/vocalist-breakdown/'Not Selected / Archived' table
+    the summary stats/vocalist-breakdown/repertoire table
     accurate. Matched on the bold-title-then-open-paren shape, which GIG
     SUMMARY STATS bullets ('- **Label**: value') don't have, since
     extra_after for the final section can also pick up trailing content
@@ -608,8 +610,6 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
 
     out.append("")
     out.extend(render_summary_page_lines(stats_lines, all_scheduled, all_songs, scheduled_titles))
-    out.append("")
-    out.extend(render_in_progress_lines(all_songs))
 
     return "\n".join(out).rstrip("\n") + "\n"
 

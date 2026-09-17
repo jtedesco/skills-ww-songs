@@ -50,26 +50,39 @@ CSS = """
   hr { border: none; border-top: 1px solid #ddd; margin: 8px 0; }
   table { border-collapse: collapse; width: 100%; margin: 6px 0 8px; font-size: 9pt; }
   th, td { border: 1px solid #ddd; padding: 2px 5px; text-align: left; vertical-align: top; }
-  /* Keep an 18-song set on one printed page: the # and Dance columns only ever
-     hold a number and a ✓, so give them the minimum and let Intro (the one
-     column that wraps) keep the slack. Without this the wider table pushes
-     each set onto a second page and the band turns a page mid-set.
+  /* Keep a set on as few printed pages as possible: the # and Dance columns
+     only ever hold a number and a ✓, so they get the minimum and Intro (the
+     column that wraps) keeps the slack. Without this the wider table pushes
+     each set onto another page and the band turns a page mid-set.
      Scoped to .song-table (see tag_song_tables) — applying these widths to
      every table squeezes the constraints table's first column to 1.6em and
      wraps each constraint name into a tower.
 
      nth-child() is positional, so these indices track build_setlist.py's
-     TABLE_COLUMNS: # is 1, Genre/Subgenre/Decade are 4-6 and Dance is 12.
+     TABLE_COLUMNS: # is 1, Genre is 4, Decade is 5, Dance is 11, Intro is 12.
      Insert or reorder a column there and these selectors have to move with
      it, or the widths land on the wrong columns. */
-  .song-table th:nth-child(1), .song-table td:nth-child(1) { width: 1.4em; }
-  .song-table th:nth-child(12), .song-table td:nth-child(12) { width: 1.4em; text-align: center; padding-left: 2px; padding-right: 2px; }
-  /* Genre ("Yacht Rock"), Subgenre ("Alternative Rock") and Decade ("1970s") —
-     nowrap so a two-word label takes one line rather than stacking and
-     growing every row of the table. */
-  .song-table th:nth-child(4), .song-table td:nth-child(4),
-  .song-table th:nth-child(5), .song-table td:nth-child(5),
-  .song-table th:nth-child(6), .song-table td:nth-child(6) { white-space: nowrap; }
+  /* Fixed layout with every column's share spelled out. Under auto layout
+     the columns size to their content and Intro — the one column that is
+     meant to wrap — gets whatever is left, which after Genre and Decade were
+     added was a one-word strip. The shares below sum to 100%; the narrow
+     ones are sized to their header word ("Decade", "Length", "Dance"). */
+  .song-table { table-layout: fixed; }
+  .song-table th:nth-child(1), .song-table td:nth-child(1) { width: 3.4%; }
+  .song-table th:nth-child(2), .song-table td:nth-child(2) { width: 13.5%; }
+  .song-table th:nth-child(3), .song-table td:nth-child(3) { width: 12%; }
+  .song-table th:nth-child(4), .song-table td:nth-child(4) { width: 13.5%; }
+  .song-table th:nth-child(5), .song-table td:nth-child(5) { width: 7%; white-space: nowrap; }
+  .song-table th:nth-child(6), .song-table td:nth-child(6) { width: 4.5%; }
+  .song-table th:nth-child(7), .song-table td:nth-child(7) { width: 5.2%; }
+  .song-table th:nth-child(8), .song-table td:nth-child(8) { width: 7%; }
+  .song-table th:nth-child(9), .song-table td:nth-child(9) { width: 6.8%; }
+  .song-table th:nth-child(10), .song-table td:nth-child(10) { width: 8%; }
+  .song-table th:nth-child(11), .song-table td:nth-child(11) { width: 6%; text-align: center; padding-left: 2px; padding-right: 2px; }
+  .song-table th:nth-child(12), .song-table td:nth-child(12) { width: 13.1%; }
+  /* Genre ("Yacht Rock / Jazz Rock") may break only after its ' / ' — see
+     keep_genre_parts_together — and Energy only after its arrow. */
+  .genre-part { white-space: nowrap; }
   th { background: #f2f2f2; font-weight: 600; }
   tr:nth-child(even) td { background: #fafafa; }
   strong { font-weight: 600; }
@@ -112,6 +125,30 @@ CSS = """
      page is one-page-or-bust, and each shaded entry that grows costs a slot. */
   .floor-sheet p.shaded { background: #f4efe6; border-left: 3px solid #c8922a;
                           padding: 1px 4px; margin-left: -4px; }
+  /* GIG SUMMARY — the last page, in two columns: stats and the vocalist
+     breakdown at the top of the left column, then the repertoire table
+     flowing down the left column and on into the right. Chrome fragments a
+     table row-by-row across columns and repeats its <thead> at the top of
+     the second one. */
+  .summary-page { column-count: 2; column-gap: 0.3in; }
+  .summary-page h2 { column-span: all; margin-top: 0; }
+  .summary-page h3 { break-after: avoid; }
+  .summary-page h3:first-of-type { margin-top: 0; }
+  .summary-page ul { break-inside: avoid; }
+  .summary-page table { font-size: 8pt; margin-top: 2px; }
+  .summary-page th, .summary-page td { padding: 1px 4px; }
+  .summary-page tr { break-inside: avoid; }
+  /* Song gets the width; Genre may wrap after its ' / '; Decade and Energy
+     are short and stay on one line. */
+  .repertoire-table th:nth-child(1), .repertoire-table td:nth-child(1) { width: 46%; }
+  .repertoire-table td:nth-child(3), .repertoire-table td:nth-child(4) { white-space: nowrap; }
+  .repertoire-table tr.group-row td { background: #e8e8e8; font-size: 8.5pt; padding-top: 3px;
+                                      border-top: 1.5px solid #888; break-after: avoid; }
+  /* A white gap above every group heading after the first, so "In Progress"
+     and "Archived" stand out from the rows above them rather than reading as
+     one more song. A wide collapsed border wins over the neighbouring 1px
+     rules, so this opens a real break in the table. */
+  .repertoire-table tr.group-row:not(:first-child) td { border-top: 12px solid #fff; }
   .callout { border-left: 4px solid #d4a017; background: #fff8e6; padding: 7px 12px; margin: 8px 0; border-radius: 3px; }
   .callout-title { font-weight: 700; margin-bottom: 3px; }
   .callout p { margin: 4px 0; }
@@ -213,6 +250,65 @@ def tag_song_tables(html):
     )
 
 
+def style_repertoire_table(html):
+    """Class the GIG SUMMARY's repertoire table and turn each row carrying
+    build_setlist.py's <!--group--> marker into a single full-width heading
+    cell ("Active — Not Selected (27)"). The .md keeps those rows as plain
+    four-cell rows with three empty cells, so it stays a valid table; the
+    colspan only exists in print."""
+    def do_table(m):
+        table = m.group(0)
+        if "<!--group-->" not in table:
+            return table
+        table = table.replace("<table>", '<table class="repertoire-table">', 1)
+        def do_row(r):
+            row = r.group(0)
+            if "<!--group-->" not in row:
+                return row
+            first = re.search(r"<td[^>]*>(.*?)</td>", row, flags=re.S).group(1).replace("<!--group-->", "")
+            ncols = len(re.findall(r"<td", row))
+            return f'<tr class="group-row"><td colspan="{ncols}">{first}</td></tr>'
+        return re.sub(r"<tr>.*?</tr>", do_row, table, flags=re.S)
+    return re.sub(r"<table>.*?</table>", do_table, html, flags=re.S)
+
+
+def keep_genre_parts_together(html):
+    """Let a merged Genre cell ('Yacht Rock / Jazz Rock') wrap only between
+    its two halves, never inside one. Wraps each half in a nowrap span, in
+    the song tables' Genre column (4th) and the repertoire table's (2nd).
+    Positional, like the width rules in CSS — build_setlist.py's
+    TABLE_COLUMNS and REPERTOIRE_COLUMNS are what these indices track."""
+    def spans(cell_html):
+        # A one-part genre ('Alternative Rock') is left free to wrap: it has
+        # no ' / ' to break at, and held to one line it overruns the column.
+        if " / " not in cell_html:
+            return cell_html
+        # &nbsp; before the slash so a wrap lands after it: 'Classic Rock /'
+        # then 'Soft Rock', never 'Classic Rock' then '/ Soft Rock'.
+        return "&nbsp;/ ".join(f'<span class="genre-part">{p}</span>' for p in cell_html.split(" / "))
+
+    def do_table(m, col):
+        def do_row(r):
+            cells = re.findall(r"(<td[^>]*>)(.*?)(</td>)", r.group(0), flags=re.S)
+            if len(cells) < col:
+                return r.group(0)
+            row = r.group(0)
+            open_tag, body, close = cells[col - 1]
+            # Rebuild by position: split the row on its cells and swap one.
+            parts = re.split(r"(<td[^>]*>.*?</td>)", row, flags=re.S)
+            td_idx = [i for i, p in enumerate(parts) if p.startswith("<td")]
+            parts[td_idx[col - 1]] = open_tag + spans(body) + close
+            return "".join(parts)
+        return re.sub(r"<tr[^>]*>.*?</tr>", do_row, m.group(0), flags=re.S)
+
+    html = re.sub(r'<table class="song-table">.*?</table>', lambda m: do_table(m, 4), html, flags=re.S)
+    # Energy ('Medium→High') may break after its arrow, for the same reason:
+    # unbroken it is the second-widest fixed cell and Intro pays for it.
+    html = re.sub(r'<table class="song-table">.*?</table>',
+                  lambda m: m.group(0).replace("→", "→<wbr>"), html, flags=re.S)
+    return re.sub(r'<table class="repertoire-table">.*?</table>', lambda m: do_table(m, 2), html, flags=re.S)
+
+
 SHADE_RE = re.compile(r"<!--shade:(.*?)-->")
 
 
@@ -261,17 +357,16 @@ def wrap_set_blocks(html):
     """Wrap each 'SET N' / 'ENCORES' / 'GIG SUMMARY' <h2> heading and
     everything up to the next h2 (its table, duration line, and following
     acoustic break, for SET/ENCORES) in a single div so the whole thing
-    moves together to a fresh page instead of splitting. GIG SUMMARY gets
-    its own forced page too (kept to one page by construction — see
-    render_summary_page_lines/render_not_selected_and_archived_lines in
-    build_setlist.py — rather than by pagination tricks here). Other h2
-    FLOOR SHEET gets the same forced page break plus a .floor-sheet class
-    that lays it out in large-type columns (see CSS). Other h2
-    sections (SONGS IN PROGRESS, or the older separate SONGS NOT SELECTED /
-    ARCHIVED SONGS format) are left unwrapped so they flow naturally and can
-    share a page — forcing every h2 onto its own page (the original,
-    pre-fix behavior) left each short trailing section stranded on its own
-    mostly-empty page."""
+    moves together to a fresh page instead of splitting. FLOOR SHEET and
+    GIG SUMMARY get the same forced page break plus a class that lays each
+    out in two columns (see CSS): large type for the floor sheet, and for
+    the summary a long repertoire table that wraps from the left column into
+    the right. Other h2 sections (SONGS IN PROGRESS, or the older separate
+    SONGS NOT SELECTED / ARCHIVED SONGS format, on setlists written before
+    those moved into the summary's table) are left unwrapped so they flow
+    naturally and can share a page — forcing every h2 onto its own page (the
+    original, pre-fix behavior) left each short trailing section stranded on
+    its own mostly-empty page."""
     parts = re.split(r"(<h2[^>]*>.*?</h2>)", html, flags=re.S)
     if len(parts) <= 1:
         return html
@@ -282,7 +377,9 @@ def wrap_set_blocks(html):
         heading_text = re.sub(r"<[^>]+>", "", heading).strip()
         if heading_text.upper() == "FLOOR SHEET":
             out.append(f'<div class="set-block floor-sheet">{heading}{content}</div>')
-        elif re.match(r"^SET\b", heading_text, re.I) or heading_text.upper() in ("ENCORES", "GIG SUMMARY"):
+        elif heading_text.upper() == "GIG SUMMARY":
+            out.append(f'<div class="set-block summary-page">{heading}{content}</div>')
+        elif re.match(r"^SET\b", heading_text, re.I) or heading_text.upper() == "ENCORES":
             out.append(f'<div class="set-block">{heading}{content}</div>')
         else:
             out.append(heading + content)
@@ -321,6 +418,10 @@ def render(md_path, pdf_path=None):
     body_html = slim_emoji(body_html)
     body_html = tag_song_tables(body_html)
     body_html = apply_shading(body_html)
+    # After apply_shading: that pass rebuilds each <tbody> from its bare <tr>
+    # rows, so a row that already carries a class would be dropped.
+    body_html = style_repertoire_table(body_html)
+    body_html = keep_genre_parts_together(body_html)
     body_html = wrap_set_blocks(body_html)
     html = f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></head><body>{body_html}</body></html>"
 

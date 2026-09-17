@@ -345,8 +345,10 @@ def test_scenario_1():
     # 1b. Every song in a yacht setlist is classified, so the Genre column
     # must be populated on every row — a blank here means the label stopped
     # reaching the table even though the filter still let the song through.
+    # The cell is the merged 'Genre / Subgenre' — the band's Genre is the half
+    # before the slash.
     unlabelled = [s["title"] for set_songs in res["sets"] for s in set_songs
-                  if s.get("genre") not in ("Yacht Rock", "Classic Rock")]
+                  if s.get("genre", "").split(" / ")[0] not in ("Yacht Rock", "Classic Rock")]
     if unlabelled:
         all_pass = False
         log_test("Genre column populated", False, f"Blank/unexpected Genre for: {unlabelled}")
@@ -752,33 +754,34 @@ def test_scenario_8():
         all_pass = False
         log_test("Acoustic Vocalist Coverage constraint present in summary", False)
 
-    # Check the two sides are present rather than the whole header row: that
-    # table has per-side Subgenre/Decade columns between them, and pinning the
-    # exact string here just breaks the next time a column is added.
-    if ("## GIG SUMMARY" in stdout and "### Not Selected / Archived" in stdout
-            and "| Not Selected |" in stdout and "| Archived |" in stdout
-            and "### Lead Vocalist Breakdown" in stdout):
-        log_test("Combined GIG SUMMARY page present (stats/vocalist breakdown/not-selected/archived)", True)
+    # Check the three group headings are present rather than the whole header
+    # row, which just breaks the next time a column is added.
+    groups = ("**Active — Not Selected**", "**In Progress**", "**Archived**")
+    if ("## GIG SUMMARY" in stdout and "### Repertoire Not Scheduled" in stdout
+            and all(g in stdout for g in groups)
+            and "### Lead Vocalist Breakdown" in stdout
+            and "## SONGS IN PROGRESS" not in stdout):
+        log_test("Combined GIG SUMMARY page present (stats/vocalist breakdown/repertoire table)", True)
     else:
         all_pass = False
-        log_test("Combined GIG SUMMARY page present (stats/vocalist breakdown/not-selected/archived)", False)
+        log_test("Combined GIG SUMMARY page present (stats/vocalist breakdown/repertoire table)", False)
 
     # No song scheduled in a set, break, or encore should also show up as "not selected"
     scheduled_titles = {s["title"] for set_songs in res["sets"] for s in set_songs}
     scheduled_titles |= {s["title"] for s in res["encores"]}
     scheduled_titles |= set(res["breaks"])
 
+    # Every group counts: nothing on tonight's setlist belongs anywhere in
+    # the not-scheduled table, in-progress songs included.
     not_selected_block = ""
-    if "### Not Selected / Archived" in stdout:
-        after = stdout.split("### Not Selected / Archived", 1)[-1]
-        not_selected_block = after.split("## SONGS IN PROGRESS", 1)[0]
+    if "### Repertoire Not Scheduled" in stdout:
+        not_selected_block = stdout.split("### Repertoire Not Scheduled", 1)[-1]
 
-    # Only the table's left ("Not Selected") column counts — the right
-    # ("Archived") column is a fixed reference list, not gig-specific.
     not_selected_titles = set()
     for line in not_selected_block.splitlines():
         line = line.strip()
-        if not line.startswith("|") or line.startswith("|---") or line.startswith("| Not Selected"):
+        if (not line.startswith("|") or line.startswith("|---") or line.startswith("| Song")
+                or "<!--group-->" in line):
             continue
         cells = [c.strip() for c in line.split("|")[1:-1]]
         if cells:

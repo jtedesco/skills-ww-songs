@@ -224,10 +224,6 @@ def pair_up(songs):
     return [songs[i:i + 2] for i in range(0, len(songs) - len(songs) % 2, 2)]
 
 
-def _song_bullet(s):
-    return f"- **{s['title']}** ({s['artist']})"
-
-
 SUMMARY_PAGE_HEADING = "## GIG SUMMARY"
 FLOOR_SHEET_HEADING = "## FLOOR SHEET"
 
@@ -356,45 +352,54 @@ def sync_pdf_to_drive(pdf_path, shared_dir=None):
         return False
 
 
-def render_not_selected_and_archived_lines(all_songs, scheduled_titles):
-    """The 'Not Selected / Archived' subsection (h3, on the combined summary
-    page): a two-sided table pairing gig-ready songs that didn't make this
-    setlist against the repertoire's archived songs, side by side instead of
-    stacked, each side carrying its own Subgenre and Decade columns — keeps the whole GIG SUMMARY page within one printed page (see
-    render_pdf.py's wrap_set_blocks, which forces GIG SUMMARY onto a fresh
-    page but relies on its content actually fitting on just that one).
-    Rows pad out to the longer column's length; an empty column gets a
-    single italic placeholder row instead of repeating it. In-progress
-    songs are excluded — that's its own separate page, render_in_progress_lines
-    below, since it's gig-independent repertoire status, not this gig's
-    bookkeeping."""
+# Marks a row of the repertoire table as a group heading ("Active — Not
+# Selected", "In Progress", "Archived") rather than a song. Carried as an
+# invisible comment, like the shade marker, so the .md stays a plain
+# four-column table; render_pdf.py's style_group_rows() turns the row into
+# one full-width heading cell.
+GROUP_ROW_MARKER = "<!--group-->"
+REPERTOIRE_COLUMNS = ["Song", "Genre", "Decade", "Energy"]
+
+
+def render_repertoire_lines(all_songs, scheduled_titles):
+    """The 'Repertoire Not Scheduled' subsection (h3, the tail of the GIG
+    SUMMARY page): ONE table of every song this gig didn't use, split into
+    three groups by in-table heading rows —
+
+      Active — Not Selected   gig-ready, not archived, not scheduled
+      In Progress             not yet gig-ready, not archived, not scheduled
+      Archived                archived
+
+    One table rather than three so render_pdf.py can flow it down the
+    page's two columns as a single run. A song on tonight's setlist appears
+    in none of the groups — including an in-progress song pulled in with
+    --include-not-ready, which is on the set table already.
+
+    An empty group keeps its heading and gets one italic placeholder row, so
+    the three headings are always there to scan for."""
     scheduled_lower = {t.lower() for t in scheduled_titles}
-    not_selected = sorted(
-        (s for s in all_songs
-         if s["title"].lower() not in scheduled_lower
-         and s.get("archived") != "Yes"
-         and s.get("gig_ready") == "Yes"),
-        key=lambda s: s["title"],
-    )
-    archived = sorted((s for s in all_songs if s.get("archived") == "Yes"), key=lambda s: s["title"])
+    unscheduled = [s for s in all_songs if s["title"].lower() not in scheduled_lower]
+    by_title = lambda songs: sorted(songs, key=lambda s: s["title"])
+    groups = [
+        ("Active — Not Selected", "*None — everything made the cut.*",
+         by_title(s for s in unscheduled if s.get("archived") != "Yes" and s.get("gig_ready") == "Yes")),
+        ("In Progress", "*Nothing else in progress.*",
+         by_title(s for s in unscheduled if s.get("archived") != "Yes" and s.get("gig_ready") != "Yes")),
+        ("Archived", "*Nothing currently archived.*",
+         by_title(s for s in unscheduled if s.get("archived") == "Yes")),
+    ]
+    blank = [""] * (len(REPERTOIRE_COLUMNS) - 1)
 
-    # Each side is three cells wide (song, style, decade), so a row is built
-    # as a list and padded with blanks rather than a single string — an empty
-    # side has to occupy its columns or the markdown row loses its shape.
-    def cells(s):
-        return [f"**{s['title']}** ({s['artist']})",
-                subgenre_display_string(s), decade_display_string(s)]
-
-    left = [cells(s) for s in not_selected] or [["*None — everything made the cut.*", "", ""]]
-    right = [cells(s) for s in archived] or [["*Nothing currently archived.*", "", ""]]
-    pad = ["", "", ""]
-
-    lines = ["### Not Selected / Archived",
-             "| Not Selected | Subgenre | Decade | Archived | Subgenre | Decade |",
-             "|---|---|---|---|---|---|"]
-    for i in range(max(len(left), len(right))):
-        row = (left[i] if i < len(left) else pad) + (right[i] if i < len(right) else pad)
-        lines.append("| " + " | ".join(row) + " |")
+    lines = ["### Repertoire Not Scheduled",
+             "| " + " | ".join(REPERTOIRE_COLUMNS) + " |",
+             "|" + "|".join(["---"] * len(REPERTOIRE_COLUMNS)) + "|"]
+    for label, placeholder, songs in groups:
+        lines.append("| " + " | ".join([f"**{label}** ({len(songs)}){GROUP_ROW_MARKER}"] + blank) + " |")
+        if not songs:
+            lines.append("| " + " | ".join([placeholder] + blank) + " |")
+        for song in songs:
+            lines.append(f"| **{song['title']}** ({song['artist']}) | {genre_subgenre_display_string(song)} "
+                         f"| {decade_display_string(song)} | {energy_display_string(song)} |")
     return lines
 
 
@@ -415,20 +420,17 @@ def render_vocal_breakdown_lines(scheduled_songs):
 
 
 def render_summary_page_lines(stats_lines, scheduled_songs, all_songs, scheduled_titles):
-    """Combine the gig summary stats, lead vocalist breakdown, and the
-    not-selected/archived table onto one page (one '##' heading, forced onto
-    its own fresh page by render_pdf.py's wrap_set_blocks — kept compact
-    enough, notably via the two-column not-selected/archived table, to fit
-    within that single page rather than spilling onto a second one).
-    'Songs In Progress' stays a separate page — see render_in_progress_lines
-    — since it's gig-independent repertoire status, not this gig's
-    bookkeeping."""
+    """The setlist's last page, under one '##' heading: gig stats, the lead
+    vocalist breakdown, then the repertoire-not-scheduled table. render_pdf.py
+    starts it on a fresh page and lays it out in two columns, so the long
+    repertoire table wraps from the bottom of the left column to the top of
+    the right one instead of running onto another page."""
     lines = [SUMMARY_PAGE_HEADING, "", "### 📊 Stats"]
     lines.extend(stats_lines)
     lines.append("")
     lines.extend(render_vocal_breakdown_lines(scheduled_songs))
     lines.append("")
-    lines.extend(render_not_selected_and_archived_lines(all_songs, scheduled_titles))
+    lines.extend(render_repertoire_lines(all_songs, scheduled_titles))
     return lines
 
 
@@ -515,20 +517,6 @@ def render_floor_sheet_lines(blocks, display_title=None):
                 line += shade_marker(song["shade"])
             lines.append(line)
             lines.append("")
-    return lines
-
-
-def render_in_progress_lines(all_songs):
-    """A standing reference page listing every not-yet-gig-ready song — same
-    caveat as render_archived_lines: constant across setlists, since these
-    are excluded from the solver by default (only included with
-    --include-not-ready)."""
-    in_progress = sorted(
-        (s for s in all_songs if s.get("gig_ready") != "Yes" and s.get("archived") != "Yes"),
-        key=lambda s: s["title"],
-    )
-    lines = ["## SONGS IN PROGRESS", "Not yet gig-ready — excluded from the solver unless --include-not-ready is passed.", ""]
-    lines.extend([_song_bullet(s) for s in in_progress] if in_progress else ["*Nothing currently in progress.*"])
     return lines
 
 
@@ -674,11 +662,23 @@ def decade_display_string(song):
         return ""
     return f"{year[:3]}0s"
 
+def genre_subgenre_display_string(song):
+    """The merged Genre column, in the set tables and the repertoire table:
+    'Yacht Rock / Jazz Rock' — the band's Genre, then the MusicBrainz
+    Subgenre. A song outside the yacht pool usually takes its Genre from its
+    Subgenre, so when the two read the same (or one is blank) it prints once
+    ('Alternative Rock') rather than as 'Alternative Rock / Alternative Rock'."""
+    genre = genre_display_string(song)
+    subgenre = subgenre_display_string(song)
+    if not genre or not subgenre or genre.lower() == subgenre.lower():
+        return genre or subgenre
+    return f"{genre} / {subgenre}"
+
 # The one place the main song-table's column layout is defined. Both
 # build_setlist.py's SET/ENCORES tables and apply_substitution.py's
 # regenerated tables render from these, so the header can't drift out of
 # sync with format_md_row()'s cells.
-TABLE_COLUMNS = ["#", "Title", "Artist", "Genre", "Subgenre", "Decade", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Dance", "Intro"]
+TABLE_COLUMNS = ["#", "Title", "Artist", "Genre", "Decade", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Dance", "Intro"]
 TABLE_HEADER = "| " + " | ".join(TABLE_COLUMNS) + " |"
 TABLE_DIVIDER = "|" + "|".join(["---"] * len(TABLE_COLUMNS)) + "|"
 
@@ -743,10 +743,9 @@ def format_md_row(song, idx, marker="", shade_start=False):
     shade_bits = ""
     if shade:
         shade_bits = (f" 🎨 *[{shade}]*" if shade_start else "") + shade_marker(shade)
-    genre = genre_display_string(song)
-    subgenre = subgenre_display_string(song)
+    genre = genre_subgenre_display_string(song)
     decade = decade_display_string(song)
-    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {genre} | {subgenre} | {decade} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
+    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {genre} | {decade} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
 
 
 def shade_starts(songs):
@@ -1727,9 +1726,6 @@ def main():
 
     md()
     for line in render_summary_page_lines(stats_lines, all_scheduled, all_songs, scheduled_titles):
-        md(line)
-    md()
-    for line in render_in_progress_lines(all_songs):
         md(line)
 
     # ---------------------------------------------------------------
