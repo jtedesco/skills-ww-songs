@@ -105,6 +105,14 @@ def strip_row_title(cell):
     return cell[start + 2:end].strip()
 
 
+def parse_bpm_cell(cell):
+    """A printed BPM cell back to an int, or None when it's blank. A
+    not-yet-gig-ready song can legitimately have no BPM; older setlists
+    printed that as the literal 'None', so accept that spelling too."""
+    cell = cell.strip()
+    return int(cell) if cell and cell != "None" else None
+
+
 def parse_energy_cell(cell):
     """'Low' -> ('Low', 'Low'); 'Low→High' -> ('Low', 'High')."""
     cell = cell.strip()
@@ -277,7 +285,7 @@ def parse_md(md_path):
                         "title": strip_row_title(title_cell),
                         "artist": _cell(cells, col, "Artist"),
                         "key": _cell(cells, col, "Key"),
-                        "bpm": int(_cell(cells, col, "BPM")),
+                        "bpm": parse_bpm_cell(_cell(cells, col, "BPM")),
                         "length": _cell(cells, col, "Length"),
                         "lead_vocals": lead, "backup_vocals": backups,
                         "covering_for": covering_for,

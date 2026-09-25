@@ -745,7 +745,11 @@ def format_md_row(song, idx, marker="", shade_start=False):
         shade_bits = (f" 🎨 *[{shade}]*" if shade_start else "") + shade_marker(shade)
     genre = genre_subgenre_display_string(song)
     decade = decade_display_string(song)
-    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {genre} | {decade} | {song['key']} | {song['bpm']} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
+    # A not-yet-gig-ready song can have no BPM (see "NEVER guess a key or
+    # BPM" in SKILL.md). Print the cell blank, never the literal "None" —
+    # apply_substitution.py reads this table back and has to parse it.
+    bpm = "" if song.get("bpm") in (None, "") else song["bpm"]
+    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {genre} | {decade} | {song['key']} | {bpm} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
 
 
 def shade_starts(songs):

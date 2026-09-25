@@ -126,8 +126,7 @@ def test_database_integrity():
         #     also requires an edit here — these lists are never derived from the CSV automatically.
         gig_ready_acoustic = {"Landslide", "Blackbird", "Wish You Were Here",
                                "Ooh La La", "Ventura Highway"}
-        not_ready_full_band = {"Kid Charlemagne", "You May Be Right",
-                               "We Didn't Start the Fire"}
+        not_ready_full_band = {"We Didn't Start the Fire"}
         if s.get("arrangement") in ["Acoustic", "Either"]:
             if title in gig_ready_acoustic:
                 if s.get("gig_ready") != "Yes":
@@ -269,7 +268,7 @@ def parse_markdown_report(stdout_str):
                         "lead": lead,
                         "backups": backups,
                         "key": cell("Key"),
-                        "bpm": int(cell("BPM")),
+                        "bpm": int(cell("BPM")) if cell("BPM") not in ("", "None") else None,
                         "length": cell("Length"),
                         "genre": cell("Genre"),
                     })
@@ -332,6 +331,7 @@ def test_scenario_1():
                    "The Chain", "Take It Easy", "Colors", "Brass in Pocket", "Dreams", 
                    "Lights", "Roll with the Changes", "Ventura Highway", "Ooh La La",
                    "Landslide", "Vienna", "Listen to the Music",
+                   "Kid Charlemagne", "You May Be Right",
                    "Ride Like the Wind", "Don't Stop", "Piano Man",
                    "Don’t Stop Believing", "All Right Now", "Miss You",
                    "Hit Me with Your Best Shot", "Jenny (867-5309)"}

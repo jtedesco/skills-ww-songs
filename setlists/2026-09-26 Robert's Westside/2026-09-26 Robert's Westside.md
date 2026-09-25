@@ -1,7 +1,7 @@
 # 2026-09-26 - Robert's Westside
 
 - **Gig Type:** Bar
-- **Duration:** 90 min — 1 × Power Hour set (111:26 scheduled, runs long, see Target Duration)
+- **Duration:** 90 min — 1 × Power Hour set (111:11 scheduled, runs long, see Target Duration)
 - **Missing:** None
 - **Breaks:** None
 - **Playlists:** [Active](https://music.youtube.com/playlist?list=PLZ3S5L7LdV3A) · [In Progress](https://music.youtube.com/playlist?list=PLVKD0nIHzHbg) · [Archived](https://music.youtube.com/playlist?list=PLHYj7O1YT8Xw)
@@ -11,14 +11,14 @@
 | :--- | :--- | :--- |
 | Show Opener (Working for the Weekend) | ✅ Satisfied |
 | Show Closer (Roll with the Changes) | ✅ Satisfied |
-| Gig-Ready Songs Only | ⚠️ Partially Satisfied (21 of 22 are gig-ready. *Kid Charlemagne* (#11) is still in progress: its intro cue is still TBD in the database) |
+| Gig-Ready Songs Only | ✅ Satisfied (all 22 are gig-ready — *Kid Charlemagne* and *You May Be Right* cleared on 2026-09-25. *You May Be Right* (#14) still has no key, BPM or intro cue on record, and its 4:15 is the album version's length) |
 | Dance Peak (danceable late in the set) | ✅ Satisfied (closes on three danceable in a row — *Hit Me with Your Best Shot* → *Born to Run* → *Roll with the Changes*) |
-| Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, #15–#17 *Pink Pony Club* → *Ride Like the Wind* → *Zombie*. Jon's four mid-set leads are split by David on *Ventura Highway*) |
+| Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, #15–#17 *Pink Pony Club* → *Ride Like the Wind* → *Zombie*. David's two leads, *Ventura Highway* → *Keep Your Hands to Yourself* (#12–#13), split up Jon's mid-set run) |
 | Lauren Vocal Health | ✅ Satisfied (taxing songs spread out — *You Oughta Know* #7, *Zombie* #17, *Roll with the Changes* #22. She leads 11 of 22 — 50.0%) |
 | Segue Integrity | ⚠️ Partial (*Reeling in the Years* → *Don't Stop* (#2→#3) are back-to-back again, which is the database's segue, but *Don't Stop* still prints Martin's "Keys" cue rather than `SEGUE Piano`. *Hey Jealousy* has no segue — *Brown Eyed Girl* isn't scheduled) |
-| Target Duration | ⚠️ Over Target (90:26 of music is the 1.5 hr the draft was sized to, but 21 transitions at the 60s buffer bring it to 111:26 — 21:26 over. Cutting *The Chain* (#19) saves 5:30 and lands at 105:56, still 15:56 over) |
+| Target Duration | ⚠️ Over Target (90:11 of music is about the 1.5 hr the draft was sized to, but 21 transitions at the 60s buffer bring it to 111:11 — 21:11 over. Cutting *The Chain* (#19) saves 5:30 and lands at 105:41, still 15:41 over) |
 | Vocalist Inclusion | ✅ Satisfied (Lauren, Jon, Martin and David all lead) |
-| Pacing Flow | ⚠️ 1 energy drop(s): Don’t Stop Believing → Brandy (#9→#10, SET 1) |
+| Pacing Flow | ⚠️ 2 energy drop(s): Don’t Stop Believing → Brandy (#9→#10, SET 1); You May Be Right → Pink Pony Club (#14→#15, SET 1) |
 | Absent-Member Note Check | ✅ Satisfied (full band) |
 
 ## SET 1
@@ -36,8 +36,8 @@
 | 10 | **Brandy** | Looking Glass | Yacht Rock / Pop Rock | 1970s | E | 126 | 3:00 | Jon (L) | Low |  | Keys |
 | 11 | **Kid Charlemagne** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | C7 | 116 | 4:32 | Jon (L, D, M) | Medium | ✓ | Keys |
 | 12 | **Ventura Highway** | America | Yacht Rock / Soft Rock | 1970s | G | 125 | 3:30 | David (J, L) | Medium |  | 3 guitars, counted off by David |
-| 13 | **Rikki Don't Lose That Number** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | D | 122 | 4:30 | Jon (L, D) | Medium |  | David starts w/ marimba (or keys straight in) |
-| 14 | **Baby Blue** | Badfinger | Classic Rock / Pop Rock | 1970s | B | 122 | 3:30 | Jon (L, D) | Low |  | Guitar riff |
+| 13 | **Keep Your Hands to Yourself** | Georgia Satellites | American Trad Rock | 1980s | A | 120 | 3:30 | David (L) | Medium | ✓ | guitar, A riff |
+| 14 | **You May Be Right** | Billy Joel | Classic Rock / Pop Rock | 1980s |  |  | 4:15 | Jon | High | ✓ | TBD |
 | 15 | **Pink Pony Club** | Chappell Roan | Synth-Pop | 2020s | E | 130 | 4:30 | Lauren (J, D) | Low→Medium | ✓ | Piano |
 | 16 | **Ride Like the Wind** | Christopher Cross | Yacht Rock / Soft Rock | 1980s | Eb | 125 | 5:12 | Lauren | Medium | ✓ | Congas |
 | 17 | **Zombie** | The Cranberries | Alternative Rock | 1990s | G | 83 | 5:00 | Lauren | Medium |  | Guitar |
@@ -47,7 +47,7 @@
 | 21 | **Born to Run** | Bruce Springsteen | Singer-Songwriter | 1970s | E | 147 | 4:30 | Martin (L) | High | ✓ | Drum roll |
 | 22 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | Classic Rock / Soft Rock | 1970s | C | 134 | 5:30 | Lauren (J, D) | High | ✓ | Bass — stage banter, thank yous |
 
-**Set 1 Music Duration**: 90:26 | **Transitions**: 21:00 | **Total**: 111:26
+**Set 1 Music Duration**: 90:11 | **Transitions**: 21:00 | **Total**: 111:11
 ----------------------------------------
 
 ## FLOOR SHEET
@@ -80,9 +80,9 @@
 
 **12. Ventura Highway** G · 125 — <em>3 guitars, counted off by David</em>
 
-**13. Rikki Don't Lose That Number** D · 122 — <em>David starts w/ marimba (or keys straight in)</em>
+**13. Keep Your Hands to Yourself** A · 120 — <em>guitar, A riff</em>
 
-**14. Baby Blue** B · 122 — <em>Guitar riff</em>
+**14. You May Be Right** - · - — <em>TBD</em>
 
 **15. Pink Pony Club** E · 130 — <em>Piano</em>
 
@@ -105,26 +105,27 @@
 
 ### 📊 Stats
 - **Total Songs Scheduled**: 22
-- **Pure Music Playtime**: 90:26
+- **Pure Music Playtime**: 90:11
 - **Transition Buffers (60s/song)**: 21:00
 - **Break Time**: 0:00
-- **Grand Total Duration**: 111:26 (Target: 90:00)
+- **Grand Total Duration**: 111:11 (Target: 90:00)
 
 ### Lead Vocalist Breakdown
 
 | Vocalist | Songs Led | % |
 |---|---|---|
 | Lauren | 11 | 50.0% |
-| Jon | 8 | 36.4% |
+| Jon | 7 | 31.8% |
 | Martin | 2 | 9.1% |
-| David | 1 | 4.5% |
+| David | 2 | 9.1% |
 
 ### Repertoire Not Scheduled
 | Song | Genre | Decade | Energy |
 |---|---|---|---|
-| **Active — Not Selected** (27)<!--group--> |  |  |  |
+| **Active — Not Selected** (28)<!--group--> |  |  |  |
 | **All Right Now** (Free) | Classic Rock / Blues Rock | 1970s | Medium |
 | **American Girl** (Tom Petty) | Singer-Songwriter | 1970s | High |
+| **Baby Blue** (Badfinger) | Classic Rock / Pop Rock | 1970s | Low |
 | **Blackbird** (Beatles) | Pop Rock | 1960s | Low |
 | **Brass in Pocket** (Pretenders) | Classic Rock / Jangle Pop | 1970s | Low |
 | **Brown Eyed Girl** (Van Morrison) | Classic Rock / Singer-Songwriter | 1960s | Low |
@@ -134,7 +135,6 @@
 | **Funkytown** (Lipps, Inc.) | Disco | 1980s | Medium |
 | **Gold on the Ceiling** (Black Keys, The) | Alternative Rock | 2010s | High |
 | **Hook** (Blues Traveler) | Blues Rock | 1990s | Medium |
-| **Keep Your Hands to Yourself** (Georgia Satellites) | American Trad Rock | 1980s | Medium |
 | **Landslide** (Stevie Nicks) | Classic Rock / Pop Rock | 1970s | Low |
 | **Lights** (Journey) | Classic Rock / AOR | 1970s | Low→Medium |
 | **Listen to the Music** (The Doobie Brothers) | Classic Rock / Pop Rock | 1970s | Medium |
@@ -143,6 +143,7 @@
 | **Ooh La La** (Faces) | Classic Rock / Blues Rock | 1970s | Medium |
 | **Piano Man** (Billy Joel) | Classic Rock / Piano Rock | 1970s | Low→Medium |
 | **Respect** (Aretha Franklin) | Motown | 1960s | Medium→High |
+| **Rikki Don't Lose That Number** (Steely Dan) | Yacht Rock / Jazz Rock | 1970s | Medium |
 | **Rock This Town** (Stray Cats) | Rockabilly | 1980s | Medium |
 | **Second Chance** (Shinedown) | Alternative Rock | 2000s | Medium→High |
 | **Superstition** (Stevie Wonder) | Contemporary R&B | 1970s | Medium |
@@ -150,11 +151,10 @@
 | **The Middle** (Jimmy Eat World) | Alternative Rock | 2000s | Medium→High |
 | **Valerie** (Amy Winehouse) | Contemporary R&B | 2000s | Medium |
 | **Wish You Were Here** (Pink Floyd) | Progressive Rock | 1970s | Low |
-| **In Progress** (4)<!--group--> |  |  |  |
+| **In Progress** (3)<!--group--> |  |  |  |
 | **The Story** (Brandi Carlile) | Alternative Country | 2000s | Medium |
 | **Vienna** (Billy Joel) | Classic Rock / Piano Rock | 1970s | Low |
 | **We Didn't Start the Fire** (Billy Joel) | Classic Rock / Piano Rock | 1980s | High |
-| **You May Be Right** (Billy Joel) | Classic Rock / Pop Rock | 1980s | High |
 | **Archived** (4)<!--group--> |  |  |  |
 | **Crazy Little Thing Called Love** (Queen) | Classic Rock / Glam Rock | 1970s | Medium |
 | **Maybe I'm Amazed** (Paul McCartney) | Classic Rock / Pop Rock | 1970s | Low→Medium |
