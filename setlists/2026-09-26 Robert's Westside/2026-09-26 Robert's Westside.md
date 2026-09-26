@@ -11,14 +11,14 @@
 | :--- | :--- | :--- |
 | Show Opener (Working for the Weekend) | ✅ Satisfied |
 | Show Closer (Roll with the Changes) | ✅ Satisfied |
-| Gig-Ready Songs Only | ✅ Satisfied (all 22 are gig-ready — *Kid Charlemagne* and *You May Be Right* cleared on 2026-09-25. *You May Be Right* (#14) still has no key, BPM or intro cue on record, and its 4:15 is the album version's length) |
+| Gig-Ready Songs Only | ✅ Satisfied (all 22 are gig-ready — *Kid Charlemagne* and *You May Be Right* cleared on 2026-09-25. *You May Be Right* (#18) still has no key or BPM on record, and its 4:15 is the album version's length) |
 | Dance Peak (danceable late in the set) | ✅ Satisfied (closes on three danceable in a row — *Hit Me with Your Best Shot* → *Born to Run* → *Roll with the Changes*) |
 | Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, #15–#17 *Pink Pony Club* → *Ride Like the Wind* → *Zombie*. David's two leads, *Ventura Highway* → *Keep Your Hands to Yourself* (#12–#13), split up Jon's mid-set run) |
 | Lauren Vocal Health | ✅ Satisfied (taxing songs spread out — *You Oughta Know* #7, *Zombie* #17, *Roll with the Changes* #22. She leads 11 of 22 — 50.0%) |
 | Segue Integrity | ⚠️ Partial (*Reeling in the Years* → *Don't Stop* (#2→#3) are back-to-back again, which is the database's segue, but *Don't Stop* still prints Martin's "Keys" cue rather than `SEGUE Piano`. *Hey Jealousy* has no segue — *Brown Eyed Girl* isn't scheduled) |
-| Target Duration | ⚠️ Over Target (90:11 of music is about the 1.5 hr the draft was sized to, but 21 transitions at the 60s buffer bring it to 111:11 — 21:11 over. Cutting *The Chain* (#19) saves 5:30 and lands at 105:41, still 15:41 over) |
+| Target Duration | ⚠️ Over Target (90:11 of music is about the 1.5 hr the draft was sized to, but 21 transitions at the 60s buffer bring it to 111:11 — 21:11 over. Two emergency cuts: dropping *The Chain* (#19) saves 5:30 and lands at 105:41; dropping *Zombie* (#17) too saves another 6:00 and lands at 99:41, still 9:41 over) |
 | Vocalist Inclusion | ✅ Satisfied (Lauren, Jon, Martin and David all lead) |
-| Pacing Flow | ⚠️ 2 energy drop(s): Don’t Stop Believing → Brandy (#9→#10, SET 1); You May Be Right → Pink Pony Club (#14→#15, SET 1) |
+| Pacing Flow | ⚠️ 1 energy drop(s): Don’t Stop Believing → Brandy (#9→#10, SET 1) |
 | Absent-Member Note Check | ✅ Satisfied (full band) |
 
 ## SET 1
@@ -37,11 +37,11 @@
 | 11 | **Kid Charlemagne** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | C7 | 116 | 4:32 | Jon (L, D, M) | Medium | ✓ | Keys |
 | 12 | **Ventura Highway** | America | Yacht Rock / Soft Rock | 1970s | G | 125 | 3:30 | David (J, L) | Medium |  | 3 guitars, counted off by David |
 | 13 | **Keep Your Hands to Yourself** | Georgia Satellites | American Trad Rock | 1980s | A | 120 | 3:30 | David (L) | Medium | ✓ | guitar, A riff |
-| 14 | **You May Be Right** | Billy Joel | Classic Rock / Pop Rock | 1980s |  |  | 4:15 | Jon | High | ✓ | TBD |
+| 14 | **Everybody Wants to Rule the World** | Tears for Fears | Classic Rock / Art Pop | 1980s | D | 112 | 4:00 | Jon (L) | Medium |  | Keys |
 | 15 | **Pink Pony Club** | Chappell Roan | Synth-Pop | 2020s | E | 130 | 4:30 | Lauren (J, D) | Low→Medium | ✓ | Piano |
 | 16 | **Ride Like the Wind** | Christopher Cross | Yacht Rock / Soft Rock | 1980s | Eb | 125 | 5:12 | Lauren | Medium | ✓ | Congas |
-| 17 | **Zombie** | The Cranberries | Alternative Rock | 1990s | G | 83 | 5:00 | Lauren | Medium |  | Guitar |
-| 18 | **Everybody Wants to Rule the World** | Tears for Fears | Classic Rock / Art Pop | 1980s | D | 112 | 4:00 | Jon (L) | Medium |  | Keys |
+| 17 | **Zombie** 🛑 **[EMERGENCY CUT]** | The Cranberries | Alternative Rock | 1990s | G | 83 | 5:00 | Lauren | Medium |  | Guitar |
+| 18 | **You May Be Right** | Billy Joel | Classic Rock / Pop Rock | 1980s |  |  | 4:15 | Jon | High | ✓ | Glass + guitar intro |
 | 19 | **The Chain** 🛑 **[EMERGENCY CUT]** | Fleetwood Mac | Classic Rock / Soft Rock | 1970s | Em | 152 | 4:30 | Lauren (J) | Medium→High |  | Drums |
 | 20 | **Hit Me with Your Best Shot** | Pat Benatar | Classic Rock / Pop Rock | 1980s | E | 127 | 2:52 | Lauren | High | ✓ | Guitar |
 | 21 | **Born to Run** | Bruce Springsteen | Singer-Songwriter | 1970s | E | 147 | 4:30 | Martin (L) | High | ✓ | Drum roll |
@@ -56,49 +56,49 @@
 
 ### SET 1
 
-**1. Working for the Weekend** Bm · 147 — <em>Cowbell</em>
+**1. Working for the Weekend** Bm · 147 — <em>Cowbell intro</em>
 
-**2. Reeling in the Years** A · 136 — <em>Guitar lead — welcome message</em>
+**2. Reeling in the Years** A · 136 — <em>Guitar lead intro — welcome message</em>
 
-**3. Don't Stop** E · 119 — <em>Keys</em> <span class="form">V C V C · Gtr solo (M) · V · C (stop) · C · Sax (J) · C · Oohs ×3 · “Don’t stop” a cappella</span>
+**3. Don't Stop** E · 119 — <em>Keys intro</em> <span class="form">V C V C · Gtr solo (M) · V · C (stop) · C · Sax (J) · C · Oohs ×3 · “Don’t stop” a cappella</span>
 
-**4. I Hate Myself for Loving You** E · 118 — <em>Drums</em>
+**4. I Hate Myself for Loving You** E · 118 — <em>Drums intro</em>
 
-**5. Hey Jealousy** D · 153 — <em>Piano</em>
+**5. Hey Jealousy** D · 153 — <em>Piano intro</em>
 
-**6. Peg** G · 116 — <em>All together</em>
+**6. Peg** G · 116 — <em>All together intro</em>
 
-**7. You Oughta Know** F#m · 105 — <em>Bass and drums</em>
+**7. You Oughta Know** F#m · 105 — <em>Bass and drums intro</em>
 
-**8. Jenny (867-5309)** F#m · 136 — <em>Guitar</em>
+**8. Jenny (867-5309)** F#m · 136 — <em>Guitar intro</em>
 
-**9. Don’t Stop Believing** E · 118 — <em>Piano</em>
+**9. Don’t Stop Believing** E · 118 — <em>Piano intro</em>
 
-**10. Brandy** E · 126 — <em>Keys</em>
+**10. Brandy** E · 126 — <em>Keys intro</em>
 
-**11. Kid Charlemagne** C7 · 116 — <em>Keys</em>
+**11. Kid Charlemagne** C7 · 116 — <em>Keys intro</em>
 
-**12. Ventura Highway** G · 125 — <em>3 guitars, counted off by David</em>
+**12. Ventura Highway** G · 125 — <em>3 guitars intro, counted off by David</em>
 
-**13. Keep Your Hands to Yourself** A · 120 — <em>guitar, A riff</em> <span class="form">V · Gtr mini-solo (M) · V · Sax (J) · V · Gtr solo (JJ) · V again · Last line slows</span>
+**13. Keep Your Hands to Yourself** A · 120 — <em>guitar intro, A riff</em> <span class="form">V · Gtr mini-solo (M) · V · Sax (J) · V · Gtr solo (JJ) · V again · Last line slows</span>
 
-**14. You May Be Right** - · - — <em>TBD</em>
+**14. EWTRW** D · 112 — <em>Keys intro</em>
 
-**15. Pink Pony Club** E · 130 — <em>Piano</em>
+**15. Pink Pony Club** E · 130 — <em>Piano intro</em>
 
-**16. Ride Like the Wind** Eb · 125 — <em>Congas</em>
+**16. Ride Like the Wind** Eb · 125 — <em>Congas intro</em>
 
-**17. Zombie** G · 83 — <em>Guitar</em>
+**17. Zombie [X]** G · 83 — <em>Guitar intro</em>
 
-**18. EWTRW** D · 112 — <em>Keys</em>
+**18. You May Be Right** - · - — <em>Glass + guitar intro</em>
 
-**19. The Chain [X]** Em · 152 — <em>Drums</em>
+**19. The Chain [X]** Em · 152 — <em>Drums intro</em>
 
-**20. Hit Me with Your Best Shot** E · 127 — <em>Guitar</em>
+**20. Hit Me with Your Best Shot** E · 127 — <em>Guitar intro</em>
 
-**21. Born to Run** E · 147 — <em>Drum roll</em>
+**21. Born to Run** E · 147 — <em>Drum roll intro</em>
 
-**22. Roll with the Changes** C · 134 — <em>Bass — stage banter, thank yous</em>
+**22. Roll with the Changes** C · 134 — <em>Bass intro — stage banter, thank yous</em>
 
 
 ## GIG SUMMARY
