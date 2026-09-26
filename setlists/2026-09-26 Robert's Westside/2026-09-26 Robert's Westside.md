@@ -11,7 +11,7 @@
 | :--- | :--- | :--- |
 | Show Opener (Working for the Weekend) | ✅ Satisfied |
 | Show Closer (Roll with the Changes) | ✅ Satisfied |
-| Gig-Ready Songs Only | ✅ Satisfied (all 22 are gig-ready — *Kid Charlemagne* and *You May Be Right* cleared on 2026-09-25. *You May Be Right* (#18) still has no key or BPM on record, and its 4:15 is the album version's length) |
+| Gig-Ready Songs Only | ✅ Satisfied (all 22 are gig-ready — *Kid Charlemagne* and *You May Be Right* cleared on 2026-09-25. *You May Be Right* (#18) runs 4:15, the album version's length, until the band times it) |
 | Dance Peak (danceable late in the set) | ✅ Satisfied (closes on three danceable in a row — *Hit Me with Your Best Shot* → *Born to Run* → *Roll with the Changes*) |
 | Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, #15–#17 *Pink Pony Club* → *Ride Like the Wind* → *Zombie*. David's two leads, *Ventura Highway* → *Keep Your Hands to Yourself* (#12–#13), split up Jon's mid-set run) |
 | Lauren Vocal Health | ✅ Satisfied (taxing songs spread out — *You Oughta Know* #7, *Zombie* #17, *Roll with the Changes* #22. She leads 11 of 22 — 50.0%) |
@@ -41,7 +41,7 @@
 | 15 | **Pink Pony Club** | Chappell Roan | Synth-Pop | 2020s | E | 130 | 4:30 | Lauren (J, D) | Low→Medium | ✓ | Piano |
 | 16 | **Ride Like the Wind** | Christopher Cross | Yacht Rock / Soft Rock | 1980s | Eb | 125 | 5:12 | Lauren | Medium | ✓ | Congas |
 | 17 | **Zombie** 🛑 **[EMERGENCY CUT]** | The Cranberries | Alternative Rock | 1990s | G | 83 | 5:00 | Lauren | Medium |  | Guitar |
-| 18 | **You May Be Right** | Billy Joel | Classic Rock / Pop Rock | 1980s |  |  | 4:15 | Jon | High | ✓ | Glass + guitar intro |
+| 18 | **You May Be Right** | Billy Joel | Classic Rock / Pop Rock | 1980s | A | 150 | 4:15 | Jon | High | ✓ | Glass + guitar intro |
 | 19 | **The Chain** 🛑 **[EMERGENCY CUT]** | Fleetwood Mac | Classic Rock / Soft Rock | 1970s | Em | 152 | 4:30 | Lauren (J) | Medium→High |  | Drums |
 | 20 | **Hit Me with Your Best Shot** | Pat Benatar | Classic Rock / Pop Rock | 1980s | E | 127 | 2:52 | Lauren | High | ✓ | Guitar |
 | 21 | **Born to Run** | Bruce Springsteen | Singer-Songwriter | 1970s | E | 147 | 4:30 | Martin (L) | High | ✓ | Drum roll |
@@ -90,7 +90,7 @@
 
 **17. Zombie [X]** G · 83 — <em>Guitar intro</em>
 
-**18. You May Be Right** - · - — <em>Glass + guitar intro</em>
+**18. You May Be Right** A · 150 — <em>Glass + guitar intro</em>
 
 **19. The Chain [X]** Em · 152 — <em>Drums intro</em>
 
