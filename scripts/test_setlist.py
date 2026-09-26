@@ -821,14 +821,21 @@ def test_form_notes():
         {"title": "Don't Stop", "key": "E", "bpm": 119, "intro_notes": "Keys",
          "form_notes": "V C · Sax (J) <end>", "shade": "Block"},
         {"title": "Peg", "key": "G", "bpm": 116, "intro_notes": "All together", "form_notes": ""},
+        {"title": "Miss You", "key": "Am", "bpm": 110, "intro_notes": "SEGUE Jon", "form_notes": ""},
     ]
     lines = build_setlist.render_floor_sheet_lines([("SET 1", songs)])
     stop = next(l for l in lines if "Don't Stop" in l)
     peg = next(l for l in lines if "Peg" in l)
+    miss = next(l for l in lines if "Miss You" in l)
     checks = [
         ("Form line printed for a song with form_notes",
          '<span class="form">V C · Sax (J) &lt;end&gt;</span>' in stop),
-        ("Form line comes after the intro cue", stop.index("<em>Keys</em>") < stop.index('class="form"')),
+        ("Form line comes after the intro cue", stop.index("<em>Keys intro</em>") < stop.index('class="form"')),
+        ("Bare cue gets an 'intro' label on the floor sheet", "<em>All together intro</em>" in peg),
+        ("Segue cue is left unlabelled", "<em>SEGUE Jon</em>" in miss),
+        ("Label goes before a cue's staging",
+         build_setlist.floor_intro_cue("Bass — stage banter, thank yous") == "Bass intro — stage banter, thank yous"),
+        ("A cue that already says 'intro' isn't doubled", build_setlist.floor_intro_cue("Keys intro") == "Keys intro"),
         ("Shade marker stays at the end of the line", stop.endswith("<!--shade:Block-->")),
         ("No form line for a song without form_notes", 'class="form"' not in peg),
     ]
@@ -870,7 +877,7 @@ def main():
     print(f"Scenario 6 (Martin-out Acoustic+Files): {'PASS' if s6_ok else 'FAIL'}")
     print(f"Scenario 7 (All Vocalists Lead ≥1):     {'PASS' if s7_ok else 'FAIL'}")
     print(f"Scenario 8 (Acoustic Coverage+NotSel):  {'PASS' if s8_ok else 'FAIL'}")
-    print(f"Form Notes (floor sheet):               {'PASS' if form_ok else 'FAIL'}")
+    print(f"Floor Sheet Cues + Form Notes:          {'PASS' if form_ok else 'FAIL'}")
     print("=============================================================")
 
     if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok and s8_ok and form_ok:

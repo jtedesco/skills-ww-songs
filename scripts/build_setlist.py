@@ -435,6 +435,32 @@ def render_summary_page_lines(stats_lines, scheduled_songs, all_songs, scheduled
     return lines
 
 
+# Words that mean a cue already says how the song starts, so it needs no
+# "intro" label: it names the intro itself, it's a segue in from the last
+# song, someone starts it ("Jon starts"), or someone counts it in ("Alex
+# counts us in"). Not "counted": in "3 guitars, counted off by David" the
+# lead phrase is still a bare instrument that wants the label.
+_CUE_NEEDS_NO_LABEL = re.compile(r"\b(intro|segue|starts?|counts?|tbd)\b", re.I)
+# The cue's lead phrase ends at the first of these; what follows is staging
+# ("— welcome message"), detail ("(4 on the floor)") or a second instruction.
+_CUE_PHRASE_END = re.compile(r" — |, |\. | \(")
+
+
+def floor_intro_cue(intro):
+    """The intro cue as the floor sheet prints it: 'intro' after its lead
+    phrase, so a bare 'Guitar' reads as 'Guitar intro' rather than an
+    instruction nobody can place. Inserted before any staging or detail that
+    follows ('Bass intro — stage banter, thank yous'), and skipped for a cue
+    that already says how the song starts ('Keys intro', 'SEGUE Piano',
+    'Jon starts', 'TBD'). Floor sheet only: the set tables print the cue
+    under a column headed Intro, so it's already clear there."""
+    if not intro or _CUE_NEEDS_NO_LABEL.search(intro):
+        return intro
+    m = _CUE_PHRASE_END.search(intro)
+    cut = m.start() if m else len(intro)
+    return intro[:cut] + " intro" + intro[cut:]
+
+
 def render_floor_sheet_lines(blocks, display_title=None, form_notes=None):
     """A single large-font page of the whole running order, meant to be torn
     off and taped to the stage floor — read at a glance from standing height,
@@ -517,7 +543,7 @@ def render_floor_sheet_lines(blocks, display_title=None, form_notes=None):
                 # and print the tag as a full-size line of its own. Wrapping
                 # explicitly keeps everything after the key/BPM inside <em>,
                 # so `.floor-sheet p > strong` reliably means "the title".
-                line += f" — <em>{intro}</em>"
+                line += f" — <em>{floor_intro_cue(intro)}</em>"
             # Marker goes at the END of the line, never the start: python-
             # markdown hoists a leading HTML comment out of the paragraph as
             # its own block, which silently loses the shading (the <p> renders
