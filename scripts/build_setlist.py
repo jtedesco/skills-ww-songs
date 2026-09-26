@@ -6,6 +6,7 @@ import sys
 import random
 import re
 import argparse
+import html
 import io
 import shutil
 import subprocess
@@ -434,7 +435,7 @@ def render_summary_page_lines(stats_lines, scheduled_songs, all_songs, scheduled
     return lines
 
 
-def render_floor_sheet_lines(blocks, display_title=None):
+def render_floor_sheet_lines(blocks, display_title=None, form_notes=None):
     """A single large-font page of the whole running order, meant to be torn
     off and taped to the stage floor — read at a glance from standing height,
     not studied. Deliberately carries only what's useful mid-song-change:
@@ -466,12 +467,21 @@ def render_floor_sheet_lines(blocks, display_title=None):
     were parsed back out of the printed .md table and carry only what that
     table prints.
 
+    `form_notes` resolves a song's optional form line — its structure in
+    shorthand ("V C V C · Gtr solo (M) · ..."), from songs_metadata.csv's
+    `form_notes` column — printed as a fourth, smallest tier under the intro
+    cue. Same resolver arrangement as `display_title`. The line is wrapped in
+    <span class="form">, which is what lets render_pdf.py drop every form
+    line again if they would push this page onto a second one.
+
     This page is REGENERATED from the final song list on every revision, the
     same as the GIG SUMMARY page — never hand-edit it in the .md, since
     apply_substitution.py truncates and rebuilds it (see TRAILING_HEADINGS).
     """
     if display_title is None:
         display_title = lambda song: (song.get("floor_sheet_title") or "").strip() or song["title"]
+    if form_notes is None:
+        form_notes = lambda song: (song.get("form_notes") or "").strip()
     lines = [FLOOR_SHEET_HEADING, ""]
     # Legend, only when something is actually marked. This page gets torn off
     # and read on its own, away from the set tables that spell out the 🛑
@@ -513,6 +523,10 @@ def render_floor_sheet_lines(blocks, display_title=None):
             # its own block, which silently loses the shading (the <p> renders
             # unshaded and the comment is dropped downstream). A trailing one
             # stays inside the <p>, where render_pdf.py can find it.
+            form = form_notes(song)
+            if form:
+                # Escaped: this is free text from the CSV going into raw HTML.
+                line += f' <span class="form">{html.escape(form, quote=False)}</span>'
             if song.get("shade"):
                 line += shade_marker(song["shade"])
             lines.append(line)

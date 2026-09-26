@@ -111,6 +111,13 @@ CSS = """
   .floor-sheet p em { font-style: normal; color: #444; font-size: 10pt; }
   .floor-sheet p em strong { display: inline; font-size: inherit; font-weight: 700;
                              color: #1a1a1a; }
+  /* FORM NOTES — the optional fourth tier: a song's structure in shorthand
+     ("V C V C · Gtr solo (M) · ..."), smaller than the intro cue and set off
+     by a thin rule so it reads as reference, not as the next cue. Only the
+     handful of songs with a form_notes value get one; see
+     fit_floor_sheet_forms() for why it can never cost the page. */
+  .floor-sheet p .form { display: block; font-size: 9pt; line-height: 1.2; color: #555;
+                         border-left: 2px solid #999; padding-left: 5px; margin: 1px 0 1px 1px; }
   /* SHADED BLOCKS — a run of songs the band reads as one unit (a themed
      stretch, a medley, a dance run), marked in the .md with an invisible
      <!--shade:LABEL--> comment on each song. Deliberately a flat wash plus a
@@ -386,6 +393,67 @@ def wrap_set_blocks(html):
     return "".join(out)
 
 
+FORM_SPAN_RE = re.compile(r'\s*<span class="form">.*?</span>', re.S)
+FLOOR_SHEET_DIV_RE = re.compile(r'<div class="set-block floor-sheet">.*?</div>', re.S)
+
+
+def pdf_page_count(pdf_path):
+    """Pages in a PDF, counted from its page objects. Plain byte matching
+    rather than a PDF library, so this works anywhere the renderer does;
+    checked against PDFKit on every setlist in the repo."""
+    with open(pdf_path, "rb") as f:
+        return len(re.findall(rb"/Type\s*/Page(?![A-Za-z])", f.read()))
+
+
+def fit_floor_sheet_forms(body_html, chrome):
+    """Drop the floor sheet's form lines if they would push it to a second
+    page. The floor sheet is one-page-or-bust (see SKILL.md), and a form line
+    costs about two small lines per song, so on a packed sheet a few of them
+    are enough to spill it. Printed on their own, the floor sheet with and
+    without its form lines is compared: if the forms are what pushes it over,
+    they come out of the whole document and a warning says so. If the sheet
+    is over a page even without them, that's the known content ceiling for a
+    very long gig, and the forms are left alone since removing them wouldn't
+    get it back to one page anyway.
+
+    Only runs when a form line exists, so a gig without any pays nothing."""
+    m = FLOOR_SHEET_DIV_RE.search(body_html)
+    if not m or 'class="form"' not in m.group(0):
+        return body_html
+    # The probe drops set-block, whose break-before would open on a blank page.
+    sheet = m.group(0).replace('class="set-block floor-sheet"', 'class="floor-sheet"', 1)
+
+    def pages(fragment):
+        with tempfile.TemporaryDirectory() as d:
+            src, out = os.path.join(d, "probe.html"), os.path.join(d, "probe.pdf")
+            with open(src, "w", encoding="utf-8") as f:
+                f.write(f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style>"
+                        f"</head><body>{fragment}</body></html>")
+            print_to_pdf(chrome, src, out)
+            return pdf_page_count(out)
+
+    with_forms = pages(sheet)
+    if with_forms <= 1:
+        return body_html
+    without_forms = pages(FORM_SPAN_RE.sub("", sheet))
+    if without_forms >= with_forms:
+        return body_html
+    print("⚠️  Form notes left off the floor sheet: with them it runs to "
+          f"{with_forms} pages, without them {without_forms}.", file=sys.stderr)
+    return body_html[:m.start()] + FORM_SPAN_RE.sub("", m.group(0)) + body_html[m.end():]
+
+
+def print_to_pdf(chrome, html_path, pdf_path):
+    subprocess.run(
+        [
+            chrome, "--headless", "--disable-gpu", "--no-sandbox",
+            "--no-pdf-header-footer", f"--print-to-pdf={pdf_path}",
+            f"file://{html_path}",
+        ],
+        check=True, capture_output=True,
+    )
+
+
 def find_chrome():
     override = os.environ.get("CHROME_PATH")
     if override and os.path.exists(override):
@@ -423,6 +491,8 @@ def render(md_path, pdf_path=None):
     body_html = style_repertoire_table(body_html)
     body_html = keep_genre_parts_together(body_html)
     body_html = wrap_set_blocks(body_html)
+    chrome = find_chrome()
+    body_html = fit_floor_sheet_forms(body_html, chrome)
     html = f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></head><body>{body_html}</body></html>"
 
     if pdf_path is None:
@@ -433,16 +503,8 @@ def render(md_path, pdf_path=None):
         tmp.write(html)
         tmp_path = tmp.name
 
-    chrome = find_chrome()
     try:
-        subprocess.run(
-            [
-                chrome, "--headless", "--disable-gpu", "--no-sandbox",
-                "--no-pdf-header-footer", f"--print-to-pdf={pdf_path}",
-                f"file://{tmp_path}",
-            ],
-            check=True, capture_output=True,
-        )
+        print_to_pdf(chrome, tmp_path, pdf_path)
     finally:
         os.unlink(tmp_path)
 

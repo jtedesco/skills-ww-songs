@@ -60,7 +60,7 @@
 
 **2. Reeling in the Years** A · 136 — <em>Guitar lead — welcome message</em>
 
-**3. Don't Stop** E · 119 — <em>Keys</em>
+**3. Don't Stop** E · 119 — <em>Keys</em> <span class="form">V C V C · Gtr solo (M) · V · C (stop) · C · Sax (J) · C · Oohs ×3 · “Don’t stop” a cappella</span>
 
 **4. I Hate Myself for Loving You** E · 118 — <em>Drums</em>
 
@@ -80,7 +80,7 @@
 
 **12. Ventura Highway** G · 125 — <em>3 guitars, counted off by David</em>
 
-**13. Keep Your Hands to Yourself** A · 120 — <em>guitar, A riff</em>
+**13. Keep Your Hands to Yourself** A · 120 — <em>guitar, A riff</em> <span class="form">V · Gtr mini-solo (M) · V · Sax (J) · V · Gtr solo (JJ) · V again · Last line slows</span>
 
 **14. You May Be Right** - · - — <em>TBD</em>
 

@@ -608,13 +608,18 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
             floor_blocks.append((brk_label or "BREAK (Acoustic)", brk))
 
     # Song dicts here were parsed out of the printed table, which has no
-    # floor_sheet_title column — resolve the short form from the database.
+    # floor_sheet_title or form_notes column — resolve both from the database.
     def floor_title(song):
         db = by_title.get(normalize_title(song["title"])) or {}
         return (db.get("floor_sheet_title") or "").strip() or song["title"]
 
+    def floor_form(song):
+        db = by_title.get(normalize_title(song["title"])) or {}
+        return (db.get("form_notes") or "").strip()
+
     out.append("")
-    out.extend(render_floor_sheet_lines(floor_blocks, display_title=floor_title))
+    out.extend(render_floor_sheet_lines(floor_blocks, display_title=floor_title,
+                                        form_notes=floor_form))
 
     out.append("")
     out.extend(render_summary_page_lines(stats_lines, all_scheduled, all_songs, scheduled_titles))
