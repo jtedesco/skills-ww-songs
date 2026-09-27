@@ -627,6 +627,31 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
     return "\n".join(out).rstrip("\n") + "\n"
 
 
+# A per-gig "no emergency cut" choice, recorded in the header so it survives
+# every later revision. Without it, a set with no marked cut gets one
+# recomputed on the next run (see sets_needing_recompute in main()), which
+# would quietly undo the choice.
+NO_CUT_BULLET = "- **Emergency Cut:** None for this gig"
+
+
+def has_no_cut_bullet(header_lines):
+    return any(l.strip() == NO_CUT_BULLET for l in header_lines)
+
+
+def add_no_cut_bullet(header_lines):
+    """Insert NO_CUT_BULLET after the Breaks bullet (or the last header
+    bullet), once."""
+    if has_no_cut_bullet(header_lines):
+        return header_lines
+    after = next((i for i, l in enumerate(header_lines) if l.startswith("- **Breaks:**")), None)
+    if after is None:
+        after = max((i for i, l in enumerate(header_lines) if l.startswith("- **")), default=None)
+    if after is None:
+        return header_lines
+    header_lines.insert(after + 1, NO_CUT_BULLET)
+    return header_lines
+
+
 def upsert_playlist_bullet(header_lines):
     """Keep the '- **Playlists:**' header bullet current on a revised setlist.
     Replaces an existing line (ids change if the playlists are ever recreated)
@@ -667,6 +692,9 @@ def main():
                         help="Shade the run of songs from FIRST to LAST (inclusive) as one named block, in both the set table and the floor sheet (repeatable). Both endpoints must be in the same set.")
     parser.add_argument("--unshade", action="append", default=[], metavar="LABEL",
                         help="Remove a shaded block by its label (repeatable).")
+    parser.add_argument("--no-emergency-cut", action="store_true",
+                        help="Drop every EMERGENCY CUT mark and stop picking one for this gig. "
+                             "Recorded in the header, so later revisions keep it.")
     parser.add_argument("--refresh-intro-notes", action="store_true",
                          help="Overwrite every printed Intro cell with the current songs_metadata.csv value. "
                               "Off by default: printed notes can carry gig-specific staging the database lacks "
@@ -678,8 +706,8 @@ def main():
     # tail (floor sheet, gig summary) onto a setlist written before that
     # section existed — re-setting a song to the length it already has.
     if not (args.swap or args.remove or args.add or args.set_length or args.refresh_intro_notes
-            or args.shade or args.unshade):
-        print("Error: nothing to do — pass at least one --swap, --remove, --add, --set-length, --shade, --unshade, or --refresh-intro-notes", file=sys.stderr)
+            or args.shade or args.unshade or args.no_emergency_cut):
+        print("Error: nothing to do — pass at least one --swap, --remove, --add, --set-length, --shade, --unshade, --no-emergency-cut, or --refresh-intro-notes", file=sys.stderr)
         sys.exit(1)
 
     md_path = args.md_path
@@ -740,7 +768,14 @@ def main():
     # in an unrelated set that still has one.
     main_set_indices = [i for i, sec in enumerate(sections) if sec["heading"].upper().startswith("SET")]
     main_sets_songs = [songs_by_section[i] for i in main_set_indices]
-    sets_needing_recompute = [
+    if args.no_emergency_cut:
+        header_lines = add_no_cut_bullet(header_lines)
+    no_cut = has_no_cut_bullet(header_lines)
+    if no_cut:
+        for songs in main_sets_songs:
+            for song in songs:
+                song["emergency_cut"] = False
+    sets_needing_recompute = [] if no_cut else [
         local_idx for local_idx, songs in enumerate(main_sets_songs)
         if not any(song.get("emergency_cut", False) for song in songs)
     ]
