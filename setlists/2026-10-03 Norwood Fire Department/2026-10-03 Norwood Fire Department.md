@@ -1,8 +1,8 @@
 # 2026-10-03 - Norwood Fire Department
 
 - **Gig Type:** Bar
-- **Duration:** 120 min — 1 set, no break (120:14 scheduled)
-- **Filters:** Easy listening — no High-energy songs except two by request, highest energy late in the set
+- **Duration:** 120 min — 1 set, no break (118:44 scheduled)
+- **Filters:** Easy listening — no High-energy songs except three by request, highest energy late in the set
 - **Missing:** None
 - **Breaks:** None
 - **Emergency Cut:** None for this gig
@@ -11,14 +11,14 @@
 ### 📋 CONSTRAINTS SATISFACTION SUMMARY
 | Constraint | Status | Notes |
 | :--- | :--- | :--- |
-| Easy Listening (no High-energy songs) | ⚠️ Two exceptions, by request (*We Didn't Start the Fire* opens at #1 — its intro cue isn't on record yet — and *Free Ride* sits at #18, where the energy is meant to peak. The other 10 High songs are out, including *Working for the Weekend* and *Roll with the Changes*. Three builds that finish High — *Don't Stop*, *The Chain*, *The Middle* — stay in, placed late) |
-| Energy Ramp (highest energy late) | ✅ Satisfied (after the *We Didn't Start the Fire* opener it settles to Medium on *Rikki*, takes the Low songs at #3–#7, holds Medium through #17 — *Baby Blue* (#13) is a Low one in that stretch — and saves *Free Ride* and the builds for #18–#24 before closer *Piano Man*) |
+| Easy Listening (no High-energy songs) | ⚠️ Three exceptions, by request (*We Didn't Start the Fire* opens at #1 — its intro cue isn't on record yet — while *Free Ride* (#18) and closer *Don't Stop Believing* (#25) sit where the energy is meant to peak. The other 9 High songs are out, including *Working for the Weekend* and *Roll with the Changes*. Three builds that finish High — *Don't Stop*, *The Chain*, *The Middle* — stay in, placed late) |
+| Energy Ramp (highest energy late) | ✅ Satisfied (after the *We Didn't Start the Fire* opener it settles to Medium on *Rikki*, takes the Low songs at #3–#7, holds Medium through #17 — *Baby Blue* (#13) is a Low one in that stretch — then climbs through *Free Ride* and the builds at #18–#24 to close on *Don't Stop Believing*) |
 | Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, #17–#19) |
-| Lauren Vocal Health | ✅ Satisfied (*Zombie* #10 is the only taxing song left. She leads 12 of 25 — 48.0%) |
+| Lauren Vocal Health | ✅ Satisfied (*Zombie* #10 is the only taxing song left. She leads 13 of 25 — 52.0%, including the closer) |
 | Segue Integrity | ✅ Satisfied (*Brown Eyed Girl* → *Hey Jealousy*, #5–#6; *Funkytown* → *Miss You* → *Reeling in the Years* → *Don't Stop*, #19–#22 — both in canonical order) |
-| Target Duration | ✅ Satisfied (120:14 against the 120-min set, 0:14 over. No emergency cut for this gig) |
+| Target Duration | ✅ Satisfied (118:44 against the 120-min set, 1:16 under. No emergency cut for this gig) |
 | Vocalist Inclusion | ✅ Satisfied (Lauren, Jon, Martin and David all lead) |
-| Pacing Flow | ⚠️ 1 energy drop(s): The Middle → Piano Man (#24→#25, SET 1) |
+| Pacing Flow | ✅ Satisfied (No High→Low energy drops) |
 | Absent-Member Note Check | ✅ Satisfied (full band) |
 
 ## SET 1
@@ -48,9 +48,9 @@
 | 22 | **Don't Stop** | Fleetwood Mac | Classic Rock / Soft Rock | 1970s | E | 119 | 3:13 | Lauren | Medium→High | ✓ | SEGUE Piano |
 | 23 | **The Chain** | Fleetwood Mac | Classic Rock / Soft Rock | 1970s | Em | 152 | 4:30 | Lauren (J) | Medium→High |  | Drums (4 on the floor) |
 | 24 | **The Middle** | Jimmy Eat World | Alternative Rock | 2000s | D | 162 | 3:00 | Martin (J, L, D) | Medium→High | ✓ | Guitar riff, starts on F# |
-| 25 | **Piano Man** 🔴 *[Closer]* | Billy Joel | Classic Rock / Piano Rock | 1970s | C | 89 | 5:30 | Jon (L) | Low→Medium |  | Keys intro |
+| 25 | **Don’t Stop Believing** 🔴 *[Closer]* | Journey | Classic Rock / AOR | 1980s | E | 118 | 4:00 | Lauren (J, D) | High | ✓ | Piano riff |
 
-**Set 1 Music Duration**: 96:14 | **Transitions**: 24:00 | **Total**: 120:14
+**Set 1 Music Duration**: 94:44 | **Transitions**: 24:00 | **Total**: 118:44
 ----------------------------------------
 
 ## FLOOR SHEET
@@ -105,24 +105,24 @@
 
 **24. The Middle** D · 162 — <em>Guitar riff, starts on F#</em>
 
-**25. Piano Man** C · 89 — <em>Keys intro</em>
+**25. Don’t Stop Believing** E · 118 — <em>Piano riff intro</em>
 
 
 ## GIG SUMMARY
 
 ### 📊 Stats
 - **Total Songs Scheduled**: 25
-- **Pure Music Playtime**: 96:14
+- **Pure Music Playtime**: 94:44
 - **Transition Buffers (60s/song)**: 24:00
 - **Break Time**: 0:00
-- **Grand Total Duration**: 120:14 (Target: 120:00)
+- **Grand Total Duration**: 118:44 (Target: 120:00)
 
 ### Lead Vocalist Breakdown
 
 | Vocalist | Songs Led | % |
 |---|---|---|
-| Lauren | 12 | 48.0% |
-| Jon | 8 | 32.0% |
+| Lauren | 13 | 52.0% |
+| Jon | 7 | 28.0% |
 | David | 3 | 12.0% |
 | Martin | 2 | 8.0% |
 
@@ -136,7 +136,6 @@
 | **Born to Run** (Bruce Springsteen) | Singer-Songwriter | 1970s | High |
 | **Brandy** (Looking Glass) | Yacht Rock / Pop Rock | 1970s | Low |
 | **Colors** (Black Pumas, The) | Contemporary R&B | 2010s | Medium |
-| **Don’t Stop Believing** (Journey) | Classic Rock / AOR | 1980s | High |
 | **Gold on the Ceiling** (Black Keys, The) | Alternative Rock | 2010s | High |
 | **Hit Me with Your Best Shot** (Pat Benatar) | Classic Rock / Pop Rock | 1980s | High |
 | **I Hate Myself for Loving You** (Joan Jett & the Blackhearts) | Album Rock | 1980s | High |
@@ -146,6 +145,7 @@
 | **Listen to the Music** (The Doobie Brothers) | Classic Rock / Pop Rock | 1970s | Medium |
 | **Me and Bobby McGee** (Janis Joplin) | Blues Rock | 1970s | Low→High |
 | **Peg** (Steely Dan) | Yacht Rock / Jazz Rock | 1970s | Medium |
+| **Piano Man** (Billy Joel) | Classic Rock / Piano Rock | 1970s | Low→Medium |
 | **Pink Pony Club** (Chappell Roan) | Synth-Pop | 2020s | Low→Medium |
 | **Respect** (Aretha Franklin) | Motown | 1960s | Medium→High |
 | **Roll with the Changes** (REO Speedwagon) | Classic Rock / Soft Rock | 1970s | High |
