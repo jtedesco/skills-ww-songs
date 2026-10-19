@@ -126,7 +126,7 @@ def test_database_integrity():
         #     also requires an edit here — these lists are never derived from the CSV automatically.
         gig_ready_acoustic = {"Landslide", "Blackbird", "Wish You Were Here",
                                "Ooh La La", "Ventura Highway"}
-        not_ready_full_band = set()
+        not_ready_full_band = {"Hold the Line", "Last Nite"}
         if s.get("arrangement") in ["Acoustic", "Either"]:
             if title in gig_ready_acoustic:
                 if s.get("gig_ready") != "Yes":
@@ -330,7 +330,7 @@ def test_scenario_1():
                    "Brandy", "Everybody Wants to Rule the World", "Reeling in the Years", 
                    "The Chain", "Take It Easy", "Colors", "Brass in Pocket", "Dreams", 
                    "Lights", "Roll with the Changes", "Ventura Highway", "Ooh La La",
-                   "Landslide", "Vienna", "Listen to the Music",
+                   "Landslide", "Listen to the Music",
                    "Kid Charlemagne", "You May Be Right", "We Didn't Start the Fire",
                    "Ride Like the Wind", "Don't Stop", "Piano Man",
                    "Don’t Stop Believing", "All Right Now", "Miss You",
@@ -371,7 +371,10 @@ def test_scenario_1():
         log_test("Show closer check ('Roll with the Changes' closer of last set)", True)
         
     # 4. Check gig-ready songs only
-    not_ready_songs = {"The Story", "Vienna"}
+    # Read from the database rather than listed here: a hardcoded pair went
+    # stale the moment those two songs left the repertoire.
+    not_ready_songs = {r["title"] for r in csv.DictReader(open(DB_PATH, encoding="utf-8"))
+                       if r.get("gig_ready") != "Yes"}
     for s_idx, set_songs in enumerate(res["sets"]):
         for song in set_songs:
             if song["title"] in not_ready_songs:
@@ -754,47 +757,28 @@ def test_scenario_8():
         all_pass = False
         log_test("Acoustic Vocalist Coverage constraint present in summary", False)
 
-    # Check the three group headings are present rather than the whole header
-    # row, which just breaks the next time a column is added.
-    groups = ("**Active — Not Selected**", "**In Progress**", "**Archived**")
-    if ("## GIG SUMMARY" in stdout and "### Repertoire Not Scheduled" in stdout
-            and all(g in stdout for g in groups)
-            and "### Lead Vocalist Breakdown" in stdout
-            and "## SONGS IN PROGRESS" not in stdout):
-        log_test("Combined GIG SUMMARY page present (stats/vocalist breakdown/repertoire table)", True)
+    # The stats sit at the foot of the first page (above SET 1) and the last
+    # page is the request list; the old GIG SUMMARY page is gone.
+    head = stdout.split("## SET 1", 1)[0]
+    if ("**Totals:**" in head and "**Lead vocals:**" in head
+            and "## REQUEST LIST" in stdout and "## GIG SUMMARY" not in stdout):
+        log_test("Stats on the first page, request list on the last", True)
     else:
         all_pass = False
-        log_test("Combined GIG SUMMARY page present (stats/vocalist breakdown/repertoire table)", False)
+        log_test("Stats on the first page, request list on the last", False)
 
-    # No song scheduled in a set, break, or encore should also show up as "not selected"
+    # No song scheduled in a set, break, or encore belongs on the request list.
     scheduled_titles = {s["title"] for set_songs in res["sets"] for s in set_songs}
     scheduled_titles |= {s["title"] for s in res["encores"]}
     scheduled_titles |= set(res["breaks"])
-
-    # Every group counts: nothing on tonight's setlist belongs anywhere in
-    # the not-scheduled table, in-progress songs included.
-    not_selected_block = ""
-    if "### Repertoire Not Scheduled" in stdout:
-        not_selected_block = stdout.split("### Repertoire Not Scheduled", 1)[-1]
-
-    not_selected_titles = set()
-    for line in not_selected_block.splitlines():
-        line = line.strip()
-        if (not line.startswith("|") or line.startswith("|---") or line.startswith("| Song")
-                or "<!--group-->" in line):
-            continue
-        cells = [c.strip() for c in line.split("|")[1:-1]]
-        if cells:
-            m = re.match(r"\*\*(.+?)\*\*", cells[0])
-            if m:
-                not_selected_titles.add(m.group(1))
-
-    overlap = scheduled_titles & not_selected_titles
-    if overlap:
+    request_block = stdout.split("## REQUEST LIST", 1)[-1] if "## REQUEST LIST" in stdout else ""
+    request_titles = set(re.findall(r"^- \*\*(.+?)\*\*", request_block, flags=re.M))
+    overlap = scheduled_titles & request_titles
+    if overlap or not request_titles:
         all_pass = False
-        log_test("No scheduled song appears in Songs Not Selected", False, f"Overlap: {overlap}")
+        log_test("Request list holds only unscheduled songs", False, f"Overlap: {overlap}" if overlap else "empty")
     else:
-        log_test("No scheduled song appears in Songs Not Selected", True)
+        log_test("Request list holds only unscheduled songs", True)
 
     # The removed can_leave_stage / Bathroom Breaks / Can Leave Stage language
     # should be gone entirely, not just renamed.
@@ -845,6 +829,30 @@ def test_form_notes():
     return all_pass
 
 
+def test_seasonal():
+    """Seasonal songs: a song with a `seasonal` value is only schedulable for
+    a gig dated in that season (build_setlist.SEASON_MONTHS), a song without
+    one always is, a seasonal song with no gig date stays out, and an unknown
+    season name keeps the song out rather than letting it play all year."""
+    print("\nTesting Seasonal songs...")
+    halloween = {"title": "Thriller", "seasonal": "Halloween"}
+    checks = [
+        ("Halloween song is in season in October", build_setlist.in_season(halloween, "2026-10-24")),
+        ("Halloween song is out of season in November", not build_setlist.in_season(halloween, "2026-11-07")),
+        ("Seasonal song stays out with no gig date", not build_setlist.in_season(halloween, None)),
+        ("Non-seasonal song is always in season", build_setlist.in_season({"title": "Peg", "seasonal": ""}, None)),
+        ("Unknown season keeps the song out", not build_setlist.in_season({"title": "x", "seasonal": "Xmas"}, "2026-12-20")),
+        ("Every season in the CSV is a known one",
+         all((r.get("seasonal") or "").strip() in ("", *build_setlist.SEASON_MONTHS)
+             for r in csv.DictReader(open(DB_PATH, encoding="utf-8")))),
+    ]
+    all_pass = True
+    for name, ok in checks:
+        log_test(name, ok)
+        all_pass = all_pass and ok
+    return all_pass
+
+
 def main():
     print("=============================================================")
     print("WANNABE WEEKENDERS SETLIST BUILDER AUTOMATED TEST SUITE")
@@ -864,6 +872,7 @@ def main():
     s7_ok = test_scenario_7()
     s8_ok = test_scenario_8()
     form_ok = test_form_notes()
+    season_ok = test_seasonal()
 
     print("\n=============================================================")
     print("TEST SUITE SUMMARY")
@@ -876,11 +885,12 @@ def main():
     print(f"Scenario 5 (Vocal Limits):              {'PASS' if s5_ok else 'FAIL'}")
     print(f"Scenario 6 (Martin-out Acoustic+Files): {'PASS' if s6_ok else 'FAIL'}")
     print(f"Scenario 7 (All Vocalists Lead ≥1):     {'PASS' if s7_ok else 'FAIL'}")
-    print(f"Scenario 8 (Acoustic Coverage+NotSel):  {'PASS' if s8_ok else 'FAIL'}")
+    print(f"Scenario 8 (Acoustic Cov.+Requests):  {'PASS' if s8_ok else 'FAIL'}")
     print(f"Floor Sheet Cues + Form Notes:          {'PASS' if form_ok else 'FAIL'}")
+    print(f"Seasonal Songs:                         {'PASS' if season_ok else 'FAIL'}")
     print("=============================================================")
 
-    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok and s8_ok and form_ok:
+    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok and s8_ok and form_ok and season_ok:
         print("\nALL TESTS PASSED SUCCESSFULLY! ✅")
         sys.exit(0)
     else:

@@ -44,6 +44,10 @@ CSS = """
   h1 { font-size: 21pt; margin: 0 0 10px 0; border-bottom: 2px solid #222; padding-bottom: 8px; }
   h2 { font-size: 13.5pt; margin: 20px 0 8px; }
   .set-block { break-before: page; page-break-before: always; }
+  /* A divider closing a set's page separates it from nothing — the next
+     section always starts a fresh page — and when the page is full it is
+     the one thing that spills, leaving a blank page behind. */
+  .set-block > hr:last-child { display: none; }
   h3 { font-size: 11.5pt; margin: 10px 0 4px; }
   ul { margin: 4px 0 8px; padding-left: 20px; }
   li { margin: 2px 0; }
@@ -68,6 +72,10 @@ CSS = """
      added was a one-word strip. The shares below sum to 100%; the narrow
      ones are sized to their header word ("Decade", "Length", "Dance"). */
   .song-table { table-layout: fixed; }
+  /* Tighter than the body's 1.45: most rows wrap to two or three lines, so
+     line height multiplies down the whole table. At 1.45 a 17-song set with
+     a few long intro cues spilled its closer onto a page of its own. */
+  .song-table td { line-height: 1.3; }
   .song-table th:nth-child(1), .song-table td:nth-child(1) { width: 3.4%; }
   .song-table th:nth-child(2), .song-table td:nth-child(2) { width: 13.5%; }
   .song-table th:nth-child(3), .song-table td:nth-child(3) { width: 12%; }
@@ -156,6 +164,15 @@ CSS = """
      one more song. A wide collapsed border wins over the neighbouring 1px
      rules, so this opens a real break in the table. */
   .repertoire-table tr.group-row:not(:first-child) td { border-top: 12px solid #fff; }
+  /* REQUEST LIST — the last page: every gig-ready song not on the setlist,
+     flat and alphabetical, in two columns so the band can scan it when
+     someone shouts a request. Larger than table text; it's read on stage. */
+  .request-list { column-count: 2; column-gap: 0.4in; }
+  .request-list h2, .request-list > p { column-span: all; }
+  .request-list h2 { margin-top: 0; }
+  .request-list ul { list-style: none; padding-left: 0; margin: 0; }
+  .request-list li { font-size: 11.5pt; line-height: 1.3; margin: 0 0 4px; break-inside: avoid; }
+  .request-list li strong { font-weight: 700; }
   .callout { border-left: 4px solid #d4a017; background: #fff8e6; padding: 7px 12px; margin: 8px 0; border-radius: 3px; }
   .callout-title { font-weight: 700; margin-bottom: 3px; }
   .callout p { margin: 4px 0; }
@@ -291,8 +308,12 @@ def keep_genre_parts_together(html):
         if " / " not in cell_html:
             return cell_html
         # &nbsp; before the slash so a wrap lands after it: 'Classic Rock /'
-        # then 'Soft Rock', never 'Classic Rock' then '/ Soft Rock'.
-        return "&nbsp;/ ".join(f'<span class="genre-part">{p}</span>' for p in cell_html.split(" / "))
+        # then 'Soft Rock', never 'Classic Rock' then '/ Soft Rock'. A
+        # hyphenated part ('Singer-Songwriter') stays unwrapped: it's one
+        # word with no space, so held to one line it overruns the column,
+        # and left alone it breaks at its hyphen.
+        return "&nbsp;/ ".join(p if "-" in p else f'<span class="genre-part">{p}</span>'
+                                for p in cell_html.split(" / "))
 
     def do_table(m, col):
         def do_row(r):
@@ -384,6 +405,8 @@ def wrap_set_blocks(html):
         heading_text = re.sub(r"<[^>]+>", "", heading).strip()
         if heading_text.upper() == "FLOOR SHEET":
             out.append(f'<div class="set-block floor-sheet">{heading}{content}</div>')
+        elif heading_text.upper() == "REQUEST LIST":
+            out.append(f'<div class="set-block request-list">{heading}{content}</div>')
         elif heading_text.upper() == "GIG SUMMARY":
             out.append(f'<div class="set-block summary-page">{heading}{content}</div>')
         elif re.match(r"^SET\b", heading_text, re.I) or heading_text.upper() == "ENCORES":

@@ -77,6 +77,35 @@ def get_segue_groups(songs):
             groups.append(group)
     return groups
 
+# Seasonal songs: songs_metadata.csv's `seasonal` column names the season a
+# song belongs to, and a song with one is only scheduled for a gig dated
+# inside it. Blank (the normal case) means any time of year. Thriller is the
+# first: the band only plays it in October.
+#
+# A season name that isn't in this table is treated as never in season, so a
+# typo in the CSV keeps the song out of every setlist (loudly, via the
+# warning) rather than letting it play all year.
+SEASON_MONTHS = {
+    "Halloween": {10},
+}
+
+
+def in_season(song, gig_date):
+    """True if `song` may be scheduled for a gig on `gig_date` ('YYYY-MM-DD',
+    or None when the build has no --date). A seasonal song needs a date to
+    place it: with no date it stays out."""
+    season = str(song.get("seasonal") or "").strip()
+    if not season:
+        return True
+    months = SEASON_MONTHS.get(season)
+    if months is None:
+        print(f"⚠️  Unknown season {season!r} for {song.get('title')!r} — left out. "
+              f"Known seasons: {', '.join(sorted(SEASON_MONTHS))}", file=sys.stderr)
+        return False
+    m = re.match(r"\d{4}-(\d{2})-\d{2}$", str(gig_date or ""))
+    return bool(m) and int(m.group(1)) in months
+
+
 def check_absent_member_notes(song_list, missing_names):
     """Flag songs whose printed intro_notes still name an absent band
     member (e.g. 'David starts w/ marimba' when David is out) — a stage
@@ -353,85 +382,64 @@ def sync_pdf_to_drive(pdf_path, shared_dir=None):
         return False
 
 
-# Marks a row of the repertoire table as a group heading ("Active — Not
-# Selected", "In Progress", "Archived") rather than a song. Carried as an
-# invisible comment, like the shade marker, so the .md stays a plain
-# four-column table; render_pdf.py's style_group_rows() turns the row into
-# one full-width heading cell.
-GROUP_ROW_MARKER = "<!--group-->"
-REPERTOIRE_COLUMNS = ["Song", "Genre", "Decade", "Energy"]
+# The run-of-show numbers live at the bottom of the FIRST page, under the
+# constraints table, as two lines whose bold labels are how
+# apply_substitution.py finds and replaces them on every revision (the rest of
+# the header block is preserved verbatim, so stale stats would otherwise stick).
+STATS_TOTALS_PREFIX = "**Totals:**"
+STATS_VOCALS_PREFIX = "**Lead vocals:**"
+# Where build_setlist.py drops the stats while writing the header, before the
+# numbers exist; swapped for render_stats_lines() once the sets are counted.
+STATS_PLACEHOLDER = "<!--stats-->"
+REQUEST_LIST_HEADING = "## REQUEST LIST"
 
 
-def render_repertoire_lines(all_songs, scheduled_titles):
-    """The 'Repertoire Not Scheduled' subsection (h3, the tail of the GIG
-    SUMMARY page): ONE table of every song this gig didn't use, split into
-    three groups by in-table heading rows —
+def render_stats_lines(total_songs, music_s, trans_s, break_s, target_str, scheduled_songs):
+    """Two lines for the foot of the first page: the run of show, and who
+    sings lead how often. Consecutive lines, so they render as one compact
+    paragraph (render_pdf.py's nl2br breaks them). `target_str` is ' (Target:
+    M:SS)' or '' — kept in that exact form because apply_substitution.py's
+    parse_md() reads the target back out of it."""
+    grand = music_s + trans_s + break_s
+    parts = [f"{total_songs} songs", f"{format_length(music_s)} music",
+             f"{format_length(trans_s)} transitions ({format_transition_buffer_label()})"]
+    if break_s:
+        parts.append(f"{format_length(break_s)} break")
+    totals = f"{STATS_TOTALS_PREFIX} " + " · ".join(parts) + f" · **{format_length(grand)} total**{target_str}"
 
-      Active — Not Selected   gig-ready, not archived, not scheduled
-      In Progress             not yet gig-ready, not archived, not scheduled
-      Archived                archived
-
-    One table rather than three so render_pdf.py can flow it down the
-    page's two columns as a single run. A song on tonight's setlist appears
-    in none of the groups — including an in-progress song pulled in with
-    --include-not-ready, which is on the set table already.
-
-    An empty group keeps its heading and gets one italic placeholder row, so
-    the three headings are always there to scan for."""
-    scheduled_lower = {t.lower() for t in scheduled_titles}
-    unscheduled = [s for s in all_songs if s["title"].lower() not in scheduled_lower]
-    by_title = lambda songs: sorted(songs, key=lambda s: s["title"])
-    groups = [
-        ("Active — Not Selected", "*None — everything made the cut.*",
-         by_title(s for s in unscheduled if s.get("archived") != "Yes" and s.get("gig_ready") == "Yes")),
-        ("In Progress", "*Nothing else in progress.*",
-         by_title(s for s in unscheduled if s.get("archived") != "Yes" and s.get("gig_ready") != "Yes")),
-        ("Archived", "*Nothing currently archived.*",
-         by_title(s for s in unscheduled if s.get("archived") == "Yes")),
-    ]
-    blank = [""] * (len(REPERTOIRE_COLUMNS) - 1)
-
-    lines = ["### Repertoire Not Scheduled",
-             "| " + " | ".join(REPERTOIRE_COLUMNS) + " |",
-             "|" + "|".join(["---"] * len(REPERTOIRE_COLUMNS)) + "|"]
-    for label, placeholder, songs in groups:
-        lines.append("| " + " | ".join([f"**{label}** ({len(songs)}){GROUP_ROW_MARKER}"] + blank) + " |")
-        if not songs:
-            lines.append("| " + " | ".join([placeholder] + blank) + " |")
-        for song in songs:
-            lines.append(f"| **{song['title']}** ({song['artist']}) | {genre_subgenre_display_string(song)} "
-                         f"| {decade_display_string(song)} | {energy_display_string(song)} |")
-    return lines
-
-
-def render_vocal_breakdown_lines(scheduled_songs):
-    """The 'Lead Vocalist Breakdown' subsection (h3, on the combined summary
-    page): what % of tonight's songs (sets + breaks + encores) each vocalist
-    leads, sorted by count descending."""
     counts = {}
-    for s in scheduled_songs:
-        counts[s["lead_vocals"]] = counts.get(s["lead_vocals"], 0) + 1
-    total = len(scheduled_songs)
-
-    lines = ["### Lead Vocalist Breakdown", "", "| Vocalist | Songs Led | % |", "|---|---|---|"]
-    for vocalist, count in sorted(counts.items(), key=lambda kv: kv[1], reverse=True):
-        pct = (count / total * 100) if total else 0
-        lines.append(f"| {vocalist} | {count} | {pct:.1f}% |")
-    return lines
+    for song in scheduled_songs:
+        counts[song["lead_vocals"]] = counts.get(song["lead_vocals"], 0) + 1
+    n = len(scheduled_songs) or 1
+    vocals = f"{STATS_VOCALS_PREFIX} " + " · ".join(
+        f"{v} {c} ({c / n:.0%})" for v, c in sorted(counts.items(), key=lambda kv: -kv[1]))
+    return [totals, vocals]
 
 
-def render_summary_page_lines(stats_lines, scheduled_songs, all_songs, scheduled_titles):
-    """The setlist's last page, under one '##' heading: gig stats, the lead
-    vocalist breakdown, then the repertoire-not-scheduled table. render_pdf.py
-    starts it on a fresh page and lays it out in two columns, so the long
-    repertoire table wraps from the bottom of the left column to the top of
-    the right one instead of running onto another page."""
-    lines = [SUMMARY_PAGE_HEADING, "", "### 📊 Stats"]
-    lines.extend(stats_lines)
-    lines.append("")
-    lines.extend(render_vocal_breakdown_lines(scheduled_songs))
-    lines.append("")
-    lines.extend(render_repertoire_lines(all_songs, scheduled_titles))
+def is_stats_line(line):
+    return line.startswith(STATS_TOTALS_PREFIX) or line.startswith(STATS_VOCALS_PREFIX)
+
+
+def render_request_list_lines(all_songs, scheduled_titles, gig_date=None):
+    """The last page: a flat list of every song the band could play on
+    request — gig-ready, not archived, not on tonight's setlist, and in
+    season for the gig date (see SEASON_MONTHS). Sorted by title.
+    render_pdf.py lays it out in two columns."""
+    scheduled_lower = {t.lower() for t in scheduled_titles}
+    songs = sorted(
+        (s for s in all_songs
+         if s.get("gig_ready") == "Yes" and s.get("archived") != "Yes"
+         and s["title"].lower() not in scheduled_lower and in_season(s, gig_date)),
+        key=lambda s: s["title"].lower())
+    lines = [REQUEST_LIST_HEADING, "",
+             f"*Gig-ready songs not on tonight's setlist — {len(songs)} to take requests from.*", ""]
+    # The database files "The" bands as "Black Pumas, The" so they sort by
+    # name; a list read out on stage wants the name the way people say it.
+    def spoken(artist):
+        return "The " + artist[:-5] if artist.endswith(", The") else artist
+    lines.extend(f"- **{s['title']}** — {spoken(s['artist'])}" for s in songs)
+    if not songs:
+        lines.append("*Everything gig-ready is already on the setlist.*")
     return lines
 
 
@@ -983,6 +991,10 @@ def main():
 
         # Explicit per-song exclusions
         if title.lower() in {e.lower() for e in args.exclude}:
+            continue
+
+        # Seasonal songs only play in their season (see SEASON_MONTHS).
+        if not in_season(song, args.date):
             continue
 
         # Gig readiness check
@@ -1587,8 +1599,9 @@ def main():
     md_buf = io.StringIO()
 
     def md(*a, **kw):
-        """Print to both stdout and the markdown buffer."""
-        print(*a, **kw)
+        """Write to the markdown buffer. The finished document goes to stdout
+        once, at the end, because the first-page stats are filled in only
+        after the sets are counted (see STATS_PLACEHOLDER)."""
         print(*a, **kw, file=md_buf)
 
     # ---------------------------------------------------------------
@@ -1679,6 +1692,9 @@ def main():
                   file=sys.stderr)
             sys.exit(1)
 
+    md(STATS_PLACEHOLDER)
+    md()
+
     total_music_seconds = 0
     total_trans_seconds = 0
     
@@ -1736,14 +1752,6 @@ def main():
         md("-" * 40)
         
     total_breaks_sec = num_breaks * 10 * 60
-    grand_total_sec = total_music_seconds + total_trans_seconds + total_breaks_sec
-    stats_lines = [
-        f"- **Total Songs Scheduled**: {sum(len(s) for s in sets_songs) + len(encores) + len(break_songs_sets)*2}",
-        f"- **Pure Music Playtime**: {format_length(total_music_seconds)}",
-        f"- **Transition Buffers ({format_transition_buffer_label()})**: {format_length(total_trans_seconds)}",
-        f"- **Break Time**: {format_length(total_breaks_sec)}",
-        f"- **Grand Total Duration**: {format_length(grand_total_sec)} (Target: {format_length(total_gig_seconds)})",
-    ]
 
     scheduled_titles = {s["title"] for set_s in sets_songs for s in set_s}
     scheduled_titles |= {s["title"] for s in encores}
@@ -1769,13 +1777,18 @@ def main():
         md(line)
 
     md()
-    for line in render_summary_page_lines(stats_lines, all_scheduled, all_songs, scheduled_titles):
+    for line in render_request_list_lines(all_songs, scheduled_titles, args.date):
         md(line)
 
     # ---------------------------------------------------------------
     # Write files
     # ---------------------------------------------------------------
-    md_content = md_buf.getvalue()
+    stats_lines = render_stats_lines(
+        sum(len(s) for s in sets_songs) + len(encores) + len(break_songs_sets) * 2,
+        total_music_seconds, total_trans_seconds, total_breaks_sec,
+        f" (Target: {format_length(total_gig_seconds)})", all_scheduled)
+    md_content = md_buf.getvalue().replace(STATS_PLACEHOLDER, "\n".join(stats_lines), 1)
+    sys.stdout.write(md_content)
 
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(md_content)

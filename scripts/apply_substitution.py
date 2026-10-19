@@ -38,23 +38,26 @@ sys.path.insert(0, SCRIPT_DIR)
 from build_setlist import (
     parse_length, format_length, get_segue_groups, tag_emergency_cuts,
     format_md_row, clean_backups, parse_covering_vocalist,
-    render_summary_page_lines, SUMMARY_PAGE_HEADING,
+    SUMMARY_PAGE_HEADING, REQUEST_LIST_HEADING, render_request_list_lines,
+    render_stats_lines, is_stats_line,
     render_floor_sheet_lines, FLOOR_SHEET_HEADING,
     check_absent_member_notes, format_absent_member_status,
     check_energy_flow, format_pacing_flow_status,
     TABLE_HEADER, TABLE_DIVIDER, sync_pdf_to_drive,
     playlist_links_bullet, PLAYLIST_BULLET_PREFIX,
-    TRANSITION_BUFFER_SECONDS, format_transition_buffer_label,
+    TRANSITION_BUFFER_SECONDS,
     parse_shade_label, assign_shade_block, shade_starts, strip_shade_markers,
+    in_season,
 )
 
 # Any of these starting a line marks the beginning of the always-regenerated
-# tail. Current files have FLOOR SHEET then GIG SUMMARY. The others only
-# appear on older files: SONGS NOT SELECTED / ARCHIVED SONGS predate the
-# combined summary page, and SONGS IN PROGRESS predates the in-progress songs
-# moving into the summary's repertoire table.
+# tail. Current files have FLOOR SHEET then REQUEST LIST. The others only
+# appear on older files: GIG SUMMARY held the stats and repertoire table until
+# the stats moved to the first page; SONGS NOT SELECTED / ARCHIVED SONGS
+# predate the combined summary page; SONGS IN PROGRESS predates the
+# in-progress songs moving into the summary's repertoire table.
 TRAILING_HEADINGS = {"## SONGS NOT SELECTED", "## ARCHIVED SONGS", FLOOR_SHEET_HEADING,
-                     SUMMARY_PAGE_HEADING, "## SONGS IN PROGRESS"}
+                     SUMMARY_PAGE_HEADING, REQUEST_LIST_HEADING, "## SONGS IN PROGRESS"}
 GIG_STATS_HEADING = "### 📊 GIG SUMMARY STATS"
 BREAK_BULLET_RE = re.compile(r"^-\s*\*\*(.+?)\*\*\s*\(")
 BREAK_HEADING_RE = re.compile(r"^###\s*\S*\s*BREAK\s+(\d+)", re.I)
@@ -435,6 +438,25 @@ def refresh_intro_notes(sections, by_title):
     print(f"✅ Refreshed {changed} intro note(s) from songs_metadata.csv", file=sys.stderr)
 
 
+def parse_gig_date(header_lines):
+    """The gig date off the title line, '# YYYY-MM-DD - Location', or None."""
+    m = re.match(r"#\s*(\d{4}-\d{2}-\d{2})", header_lines[0] if header_lines else "")
+    return m.group(1) if m else None
+
+
+def check_seasons(sections, by_title, header_lines):
+    """Refuse a setlist holding a seasonal song outside its season — the same
+    rule build_setlist.py applies to its pool (see SEASON_MONTHS)."""
+    gig_date = parse_gig_date(header_lines)
+    for sec in sections:
+        for row in sec["rows"]:
+            db = by_title.get(normalize_title(row["title"])) or {}
+            if not in_season(db, gig_date):
+                print(f"Error: {row['title']!r} is a {db.get('seasonal')} song and this gig "
+                      f"({gig_date or 'no date'}) is out of season.", file=sys.stderr)
+                sys.exit(1)
+
+
 def check_no_duplicates(sections):
     """Error out if any title now appears more than once across the setlist
     — most likely a --swap target that was already scheduled elsewhere."""
@@ -506,7 +528,13 @@ def extract_break_songs(sections):
 
 def render_md(header_lines, sections, songs_by_section, all_songs, by_title, break_songs=None, target_duration=None):
     break_songs = break_songs or []
-    out = list(header_lines)
+    # The stats sit at the foot of the header (the first page). Drop whatever
+    # copy is there and mark where the fresh one goes, just before the blank
+    # lines that close the header — they're filled in once the totals exist.
+    header = [l for l in header_lines if not is_stats_line(l)]
+    while header and not header[-1].strip():
+        header.pop()
+    out = header + ["", "<<STATS>>", ""]
     for sec, songs in zip(sections, songs_by_section):
         out.append(f"## {sec['heading']}")
         out.append(TABLE_HEADER)
@@ -563,16 +591,8 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
         break_seconds = parse_declared_break_seconds(header_lines)
 
     total_songs = sum(len(s) for s in songs_by_section) + len(break_songs)
-    grand_total = total_music + total_trans + break_seconds
     target_str = f" (Target: {target_duration})" if target_duration else ""
 
-    stats_lines = [
-        f"- **Total Songs Scheduled**: {total_songs}",
-        f"- **Pure Music Playtime**: {format_length(total_music)}",
-        f"- **Transition Buffers ({format_transition_buffer_label()})**: {format_length(total_trans)}",
-        f"- **Break Time**: {format_length(break_seconds)}",
-        f"- **Grand Total Duration**: {format_length(grand_total)}{target_str}",
-    ]
 
     scheduled_titles = {s["title"] for songs in songs_by_section for s in songs}
     scheduled_titles |= {bs["title"] for bs in break_songs}
@@ -622,7 +642,11 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
                                         form_notes=floor_form))
 
     out.append("")
-    out.extend(render_summary_page_lines(stats_lines, all_scheduled, all_songs, scheduled_titles))
+    out.extend(render_request_list_lines(all_songs, scheduled_titles, parse_gig_date(header_lines)))
+
+    stats = render_stats_lines(total_songs, total_music, total_trans, break_seconds, target_str, all_scheduled)
+    i = out.index("<<STATS>>")
+    out[i:i + 1] = stats
 
     return "\n".join(out).rstrip("\n") + "\n"
 
@@ -720,6 +744,7 @@ def main():
     apply_ops(sections, [tuple(s) for s in args.swap], args.remove, [tuple(a) for a in args.add],
               by_title, martin_out, david_out)
     check_no_duplicates(sections)
+    check_seasons(sections, by_title, header_lines)
     enrich_static_fields(sections, by_title)
     if args.refresh_intro_notes:
         refresh_intro_notes(sections, by_title)
