@@ -47,7 +47,7 @@ from build_setlist import (
     playlist_links_bullet, PLAYLIST_BULLET_PREFIX,
     TRANSITION_BUFFER_SECONDS,
     parse_shade_label, assign_shade_block, shade_starts, strip_shade_markers,
-    in_season,
+    in_season, cut_without,
 )
 
 # Any of these starting a line marks the beginning of the always-regenerated
@@ -321,12 +321,10 @@ def build_new_song(by_title, title, martin_out, david_out):
         sys.exit(1)
     song = dict(by_title[key])
     notes = song.get("substitution_notes", "")
-    if martin_out and notes.startswith("If Martin is out:") and "Cut song" in notes:
-        print(f"Error: {title!r} requires Martin per the database and can't be added — Martin is out for this gig.", file=sys.stderr)
-        sys.exit(1)
-    if david_out and notes.startswith("If David is out:") and "Cut song" in notes:
-        print(f"Error: {title!r} requires David per the database and can't be added — David is out for this gig.", file=sys.stderr)
-        sys.exit(1)
+    for out, name in ((martin_out, "Martin"), (david_out, "David")):
+        if out and cut_without(song, martin_out=(name == "Martin"), david_out=(name == "David")):
+            print(f"Error: {title!r} requires {name} per the database and can't be added — {name} is out for this gig.", file=sys.stderr)
+            sys.exit(1)
     if martin_out and song["lead_vocals"] == "Martin":
         song["lead_vocals"] = parse_covering_vocalist(notes, "David")
         song["covering_for"] = "Martin"
@@ -642,7 +640,9 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
                                         form_notes=floor_form))
 
     out.append("")
-    out.extend(render_request_list_lines(all_songs, scheduled_titles, parse_gig_date(header_lines)))
+    martin_out, david_out = parse_missing(header_lines)
+    out.extend(render_request_list_lines(all_songs, scheduled_titles, parse_gig_date(header_lines),
+                                         martin_out, david_out))
 
     stats = render_stats_lines(total_songs, total_music, total_trans, break_seconds, target_str, all_scheduled)
     i = out.index("<<STATS>>")
@@ -828,6 +828,13 @@ def main():
     with open(md_path, "w", encoding="utf-8") as f:
         f.write(md_content)
     print(f"✅ Saved markdown  → {os.path.abspath(md_path)}", file=sys.stderr)
+
+    # Check the finished setlist against the band's rules (check_setlist.py)
+    # and say what's wrong. Never blocks the write: the band can knowingly
+    # override a rule, and the output is how they find out they have.
+    # Imported here, not at the top: check_setlist imports this module.
+    import check_setlist
+    check_setlist.report(md_path)
 
     pdf_path = None
     try:

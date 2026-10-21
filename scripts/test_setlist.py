@@ -223,6 +223,16 @@ def parse_markdown_report(stdout_str):
             in_break = False
             continue
             
+        # Any other top-level section (FLOOR SHEET, REQUEST LIST) ends the
+        # running order. The request list is a song table too, with the same
+        # columns, so without this its rows were read as more songs in the
+        # last set.
+        if line.startswith("## "):
+            current_set = None
+            in_encore = False
+            in_break = False
+            continue
+
         if line.startswith("### ☕ BREAK") or line.startswith("### ⏸️ BREAK"):
             in_break = True
             current_set = None
@@ -772,7 +782,7 @@ def test_scenario_8():
     scheduled_titles |= {s["title"] for s in res["encores"]}
     scheduled_titles |= set(res["breaks"])
     request_block = stdout.split("## REQUEST LIST", 1)[-1] if "## REQUEST LIST" in stdout else ""
-    request_titles = set(re.findall(r"^- \*\*(.+?)\*\*", request_block, flags=re.M))
+    request_titles = set(re.findall(r"^\| \d+ \| \*\*(.+?)\*\*", request_block, flags=re.M))
     overlap = scheduled_titles & request_titles
     if overlap or not request_titles:
         all_pass = False
@@ -853,6 +863,74 @@ def test_seasonal():
     return all_pass
 
 
+def test_rules():
+    """Setlist rules (check_setlist.py): solver output and every committed
+    setlist in the current format pass with no errors, and the checker
+    actually catches a misplaced emergency cut, an uncovered active song,
+    and an out-of-season song."""
+    import tempfile, shutil
+    import check_setlist
+    print("\nTesting Setlist Rules (check_setlist.py)...")
+    all_pass = True
+
+    def errors(path):
+        return [i for i in check_setlist.check_setlist(path) if i[0] == check_setlist.ERROR]
+
+    def check(name, ok, detail=""):
+        nonlocal all_pass
+        log_test(name, ok, detail)
+        all_pass = all_pass and ok
+
+    tmp = tempfile.mkdtemp()
+    try:
+        # 1. Fresh solver output, read from stdout so nothing is written or synced.
+        for label, args in [("3hr bar, acoustic breaks", ["--duration", "3.0", "--breaks", "acoustic"]),
+                            ("2 sets, silent break", ["--duration", "2.5", "--sets", "2", "--breaks", "silent", "--no-encore"])]:
+            res = subprocess.run([sys.executable, BUILDER_PATH] + args, capture_output=True, text=True, cwd=SCRIPT_DIR)
+            path = os.path.join(tmp, "solver.md")
+            open(path, "w", encoding="utf-8").write(res.stdout)
+            errs = errors(path)
+            check(f"Solver output passes the rules ({label})", not errs, check_setlist.format_issues(errs))
+
+        # 2. Every committed setlist in the current format (it has a request list).
+        setlists_dir = os.path.join(SCRIPT_DIR, "..", "setlists")
+        current = [os.path.join(r, f) for r, _, fs in os.walk(setlists_dir) for f in fs
+                   if f.endswith(".md") and check_setlist.read_request_list(os.path.join(r, f)) is not None
+                   and not os.path.basename(r).startswith("setlist_")]
+        for path in sorted(current):
+            errs = errors(path)
+            check(f"Committed setlist passes the rules: {os.path.basename(path)}", not errs,
+                  check_setlist.format_issues(errs))
+
+        # 3. The checker catches what it should, on a copy of a current setlist.
+        if current:
+            base = open(sorted(current)[-1], encoding="utf-8").read()
+            lines = base.split("\n")
+            def variant(name, text):
+                path = os.path.join(tmp, name)
+                open(path, "w", encoding="utf-8").write(text)
+                return {rule for _, rule, _ in errors(path)}
+            # a) emergency cut moved to the second song of the first set
+            rows = [i for i, l in enumerate(lines) if re.match(r"^\| \d+ \| \*\*", l)]
+            cut_row = next(i for i in rows if "EMERGENCY CUT" in lines[i])
+            moved = list(lines)
+            moved[cut_row] = moved[cut_row].replace(" 🛑 **[EMERGENCY CUT]**", "")
+            moved[rows[1]] = moved[rows[1]].replace("** |", "** 🛑 **[EMERGENCY CUT]** |", 1)
+            check("Checker flags an emergency cut outside the back half", "emergency-cut" in variant("cut.md", "\n".join(moved)))
+            # b) a request-list song dropped, so an active song is covered by neither page
+            start = lines.index(check_setlist.REQUEST_LIST_HEADING)
+            req = next(i for i, l in enumerate(lines) if i > start and check_setlist.REQUEST_ITEM_RE.match(l))
+            check("Checker flags an active song missing from setlist + request list",
+                  "coverage" in variant("cover.md", "\n".join(lines[:req] + lines[req + 1:])))
+            # c) a Halloween song on a November date
+            if "**Thriller**" in base:
+                nov = re.sub(r"^# \d{4}-\d{2}-\d{2}", "# 2026-11-07", base, count=1, flags=re.M)
+                check("Checker flags a seasonal song out of season", "seasonal" in variant("season.md", nov))
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return all_pass
+
+
 def main():
     print("=============================================================")
     print("WANNABE WEEKENDERS SETLIST BUILDER AUTOMATED TEST SUITE")
@@ -873,6 +951,7 @@ def main():
     s8_ok = test_scenario_8()
     form_ok = test_form_notes()
     season_ok = test_seasonal()
+    rules_ok = test_rules()
 
     print("\n=============================================================")
     print("TEST SUITE SUMMARY")
@@ -888,9 +967,10 @@ def main():
     print(f"Scenario 8 (Acoustic Cov.+Requests):  {'PASS' if s8_ok else 'FAIL'}")
     print(f"Floor Sheet Cues + Form Notes:          {'PASS' if form_ok else 'FAIL'}")
     print(f"Seasonal Songs:                         {'PASS' if season_ok else 'FAIL'}")
+    print(f"Setlist Rules (check_setlist.py):       {'PASS' if rules_ok else 'FAIL'}")
     print("=============================================================")
 
-    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok and s8_ok and form_ok and season_ok:
+    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok and s8_ok and form_ok and season_ok and rules_ok:
         print("\nALL TESTS PASSED SUCCESSFULLY! ✅")
         sys.exit(0)
     else:

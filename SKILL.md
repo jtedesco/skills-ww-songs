@@ -501,6 +501,7 @@ All "who's missing" and event-detail info lives here — do not restate it in th
   - **The PDF uses fixed column widths.** `render_pdf.py` sets `table-layout: fixed` on `.song-table` with a percentage for every column, summing to 100%. Under auto layout the columns sized to their content and Intro — the one column meant to wrap — got whatever was left, a one-word strip. The rules are positional `nth-child()` selectors (`#` is 1, `Genre` 4, `Dance` 11, `Intro` 12); adding or reordering a column means re-dividing all twelve shares, not just moving one.
   - **A Genre cell breaks only at its ` / `**, and Energy only after its arrow (`Medium→` / `High`) — `keep_genre_parts_together()` in `render_pdf.py`. Letting `Yacht Rock / Jazz Rock` break anywhere stacked it three lines tall and cost rows per page; holding it to one line crowded Intro. A one-part genre (`Alternative Rock`) is left free to wrap, and so is a hyphenated part (`Singer-Songwriter`), which has no space to break at and otherwise overruns into Decade.
   - **A set's closing divider is hidden** (`.set-block > hr:last-child`). The next section always starts a fresh page, so it separated nothing, and on a full page it was the one thing that spilled, leaving a blank page behind (Danny's again, after a revision).
+  - **A set page's heading has no top margin** (`.set-block > h2:first-child`) — it always sits at the top of a fresh sheet, so the margin was dead space. That line let Danny's Set 2 keep its emergency cut on *Rock This Town* instead of moving the cut to save room, which the rules don't allow.
   - **Table rows use a 1.3 line height**, tighter than the body's 1.45. Most rows wrap to two or three lines, so line height multiplies down the table: at 1.45, the 17-song second set of the 2026-10-24 Danny's gig spilled its closer onto a page of its own.
 - **Duration summary**: Music time, transitions, breaks, grand total
 - **Stats, at the foot of the first page**: two lines under the constraints table, from `render_stats_lines()` in `build_setlist.py`:
@@ -512,7 +513,10 @@ All "who's missing" and event-detail info lives here — do not restate it in th
   - **`(Target: M:SS)` is load-bearing.** `parse_md()` reads the gig's target back out of it on the next revision.
   - **`build_setlist.py` writes a placeholder** (`STATS_PLACEHOLDER`) where the stats go, since the header is written before the sets are counted, and swaps it in at the end. Its stdout is the finished document, printed once, so the placeholder never reaches it.
   - **They count against the first-page budget** ([first page is one page](#first-page-is-one-page)). On the 13-row Danny's constraints table they fit with room to spare; re-check after adding constraint rows.
-- **Request list, the last page**: `## REQUEST LIST`, from `render_request_list_lines()` — a flat, alphabetical list of every song the band could play on request: gig-ready, not archived, not on tonight's setlist, and in season for the gig date. One line each, `**Title** — Artist`, with a "The" band written the way it's said (`The Black Pumas`, not the database's `Black Pumas, The`). It replaced the GIG SUMMARY page, whose stats moved to the first page and whose repertoire table (with its In Progress and Archived groups) was dropped.
+- **Request list, the last page**: `## REQUEST LIST`, from `render_request_list_lines()` — one flat table of every song the band could play on request: gig-ready, not archived, not on tonight's setlist, in season for the gig date, and playable with tonight's lineup (`cut_without()`). Alphabetical, numbered 1…N in the `#` column.
+  - **Columns** (`REQUEST_TABLE_COLUMNS`): `#`, `Title`, `Artist`, `Key`, `BPM`, `Length`, `Intro`, `Rec` — just what it takes to start a song on the spot, plus `Rec`, a `YT` link to the song's `youtube_url` (blank when there's none). Genre, decade, vocals, energy and dance were dropped from this page on request; they're on the set tables. A "The" band is written the way it's said (`The Black Pumas`, not the database's `Black Pumas, The`).
+  - **Compact by design**: `render_pdf.py` classes it `request-table` (not `song-table` — `tag_song_tables()` tells them apart by the `Rec` header) and sets it at 9pt with fixed widths, so ~20 songs fit on one page with room to spare.
+  - It replaced the GIG SUMMARY page, whose stats moved to the first page and whose repertoire table (with its In Progress and Archived groups) was dropped.
 
   Every `apply_substitution.py` run fully regenerates the stats and the request list from the final scheduled songs, so they're never stale after a swap/remove/add, unlike the acoustic breaks (which that script leaves untouched).
 - **Floor Sheet**: a single large-type page, `## FLOOR SHEET`, built by `render_floor_sheet_lines()` in `build_setlist.py` and placed after the last set (and after `## ENCORES`, if any) but before `## REQUEST LIST`. It's the page the band tears off and tapes to the stage floor, so it's designed for one thing — being read at a glance from standing height:
@@ -531,7 +535,7 @@ All "who's missing" and event-detail info lives here — do not restate it in th
     - **Abbreviating is a band-recognition call.** A short form that nobody parses at a glance is worse than a wrapped line. Ask before shortening a printed title.
 
   <a id="form-notes"></a>
-  - **Form notes — an optional fourth tier.** `songs_metadata.csv`'s `form_notes` column holds a song's structure in shorthand, printed on the floor sheet only, as a small grey line with a thin left rule under the intro cue. It stays blank for most songs. Current entries: *Don't Stop* and *Keep Your Hands to Yourself*.
+  - **Form notes — an optional fourth tier.** `songs_metadata.csv`'s `form_notes` column holds a song's structure in shorthand, printed on the floor sheet only, as a small grey line with a thin left rule under the intro cue. It stays blank for most songs. Current entries: *Don't Stop*, *Hook*, *Keep Your Hands to Yourself* and *Rock This Town*.
     - **Shorthand**: `V` / `C` for verse and chorus, a solo tagged with who plays it (`Gtr solo (M)`, `Sax (J)`, `Gtr solo (JJ)`), `·` between sections, and plain words for the one-off moments (`C (stop)`, `Oohs ×3`, `Last line slows`). Keep it to about two lines of a half-page column; it's a reminder of the road map, not a chart.
     - **Song-level, so it lives in the CSV, not the setlist `.md`.** A song's form doesn't change gig to gig — unlike a `[Vamp]` intro tag — so it's entered once and prints wherever the song is scheduled. `render_floor_sheet_lines()` reads it through a `form_notes` resolver, same as `display_title`; `apply_substitution.py` passes one that reads the database, because its rows are parsed from the printed table.
     - **It can never cost the page.** `render_pdf.py`'s `fit_floor_sheet_forms()` prints the floor sheet on its own, with and without its form lines; if the lines are what push it past one page, they're stripped from the PDF and a warning is printed. The `.md` keeps them, so they come back the moment the gig has room. Verified on the 37-song Empire sheet with a form line on every song: the lines drop and the PDF stays at 6 pages. The check only runs when a form line exists, so a gig without one pays nothing.
@@ -584,6 +588,35 @@ Segue groups (songs performed with no gap between them) are defined by the `orde
   | **Peg** → **Second Chance** | `Alex counts us in` | `SEGUE (Cmaj7 to Cm) Jon` |
   | **Funkytown** → **Miss You** → **Reeling in the Years** → **Don't Stop** | `Jon starts` | `SEGUE Jon` → `SEGUE (E7 Resolve) JJ starts` → `SEGUE Piano` |
 - **Never invent or infer segue transitions** — only use what is explicitly in `intro_notes`.
+
+## Setlist Rules (check_setlist.py)
+
+Every finished setlist must satisfy these rules. The solver applies most of them while it builds, but setlists are then edited by hand and by `apply_substitution.py`, and before this check existed nothing re-verified the result — which is how Danny's ended up with both emergency cuts at #4 (one from a hand re-order, one moved to save page space). `scripts/check_setlist.py` reads the printed `.md` plus `songs_metadata.csv` and reports every break:
+
+```bash
+python3 scripts/check_setlist.py "setlists/<gig>/<gig>.md"
+```
+
+`build_setlist.py` and `apply_substitution.py` run it on every setlist they write and print the result (`✅ Rule check: no issues`, or the list). It never blocks a write — the band can knowingly override a rule, and the printout is how they find out they have. **Fix every ERROR before a setlist goes to the band; a WARNING is a deliberate override or nothing.**
+
+| Rule | Severity | What it checks |
+| :--- | :--- | :--- |
+| `emergency-cut` | ERROR | Each main set has at least one cut (unless the header says `- **Emergency Cut:** None for this gig`); every cut is in the **back half of its set and never the closer** (`cut_window()`), and not a segue-chain song. A second cut is fine — Robert's had two. |
+| `segue-order` | ERROR | Chain members in the same set appear in `order_rules` order. |
+| `segue-cue` | ERROR | A song printing a `SEGUE…` cue has its chain predecessor directly before it. When the predecessor is cut, de-segue the cue (`Jon starts (no segue)`). |
+| `duplicate` / `unknown-song` | ERROR | Every scheduled title is in the database, once. |
+| `archived` | ERROR | Nothing archived is scheduled. |
+| `seasonal` | ERROR | Seasonal songs only in season for the gig date (see Seasonal Column). |
+| `absent-member` | ERROR | Nothing whose `substitution_notes` names a missing member and says "Cut song" (`cut_without()` in `build_setlist.py` — the builder, `apply_substitution.py`, the request list and this check all use it). It used to match only notes starting "If Martin is out:", which missed *Ventura Highway*'s "Requires Martin, David AND JJ … Cut song if any of them is out". |
+| `coverage` | ERROR | **The setlist and the request list together are exactly the active repertoire** — every gig-ready, non-archived, in-season song playable with tonight's lineup is on one or the other, none is on both, and nothing inactive is on the request list. Only checked on setlists with a REQUEST LIST page. |
+| `vocal-run` | WARNING | No lead vocalist more than 3 in a row (overridable: a present vocalist's only lead outranks the streak rule). |
+| `vocal-health` | WARNING | At least 2 songs between two of Lauren's taxing songs. |
+| `gig-ready` | WARNING | A scheduled song that isn't gig-ready (allowed with `--include-not-ready`). |
+
+- **The cut window is the back half, not the closer.** `tag_emergency_cuts()` searches a narrower window for its own pick (it also skips the second-to-last song, so the cut usually lands a little earlier), then tries the second-to-last song before ever falling back to a segue-chain song. The band hand-picks second-to-last cuts routinely (*Respect* at Can Bar and Empire), so the rule allows it.
+- **Moving a cut to fix a page break is not allowed.** Find the space another way.
+- **`test_setlist.py`'s `test_rules()`** runs the check on fresh solver output, on every committed setlist in the current format (one with a REQUEST LIST), and on broken copies to prove each main rule is actually caught. Setlists from before the check existed are history: three of them break rules (Local Bar & Grill scheduled *Ventura Highway* with Martin out; Bear Cave Lake printed *Hey Jealousy*'s SEGUE cue without *Brown Eyed Girl*), and they're left as played.
+- **Writing the check turned up two solver bugs**, both fixed: the automatic encore filler could pick a lone segue-chain song (*Reeling in the Years* in the encores, still cued `SEGUE`), and the cut picker fell back to a chain song when the second-to-last song was a valid pick.
 
 ## Setlist Programming Strategies
 

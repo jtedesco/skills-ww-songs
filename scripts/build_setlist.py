@@ -50,6 +50,19 @@ def format_transition_buffer_label():
     return f"{TRANSITION_BUFFER_SECONDS}s/song"
 
 
+def cut_without(song, martin_out=False, david_out=False):
+    """True if `song` can't be played with this lineup, per its
+    substitution_notes. Any note that names a missing member and says "Cut
+    song" counts — not only the "If David is out: Cut song" form. Ventura
+    Highway's note is "Requires Martin, David AND JJ ... Cut song if any of
+    them is out", which the narrower startswith() test every caller used to
+    have missed, so it was scheduled at Local Bar & Grill with Martin out."""
+    notes = song.get("substitution_notes", "") or ""
+    if "cut song" not in notes.lower():
+        return False
+    return (martin_out and "Martin" in notes) or (david_out and "David" in notes)
+
+
 def parse_covering_vocalist(notes, default):
     """Extract the per-song covering lead vocalist from substitution_notes.
 
@@ -420,24 +433,38 @@ def is_stats_line(line):
     return line.startswith(STATS_TOTALS_PREFIX) or line.startswith(STATS_VOCALS_PREFIX)
 
 
-def render_request_list_lines(all_songs, scheduled_titles, gig_date=None):
-    """The last page: a flat list of every song the band could play on
-    request — gig-ready, not archived, not on tonight's setlist, and in
-    season for the gig date (see SEASON_MONTHS). Sorted by title.
-    render_pdf.py lays it out in two columns."""
+def render_request_list_lines(all_songs, scheduled_titles, gig_date=None, martin_out=False, david_out=False):
+    """The last page: one flat table of every song the band could play on
+    request — gig-ready, not archived, not on tonight's setlist, in season
+    for the gig date (SEASON_MONTHS), and playable with tonight's lineup
+    (cut_without). Alphabetical, numbered 1..N.
+
+    Columns are REQUEST_TABLE_COLUMNS: only what it takes to start a song on
+    the spot (key, BPM, length, intro cue) plus Rec, a "YT" link to the
+    song's youtube_url. render_pdf.py sets it compact."""
     scheduled_lower = {t.lower() for t in scheduled_titles}
     songs = sorted(
         (s for s in all_songs
          if s.get("gig_ready") == "Yes" and s.get("archived") != "Yes"
-         and s["title"].lower() not in scheduled_lower and in_season(s, gig_date)),
+         and s["title"].lower() not in scheduled_lower and in_season(s, gig_date)
+         and not cut_without(s, martin_out, david_out)),
         key=lambda s: s["title"].lower())
-    lines = [REQUEST_LIST_HEADING, "",
-             f"*Gig-ready songs not on tonight's setlist — {len(songs)} to take requests from.*", ""]
+
     # The database files "The" bands as "Black Pumas, The" so they sort by
-    # name; a list read out on stage wants the name the way people say it.
+    # name; a page read on stage wants the name the way people say it.
     def spoken(artist):
         return "The " + artist[:-5] if artist.endswith(", The") else artist
-    lines.extend(f"- **{s['title']}** — {spoken(s['artist'])}" for s in songs)
+
+    lines = [REQUEST_LIST_HEADING, "",
+             f"*Gig-ready songs not on tonight's setlist — {len(songs)} to take requests from.*", "",
+             "| " + " | ".join(REQUEST_TABLE_COLUMNS) + " |",
+             "|" + "|".join(["---"] * len(REQUEST_TABLE_COLUMNS)) + "|"]
+    for n, song in enumerate(songs, 1):
+        url = (song.get("youtube_url") or "").strip()
+        bpm = "" if song.get("bpm") in (None, "") else song["bpm"]
+        cells = [str(n), f"**{song['title']}**", spoken(song["artist"]), song.get("key", ""), str(bpm),
+                 song.get("length", ""), song.get("intro_notes", ""), f"[YT]({url})" if url else ""]
+        lines.append("| " + " | ".join(cells) + " |")
     if not songs:
         lines.append("*Everything gig-ready is already on the setlist.*")
     return lines
@@ -727,6 +754,9 @@ def genre_subgenre_display_string(song):
 # regenerated tables render from these, so the header can't drift out of
 # sync with format_md_row()'s cells.
 TABLE_COLUMNS = ["#", "Title", "Artist", "Genre", "Decade", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Dance", "Intro"]
+# The request list (last page): just what's needed to start a song on the
+# spot, plus Rec, a "YT" link to the recording — see render_request_list_lines().
+REQUEST_TABLE_COLUMNS = ["#", "Title", "Artist", "Key", "BPM", "Length", "Intro", "Rec"]
 TABLE_HEADER = "| " + " | ".join(TABLE_COLUMNS) + " |"
 TABLE_DIVIDER = "|" + "|".join(["---"] * len(TABLE_COLUMNS)) + "|"
 
@@ -820,12 +850,7 @@ def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, nu
         
         if len(available_acoustic) < num_breaks * 2:
             def _cut_for_lineup(s):
-                notes = s.get("substitution_notes", "")
-                if martin_out and notes.startswith("If Martin is out:") and "Cut song" in notes:
-                    return True
-                if david_out and notes.startswith("If David is out:") and "Cut song" in notes:
-                    return True
-                return False
+                return cut_without(s, martin_out, david_out)
             available_acoustic = [
                 s for s in available_songs
                 if s["arrangement"] in ["Acoustic", "Either"]
@@ -858,9 +883,13 @@ def simulate_all_scheduled(sets_songs, available_songs, num_sets, breaks_opt, nu
                 encores.append(match)
                 remaining_songs.remove(match)
 
-        while len(encores) < 2 and remaining_songs:
-            remaining_songs.sort(key=lambda s: s["bpm"] or 0, reverse=True)
-            encores.append(remaining_songs.pop(0))
+        # Filler skips segue-chain songs: an encore is two standalone songs,
+        # and a chain member pulled in alone (Reeling in the Years without
+        # Miss You) printed a SEGUE cue with nothing to segue from.
+        filler = [s for s in remaining_songs if s.get("order_rules", "None") in ("", "None")]
+        while len(encores) < 2 and filler:
+            filler.sort(key=lambda s: s["bpm"] or 0, reverse=True)
+            encores.append(filler.pop(0))
 
     return [s for set_s in sets_songs for s in set_s] + encores
 
@@ -1007,10 +1036,9 @@ def main():
         # hardcoded title list.
         if args.martin_out:
             notes = song.get("substitution_notes", "")
-            if notes.startswith("If Martin is out:") and "Cut song" in notes:
-                # Dropped from the pool entirely. It isn't named anywhere in
-                # the report: the Absent-Member row says who's out, and the
-                # song surfaces in GIG SUMMARY's Not Selected column.
+            if cut_without(song, martin_out=True):
+                # Dropped from the pool entirely — and so from the request
+                # list too, since it can't be played tonight.
                 continue
             if song["lead_vocals"] == "Martin":
                 song["lead_vocals"] = parse_covering_vocalist(notes, "David")
@@ -1021,7 +1049,7 @@ def main():
         # David Out rules
         if args.david_out:
             notes = song.get("substitution_notes", "")
-            if notes.startswith("If David is out:") and "Cut song" in notes:
+            if cut_without(song, david_out=True):
                 continue
             if song["lead_vocals"] == "David":
                 song["lead_vocals"] = parse_covering_vocalist(notes, "Lauren")
@@ -1085,12 +1113,7 @@ def main():
     pre_reserved_break_titles = set()
     if args.breaks == "acoustic" and num_breaks > 0:
         def _is_hard_cut(s):
-            notes = s.get("substitution_notes", "")
-            if args.martin_out and "If Martin is out:" in notes and "Cut song" in notes:
-                return True
-            if args.david_out and "If David is out:" in notes and "Cut song" in notes:
-                return True
-            return False
+            return cut_without(s, args.martin_out, args.david_out)
 
         candidate_acoustics = [
             s for s in acoustic_pool
@@ -1475,12 +1498,7 @@ def main():
         # that say "Martin-out OK" or give alternative arrangements are fine.
         if len(available_acoustic) < num_breaks * 2:
             def _cut_for_lineup(s):
-                notes = s.get("substitution_notes", "")
-                if args.martin_out and "If Martin is out:" in notes and "Cut song" in notes:
-                    return True
-                if args.david_out and "If David is out:" in notes and "Cut song" in notes:
-                    return True
-                return False
+                return cut_without(s, args.martin_out, args.david_out)
             available_acoustic = [
                 s for s in all_songs
                 if s["arrangement"] in ["Acoustic", "Either"]
@@ -1527,9 +1545,13 @@ def main():
                 encores.append(match)
                 remaining_songs.remove(match)
 
-        while len(encores) < 2 and remaining_songs:
-            remaining_songs.sort(key=lambda s: s["bpm"] or 0, reverse=True)
-            encores.append(remaining_songs.pop(0))
+        # Filler skips segue-chain songs: an encore is two standalone songs,
+        # and a chain member pulled in alone (Reeling in the Years without
+        # Miss You) printed a SEGUE cue with nothing to segue from.
+        filler = [s for s in remaining_songs if s.get("order_rules", "None") in ("", "None")]
+        while len(encores) < 2 and filler:
+            filler.sort(key=lambda s: s["bpm"] or 0, reverse=True)
+            encores.append(filler.pop(0))
 
     sets_songs = tag_emergency_cuts(sets_songs, segue_raw_groups)
 
@@ -1777,7 +1799,8 @@ def main():
         md(line)
 
     md()
-    for line in render_request_list_lines(all_songs, scheduled_titles, args.date):
+    for line in render_request_list_lines(all_songs, scheduled_titles, args.date,
+                                          args.martin_out, args.david_out):
         md(line)
 
     # ---------------------------------------------------------------
@@ -1794,6 +1817,13 @@ def main():
         f.write(md_content)
 
     print(f"\n✅ Saved markdown  → {os.path.abspath(md_path)}", file=sys.stderr)
+
+    # Check the finished setlist against the band's rules (check_setlist.py)
+    # and say what's wrong. Never blocks the write: the band can knowingly
+    # override a rule, and the output is how they find out they have.
+    # Imported here, not at the top: check_setlist imports this module (via apply_substitution).
+    import check_setlist
+    check_setlist.report(md_path)
 
     pdf_path = None
     try:
@@ -1854,6 +1884,15 @@ def tag_emergency_cuts(sets_songs, segue_groups):
                         eligible_idx = idx
                         break
                         
+        # Pass 2c: the second-to-last song, if it isn't in a segue chain. The
+        # passes above skip it so the cut usually lands a little earlier, but
+        # it's inside the cut window (check_setlist.cut_window) and is always
+        # better than cutting into a segue chain.
+        if eligible_idx is None and len(set_songs) >= 3:
+            idx = len(set_songs) - 2
+            if set_songs[idx]["title"].lower() not in segue_titles:
+                eligible_idx = idx
+
         # Pass 3a: Relax segue constraint & preferred emergency cut
         if eligible_idx is None:
             for idx in range(start_search, end_search - 1, -1):

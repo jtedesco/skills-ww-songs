@@ -35,7 +35,7 @@
         },
         {
           "id": "emergency_cuts_placement",
-          "assertion": "Verify that each set has exactly one emergency cut, and it is located in the second half of the set (excluding openers/closers and segues).",
+          "assertion": "Verify that each set has an emergency cut, and every cut is in the back half of its set, never the set's closer, and never part of a segue chain (check_setlist.py's emergency-cut rule).",
           "type": "emergency_cut"
         }
       ]
@@ -194,6 +194,143 @@
           "id": "vocalist_inclusion_supersedes_streak",
           "assertion": "Verify that even if the vocalist inclusion constraint causes a 3-in-a-row streak for one vocalist, the setlist is still accepted as valid (vocalist inclusion takes priority).",
           "type": "constraint_priority"
+        }
+      ]
+    },
+    {
+      "name": "Scenario 9: Setlist rules and repertoire coverage (October two-set gig)",
+      "input_parameters": {
+        "duration": 2.9167,
+        "sets": 2,
+        "gig_type": "bar",
+        "breaks": "silent",
+        "no_encore": true,
+        "date": "2026-10-24",
+        "location": "Rule Check Test",
+        "martin_out": false,
+        "david_out": false,
+        "include_not_ready": false
+      },
+      "validation_criteria": [
+        {
+          "id": "rule_check_clean",
+          "assertion": "Run scripts/check_setlist.py on the generated .md and verify it reports no ERRORs (WARNINGs are allowed: vocal-run, vocal-health, gig-ready).",
+          "type": "rule_check"
+        },
+        {
+          "id": "emergency_cut_window",
+          "assertion": "Verify every set has at least one emergency cut, each in the back half of the set, never the closer, and not a segue-chain song.",
+          "type": "emergency_cut"
+        },
+        {
+          "id": "segue_cues_valid",
+          "assertion": "Verify every song printing a 'SEGUE' intro cue is directly preceded by its chain predecessor, and chain members in a set appear in order_rules order.",
+          "type": "segue_ordering"
+        },
+        {
+          "id": "setlist_plus_requests_cover_active_repertoire",
+          "assertion": "Verify the scheduled songs (sets, breaks, encores) plus the REQUEST LIST table are exactly the active repertoire — every gig-ready, non-archived, in-season song playable with tonight's lineup appears on exactly one of them, and nothing else appears on the request list.",
+          "type": "coverage"
+        },
+        {
+          "id": "request_list_table",
+          "assertion": "Verify the last page is '## REQUEST LIST': one flat table, alphabetical by title, numbered 1..N in the '#' column, with columns # | Title | Artist | Key | BPM | Length | Intro | Rec, where Rec holds a '[YT](...)' link to the song's youtube_url.",
+          "type": "output_format"
+        },
+        {
+          "id": "stats_on_first_page",
+          "assertion": "Verify the '**Totals:**' and '**Lead vocals:**' lines sit above '## SET 1' (the foot of the first page), and that no '## GIG SUMMARY' section exists.",
+          "type": "output_format"
+        },
+        {
+          "id": "halloween_song_in_season",
+          "assertion": "Verify Thriller (seasonal: Halloween) is eligible in October: it appears on either the setlist or the request list.",
+          "type": "seasonal"
+        }
+      ]
+    },
+    {
+      "name": "Scenario 10: Seasonal song out of season",
+      "input_parameters": {
+        "duration": 2.0,
+        "gig_type": "bar",
+        "breaks": "none",
+        "date": "2026-11-07",
+        "location": "Season Test",
+        "martin_out": false,
+        "david_out": false,
+        "include_not_ready": false
+      },
+      "validation_criteria": [
+        {
+          "id": "halloween_song_excluded",
+          "assertion": "Verify Thriller (seasonal: Halloween) is on neither the setlist nor the request list for a November gig, and that apply_substitution.py refuses '--swap <song> Thriller' on it with an out-of-season error.",
+          "type": "seasonal"
+        },
+        {
+          "id": "rule_check_clean",
+          "assertion": "Run scripts/check_setlist.py on the generated .md and verify it reports no ERRORs.",
+          "type": "rule_check"
+        }
+      ]
+    },
+    {
+      "name": "Scenario 11: Rules hold through a hand revision",
+      "input_parameters": {
+        "base": "any committed setlist with a REQUEST LIST page",
+        "tool": "apply_substitution.py",
+        "operations": "--swap one song, --remove one song, and move an emergency cut by hand"
+      },
+      "validation_criteria": [
+        {
+          "id": "rule_check_printed",
+          "assertion": "Verify apply_substitution.py prints a 'Rule check' result after writing the .md.",
+          "type": "rule_check"
+        },
+        {
+          "id": "coverage_after_revision",
+          "assertion": "Verify the removed song moves to the request list and the swapped-in song leaves it, so setlist + request list still cover the active repertoire exactly.",
+          "type": "coverage"
+        },
+        {
+          "id": "misplaced_cut_flagged",
+          "assertion": "Verify that moving an emergency cut into the first half of a set (or onto the closer) is reported as an emergency-cut ERROR.",
+          "type": "emergency_cut"
+        },
+        {
+          "id": "orphaned_segue_flagged",
+          "assertion": "Verify that removing a segue source while its destination still prints a 'SEGUE' cue is reported as a segue-cue ERROR.",
+          "type": "segue_ordering"
+        }
+      ]
+    },
+    {
+      "name": "Scenario 12: Request list respects the lineup",
+      "input_parameters": {
+        "duration": 2.0,
+        "gig_type": "bar",
+        "breaks": "none",
+        "martin_out": true,
+        "david_out": false,
+        "include_not_ready": false,
+        "date": "2099-02-01",
+        "location": "Lineup Test"
+      },
+      "validation_criteria": [
+        {
+          "id": "cut_song_off_both_pages",
+          "assertion": "Verify Ventura Highway (substitution_notes: 'Requires Martin, David AND JJ ... Cut song if any of them is out') is on neither the setlist nor the request list when Martin is out.",
+          "type": "member_substitution"
+        },
+        {
+          "id": "cut_song_off_request_list",
+          "assertion": "Verify no song that substitution_notes says to cut without Martin appears on the request list when Martin is out.",
+          "type": "member_substitution"
+        },
+        {
+          "id": "rule_check_clean",
+          "assertion": "Run scripts/check_setlist.py on the generated .md and verify it reports no ERRORs.",
+          "type": "rule_check"
         }
       ]
     }

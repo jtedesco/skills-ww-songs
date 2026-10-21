@@ -48,6 +48,9 @@ CSS = """
      section always starts a fresh page — and when the page is full it is
      the one thing that spills, leaving a blank page behind. */
   .set-block > hr:last-child { display: none; }
+  /* Each set-block starts a fresh page, so its heading's top margin is dead
+     space at the top of the sheet — a line the set table can use instead. */
+  .set-block > h2:first-child { margin-top: 0; }
   h3 { font-size: 11.5pt; margin: 10px 0 4px; }
   ul { margin: 4px 0 8px; padding-left: 20px; }
   li { margin: 2px 0; }
@@ -164,14 +167,23 @@ CSS = """
      one more song. A wide collapsed border wins over the neighbouring 1px
      rules, so this opens a real break in the table. */
   .repertoire-table tr.group-row:not(:first-child) td { border-top: 12px solid #fff; }
-  /* REQUEST LIST — the last page: every gig-ready song not on the setlist,
-     flat and alphabetical, in two columns so the band can scan it when
-     someone shouts a request. Larger than table text; it's read on stage. */
-  .request-list { column-count: 2; column-gap: 0.4in; }
-  .request-list h2, .request-list > p { column-span: all; }
+  /* REQUEST LIST — the last page: one flat table of every song the band
+     could play on request — #, title, artist, key, BPM, length, intro cue,
+     and Rec (a "YT" link to the recording). Compact, so ~20 songs fit on one
+     page. Fixed widths; the indices track build_setlist.py's
+     REQUEST_TABLE_COLUMNS. */
   .request-list h2 { margin-top: 0; }
-  .request-list ul { list-style: none; padding-left: 0; margin: 0; }
-  .request-list li { font-size: 11.5pt; line-height: 1.3; margin: 0 0 4px; break-inside: avoid; }
+  .request-table { table-layout: fixed; font-size: 9pt; }
+  .request-table th, .request-table td { padding: 2px 4px; line-height: 1.25; }
+  .request-table th:nth-child(1), .request-table td:nth-child(1) { width: 4%; }
+  .request-table th:nth-child(2), .request-table td:nth-child(2) { width: 22%; }
+  .request-table th:nth-child(3), .request-table td:nth-child(3) { width: 18%; }
+  .request-table th:nth-child(4), .request-table td:nth-child(4) { width: 6%; }
+  .request-table th:nth-child(5), .request-table td:nth-child(5) { width: 6%; }
+  .request-table th:nth-child(6), .request-table td:nth-child(6) { width: 7.5%; }
+  .request-table th:nth-child(7), .request-table td:nth-child(7) { width: 30.5%; }
+  .request-table th:nth-child(8), .request-table td:nth-child(8) { width: 6%; text-align: center; }
+  .request-table a { color: #0b57d0; text-decoration: none; font-weight: 600; }
   .request-list li strong { font-weight: 700; }
   .callout { border-left: 4px solid #d4a017; background: #fff8e6; padding: 7px 12px; margin: 8px 0; border-radius: 3px; }
   .callout-title { font-weight: 700; margin-bottom: 3px; }
@@ -266,12 +278,16 @@ def tag_song_tables(html):
     per-column width rules in CSS can target them without also hitting the
     constraints / vocalist-breakdown / not-selected tables, which have
     completely different column counts and meanings. Identified by their
-    first header cell being '#', which only the song tables use."""
-    return re.sub(
-        r"<table>(\s*<thead>\s*<tr>\s*<th[^>]*>#</th>)",
-        r'<table class="song-table">\1',
-        html,
-    )
+    first header cell being '#'. The request list (last page) shares that
+    and the same leading columns, plus a Rec column — it gets its own class,
+    request-table, and its own widths."""
+    def do_table(m):
+        table = m.group(0)
+        if not re.match(r"<table>\s*<thead>\s*<tr>\s*<th[^>]*>#</th>", table):
+            return table
+        cls = "request-table" if re.search(r"<th[^>]*>Rec</th>", table) else "song-table"
+        return table.replace("<table>", f'<table class="{cls}">', 1)
+    return re.sub(r"<table>.*?</table>", do_table, html, flags=re.S)
 
 
 def style_repertoire_table(html):
