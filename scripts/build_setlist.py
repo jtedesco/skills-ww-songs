@@ -440,7 +440,7 @@ def render_request_list_lines(all_songs, scheduled_titles, gig_date=None, martin
     (cut_without). Alphabetical, numbered 1..N.
 
     Columns are REQUEST_TABLE_COLUMNS: only what it takes to start a song on
-    the spot (key, BPM, length, intro cue) plus Rec, a "YT" link to the
+    the spot (key, BPM, intro cue) plus Rec, a "YT" link to the
     song's youtube_url. render_pdf.py sets it compact."""
     scheduled_lower = {t.lower() for t in scheduled_titles}
     songs = sorted(
@@ -463,7 +463,7 @@ def render_request_list_lines(all_songs, scheduled_titles, gig_date=None, martin
         url = (song.get("youtube_url") or "").strip()
         bpm = "" if song.get("bpm") in (None, "") else song["bpm"]
         cells = [str(n), f"**{song['title']}**", spoken(song["artist"]), song.get("key", ""), str(bpm),
-                 song.get("length", ""), song.get("intro_notes", ""), f"[YT]({url})" if url else ""]
+                 song.get("intro_notes", ""), f"[YT]({url})" if url else ""]
         lines.append("| " + " | ".join(cells) + " |")
     if not songs:
         lines.append("*Everything gig-ready is already on the setlist.*")
@@ -756,7 +756,7 @@ def genre_subgenre_display_string(song):
 TABLE_COLUMNS = ["#", "Title", "Artist", "Genre", "Decade", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Dance", "Intro"]
 # The request list (last page): just what's needed to start a song on the
 # spot, plus Rec, a "YT" link to the recording — see render_request_list_lines().
-REQUEST_TABLE_COLUMNS = ["#", "Title", "Artist", "Key", "BPM", "Length", "Intro", "Rec"]
+REQUEST_TABLE_COLUMNS = ["#", "Title", "Artist", "Key", "BPM", "Intro", "Rec"]
 TABLE_HEADER = "| " + " | ".join(TABLE_COLUMNS) + " |"
 TABLE_DIVIDER = "|" + "|".join(["---"] * len(TABLE_COLUMNS)) + "|"
 

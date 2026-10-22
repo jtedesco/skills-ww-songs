@@ -234,7 +234,7 @@
         },
         {
           "id": "request_list_table",
-          "assertion": "Verify the last page is '## REQUEST LIST': one flat table, alphabetical by title, numbered 1..N in the '#' column, with columns # | Title | Artist | Key | BPM | Length | Intro | Rec, where Rec holds a '[YT](...)' link to the song's youtube_url.",
+          "assertion": "Verify the last page is '## REQUEST LIST': one flat table, alphabetical by title, numbered 1..N in the '#' column, with columns # | Title | Artist | Key | BPM | Intro | Rec, where Rec holds a '[YT](...)' link to the song's youtube_url.",
           "type": "output_format"
         },
         {

@@ -168,21 +168,20 @@ CSS = """
      rules, so this opens a real break in the table. */
   .repertoire-table tr.group-row:not(:first-child) td { border-top: 12px solid #fff; }
   /* REQUEST LIST — the last page: one flat table of every song the band
-     could play on request — #, title, artist, key, BPM, length, intro cue,
-     and Rec (a "YT" link to the recording). Compact, so ~20 songs fit on one
+     could play on request — #, title, artist, key, BPM, intro cue, and
+     Rec (a "YT" link to the recording). Compact, so ~20 songs fit on one
      page. Fixed widths; the indices track build_setlist.py's
      REQUEST_TABLE_COLUMNS. */
   .request-list h2 { margin-top: 0; }
   .request-table { table-layout: fixed; font-size: 9pt; }
   .request-table th, .request-table td { padding: 2px 4px; line-height: 1.25; }
   .request-table th:nth-child(1), .request-table td:nth-child(1) { width: 4%; }
-  .request-table th:nth-child(2), .request-table td:nth-child(2) { width: 22%; }
-  .request-table th:nth-child(3), .request-table td:nth-child(3) { width: 18%; }
-  .request-table th:nth-child(4), .request-table td:nth-child(4) { width: 6%; }
-  .request-table th:nth-child(5), .request-table td:nth-child(5) { width: 6%; }
-  .request-table th:nth-child(6), .request-table td:nth-child(6) { width: 7.5%; }
-  .request-table th:nth-child(7), .request-table td:nth-child(7) { width: 30.5%; }
-  .request-table th:nth-child(8), .request-table td:nth-child(8) { width: 6%; text-align: center; }
+  .request-table th:nth-child(2), .request-table td:nth-child(2) { width: 24%; }
+  .request-table th:nth-child(3), .request-table td:nth-child(3) { width: 20%; }
+  .request-table th:nth-child(4), .request-table td:nth-child(4) { width: 7%; }
+  .request-table th:nth-child(5), .request-table td:nth-child(5) { width: 7%; }
+  .request-table th:nth-child(6), .request-table td:nth-child(6) { width: 31%; }
+  .request-table th:nth-child(7), .request-table td:nth-child(7) { width: 7%; text-align: center; }
   .request-table a { color: #0b57d0; text-decoration: none; font-weight: 600; }
   .request-list li strong { font-weight: 700; }
   .callout { border-left: 4px solid #d4a017; background: #fff8e6; padding: 7px 12px; margin: 8px 0; border-radius: 3px; }
