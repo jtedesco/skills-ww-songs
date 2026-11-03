@@ -26,7 +26,7 @@ import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SCRIPT_DIR)
-from build_setlist import get_segue_groups, in_season, cut_without, REQUEST_LIST_HEADING
+from build_setlist import get_segue_groups, in_season, cut_without, cut_window, REQUEST_LIST_HEADING
 from apply_substitution import (
     parse_md, extract_break_songs, normalize_title, load_song_db,
     has_no_cut_bullet, parse_gig_date, parse_missing_names,
@@ -39,16 +39,6 @@ MIN_TAXING_GAP = 2         # songs between two of Lauren's taxing ones
 # A request-list song: a table row ('| 3 | **Brandy** | ...'), or the older
 # numbered/bulleted list forms.
 REQUEST_ITEM_RE = re.compile(r"^\s*(?:\|\s*\d+\s*\||\d+\.|-)\s*\*\*(.+?)\*\*")
-
-
-def cut_window(n):
-    """0-based positions a set's emergency cut may occupy: the back half of
-    the set, never its closer — the cut is "one of the last songs", dropped
-    late when the night is running long. tag_emergency_cuts() searches a
-    narrower window for its own pick (it also skips the second-to-last), but
-    the band hand-picks the second-to-last song routinely (Respect at Can
-    Bar and Empire), so that's allowed here."""
-    return range(n // 2, n - 1)
 
 
 def read_request_list(md_path):

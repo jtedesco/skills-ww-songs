@@ -1155,7 +1155,8 @@ def main():
     
     # Segue group building
     segue_raw_groups = get_segue_groups(available_songs)
-    
+    segue_titles = {title.lower() for group in segue_raw_groups for title in group}
+
     used_in_segue = set()
     segue_items = []
     
@@ -1215,8 +1216,8 @@ def main():
             
     # Solver loop
     best_candidate = None
-    best_score = float('inf')
-    
+    best_rank = (True, float('inf'))
+
     max_consecutive_vocals = 3
     min_gravelly_separation = 2
     duration_tolerance = 180
@@ -1467,9 +1468,15 @@ def main():
             if not valid_setlist:
                 continue
                 
+            # Pacing can stack segue chains across a set's whole back half,
+            # leaving tag_emergency_cuts() only chain songs to pick from. Any
+            # candidate with a legal cut in every set beats one without, however
+            # the vocals score; one without is kept only as a last resort, so a
+            # pool that can't avoid it still gets a setlist (and a rule-check error).
             score = get_vocalist_score(all_songs_in_sets, target_vocal_pcts)
-            if score < best_score:
-                best_score = score
+            rank = (not all(has_cut_slot(s, segue_titles) for s in candidate_sets_songs), score)
+            if rank < best_rank:
+                best_rank = rank
                 best_candidate = (candidate_sets_songs, used_item_indices)
                 
         if best_candidate is not None:
@@ -1838,6 +1845,23 @@ def main():
     if pdf_path and (args.date or args.location):
         sync_pdf_to_drive(pdf_path)
 
+def cut_window(n):
+    """0-based positions a set's emergency cut may occupy: the back half of
+    the set, never its closer — the cut is "one of the last songs", dropped
+    late when the night is running long. tag_emergency_cuts() searches a
+    narrower window for its own pick (it also skips the second-to-last), but
+    the band hand-picks the second-to-last song routinely (Respect at Can
+    Bar and Empire), so that's allowed here."""
+    return range(n // 2, n - 1)
+
+
+def has_cut_slot(set_songs, segue_titles):
+    """True if the set's cut window holds at least one song outside a segue
+    chain. If it doesn't, tag_emergency_cuts() has no legal pick and no way
+    to make one: only the running order can fix it."""
+    return any(set_songs[i]["title"].lower() not in segue_titles for i in cut_window(len(set_songs)))
+
+
 def tag_emergency_cuts(sets_songs, segue_groups):
     segue_titles = {title.lower() for group in segue_groups for title in group}
     updated_sets = []
@@ -1886,7 +1910,7 @@ def tag_emergency_cuts(sets_songs, segue_groups):
                         
         # Pass 2c: the second-to-last song, if it isn't in a segue chain. The
         # passes above skip it so the cut usually lands a little earlier, but
-        # it's inside the cut window (check_setlist.cut_window) and is always
+        # it's inside the cut window (cut_window) and is always
         # better than cutting into a segue chain.
         if eligible_idx is None and len(set_songs) >= 3:
             idx = len(set_songs) - 2
