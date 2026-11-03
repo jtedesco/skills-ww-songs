@@ -109,9 +109,9 @@
 
 **<span class="starter">[JJ + Jon] </span>13. Lights** D · 103 — <em>Guitar + piano unison intro</em>
 
-**<span class="starter">[David] </span>14. Keep Your Hands to Yourself** A · 120 — <em>guitar intro, A riff</em> <span class="form">V · Gtr mini-solo (M) · V · Sax (J) · V · Gtr solo (JJ) · V again · Last line slows</span>
+**<span class="starter">[David] </span>14. Keep Your Hands** A · 120 — <em>guitar intro, A riff</em> <span class="form">V · Gtr mini-solo (M) · V · Sax (J) · V · Gtr solo (JJ) · V again · Last line slows</span>
 
-**<span class="starter">[Jon] </span>15. Hook [X]** A · 116 — <em>Sax intro</em> <span class="form">Sax intro · V · V · C · V · V · C · Sax · Gtr · Rap · C · Out</span>
+**<span class="starter">[Martin] </span>15. Hook [X]** A · 116 — <em>Sax intro</em> <span class="form">Sax intro · V · V · C · V · V · C · Sax · Gtr · Rap · C · Out</span>
 
 **<span class="starter">[Jon] </span>16. Kid Charlemagne** C7 · 116 — <em>Keys intro</em>
 
@@ -131,7 +131,7 @@
 
 **<span class="starter">[Jon] </span>5. Don't Stop** E · 119 — <em>SEGUE Piano</em> <span class="form">V C V C · Gtr solo (M) · V · C (stop) · C · Sax (J) · C · Oohs ×3 · “Don’t stop” a cappella</span>
 
-**<span class="starter">[Jon] </span>6. Brandy** E · 126 — <em>Keys intro</em><!--shade:Girls' Names-->
+**<span class="starter">[Martin] </span>6. Brandy** E · 126 — <em>Keys intro</em><!--shade:Girls' Names-->
 
 **<span class="starter">[Guitars] </span>7. American Girl** D · 114 — <em>Guitar hook intro</em><!--shade:Girls' Names-->
 
@@ -145,7 +145,7 @@
 
 **<span class="starter">[Jon] </span>12. Piano Man** C · 89 — <em>Keys intro</em>
 
-**<span class="starter">[David] </span>13. Ventura Highway** G · 125 — <em>3 guitars intro, counted off by David</em>
+**<span class="starter">[Guitars] </span>13. Ventura Highway** G · 125 — <em>3 guitars intro, counted off by David</em>
 
 **<span class="starter">[Alex] </span>14. Respect** C · 115 — <em>Alex counts us in, start together</em>
 
