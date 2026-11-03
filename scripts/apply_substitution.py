@@ -472,7 +472,7 @@ def check_no_duplicates(sections):
 
 def enrich_static_fields(sections, by_title):
     """Merge in the lineup-independent fields (opener/closer/preferred_emergency_cut,
-    start_energy/end_energy, danceable, genre, and the musicbrainz_genre /
+    start_energy/end_energy, youtube_url, genre, and the musicbrainz_genre /
     release_year that Subgenre and Decade derive from) that tag_emergency_cuts()
     and the row/tag formatters need — without touching lead_vocals/backup_vocals,
     which must stay whatever they already are (existing rows keep their already-applied lineup
@@ -495,7 +495,7 @@ def enrich_static_fields(sections, by_title):
             row["preferred_emergency_cut"] = csv_row.get("preferred_emergency_cut")
             row["start_energy"] = csv_row.get("start_energy", "")
             row["end_energy"] = csv_row.get("end_energy", "")
-            row["danceable"] = csv_row.get("danceable", "")
+            row["youtube_url"] = csv_row.get("youtube_url", "")
             row["genre"] = csv_row.get("genre", "")
             # Source columns for the derived Subgenre and Decade cells. Without
             # these a revision re-renders every preserved row with both

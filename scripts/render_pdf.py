@@ -57,8 +57,8 @@ CSS = """
   hr { border: none; border-top: 1px solid #ddd; margin: 8px 0; }
   table { border-collapse: collapse; width: 100%; margin: 6px 0 8px; font-size: 9pt; }
   th, td { border: 1px solid #ddd; padding: 2px 5px; text-align: left; vertical-align: top; }
-  /* Keep a set on as few printed pages as possible: the # and Dance columns
-     only ever hold a number and a ✓, so they get the minimum and Intro (the
+  /* Keep a set on as few printed pages as possible: the # and Rec columns
+     only ever hold a number and a "YT" link, so they get the minimum and Intro (the
      column that wraps) keeps the slack. Without this the wider table pushes
      each set onto another page and the band turns a page mid-set.
      Scoped to .song-table (see tag_song_tables) — applying these widths to
@@ -66,14 +66,14 @@ CSS = """
      wraps each constraint name into a tower.
 
      nth-child() is positional, so these indices track build_setlist.py's
-     TABLE_COLUMNS: # is 1, Genre is 4, Decade is 5, Dance is 11, Intro is 12.
+     TABLE_COLUMNS: # is 1, Genre is 4, Decade is 5, Rec is 11, Intro is 12.
      Insert or reorder a column there and these selectors have to move with
      it, or the widths land on the wrong columns. */
   /* Fixed layout with every column's share spelled out. Under auto layout
      the columns size to their content and Intro — the one column that is
      meant to wrap — gets whatever is left, which after Genre and Decade were
      added was a one-word strip. The shares below sum to 100%; the narrow
-     ones are sized to their header word ("Decade", "Length", "Dance"). */
+     ones are sized to their header word ("Decade", "Length"). */
   .song-table { table-layout: fixed; }
   /* Tighter than the body's 1.45: most rows wrap to two or three lines, so
      line height multiplies down the whole table. At 1.45 a 17-song set with
@@ -168,21 +168,21 @@ CSS = """
      rules, so this opens a real break in the table. */
   .repertoire-table tr.group-row:not(:first-child) td { border-top: 12px solid #fff; }
   /* REQUEST LIST — the last page: one flat table of every song the band
-     could play on request — #, title, artist, key, BPM, intro cue, and
-     Rec (a "YT" link to the recording). Compact, so ~20 songs fit on one
-     page. Fixed widths; the indices track build_setlist.py's
-     REQUEST_TABLE_COLUMNS. */
+     could play on request — #, title, artist, key, BPM and intro cue.
+     Compact, so ~20 songs fit on one page. Fixed widths; the indices track
+     build_setlist.py's REQUEST_TABLE_COLUMNS. A setlist not revised since the
+     Rec link column was dropped still prints it, hence the seventh rule. */
   .request-list h2 { margin-top: 0; }
   .request-table { table-layout: fixed; font-size: 9pt; }
   .request-table th, .request-table td { padding: 2px 4px; line-height: 1.25; }
   .request-table th:nth-child(1), .request-table td:nth-child(1) { width: 4%; }
-  .request-table th:nth-child(2), .request-table td:nth-child(2) { width: 24%; }
-  .request-table th:nth-child(3), .request-table td:nth-child(3) { width: 20%; }
+  .request-table th:nth-child(2), .request-table td:nth-child(2) { width: 27%; }
+  .request-table th:nth-child(3), .request-table td:nth-child(3) { width: 22%; }
   .request-table th:nth-child(4), .request-table td:nth-child(4) { width: 7%; }
   .request-table th:nth-child(5), .request-table td:nth-child(5) { width: 7%; }
-  .request-table th:nth-child(6), .request-table td:nth-child(6) { width: 31%; }
+  .request-table th:nth-child(6), .request-table td:nth-child(6) { width: 33%; }
   .request-table th:nth-child(7), .request-table td:nth-child(7) { width: 7%; text-align: center; }
-  .request-table a { color: #0b57d0; text-decoration: none; font-weight: 600; }
+  .request-table a, .song-table a { color: #0b57d0; text-decoration: none; font-weight: 600; }
   .request-list li strong { font-weight: 700; }
   .callout { border-left: 4px solid #d4a017; background: #fff8e6; padding: 7px 12px; margin: 8px 0; border-radius: 3px; }
   .callout-title { font-weight: 700; margin-bottom: 3px; }
@@ -278,13 +278,13 @@ def tag_song_tables(html):
     constraints / vocalist-breakdown / not-selected tables, which have
     completely different column counts and meanings. Identified by their
     first header cell being '#'. The request list (last page) shares that
-    and the same leading columns, plus a Rec column — it gets its own class,
-    request-table, and its own widths."""
+    and the same leading columns, but has no Lead Vocal column — it gets its
+    own class, request-table, and its own widths."""
     def do_table(m):
         table = m.group(0)
         if not re.match(r"<table>\s*<thead>\s*<tr>\s*<th[^>]*>#</th>", table):
             return table
-        cls = "request-table" if re.search(r"<th[^>]*>Rec</th>", table) else "song-table"
+        cls = "song-table" if re.search(r"<th[^>]*>Lead Vocal</th>", table) else "request-table"
         return table.replace("<table>", f'<table class="{cls}">', 1)
     return re.sub(r"<table>.*?</table>", do_table, html, flags=re.S)
 

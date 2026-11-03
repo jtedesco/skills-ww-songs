@@ -440,8 +440,7 @@ def render_request_list_lines(all_songs, scheduled_titles, gig_date=None, martin
     (cut_without). Alphabetical, numbered 1..N.
 
     Columns are REQUEST_TABLE_COLUMNS: only what it takes to start a song on
-    the spot (key, BPM, intro cue) plus Rec, a "YT" link to the
-    song's youtube_url. render_pdf.py sets it compact."""
+    the spot (key, BPM, intro cue). render_pdf.py sets it compact."""
     scheduled_lower = {t.lower() for t in scheduled_titles}
     songs = sorted(
         (s for s in all_songs
@@ -460,10 +459,9 @@ def render_request_list_lines(all_songs, scheduled_titles, gig_date=None, martin
              "| " + " | ".join(REQUEST_TABLE_COLUMNS) + " |",
              "|" + "|".join(["---"] * len(REQUEST_TABLE_COLUMNS)) + "|"]
     for n, song in enumerate(songs, 1):
-        url = (song.get("youtube_url") or "").strip()
         bpm = "" if song.get("bpm") in (None, "") else song["bpm"]
         cells = [str(n), f"**{song['title']}**", spoken(song["artist"]), song.get("key", ""), str(bpm),
-                 song.get("intro_notes", ""), f"[YT]({url})" if url else ""]
+                 song.get("intro_notes", "")]
         lines.append("| " + " | ".join(cells) + " |")
     if not songs:
         lines.append("*Everything gig-ready is already on the setlist.*")
@@ -627,14 +625,11 @@ def energy_display_string(song):
         return start
     return f"{start}→{end}"
 
-def dance_display_string(song):
-    """'✓' for a danceable song, blank otherwise — the Dance column in the
-    .md table. Blank rather than '✗' on purpose: the checkmarks are what the
-    band scans for when reading the floor, so the non-danceable slots should
-    recede, not compete. Reads the `danceable` CSV column; anything other
-    than an explicit 'No' counts as danceable, so a song added before the
-    column existed doesn't silently render as a floor-killer."""
-    return "" if str(song.get("danceable", "")).strip() == "No" else "✓"
+def rec_display_string(song):
+    """The Rec column in the .md table: a "YT" link to the song's
+    youtube_url, blank when it has none."""
+    url = str(song.get("youtube_url") or "").strip()
+    return f"[YT]({url})" if url else ""
 
 # The band's genre classification, stored in songs_metadata.csv's `genre`
 # column and printed in the setlist table's Genre column.
@@ -670,7 +665,7 @@ def genre_display_string(song):
     """The Genre column: the band's broad classification for a song —
     'Yacht Rock', 'Classic Rock', or, for a song outside the yacht pool,
     its own genre ('Alternative Rock', 'Motown', 'Disco'). Blank only when
-    the column is empty, same convention as the Dance column.
+    the column is empty, same convention as the Rec column.
 
     Reads `genre` straight from the song dict, which is the CSV row here and
     is refreshed from the CSV by apply_substitution.py's
@@ -714,7 +709,7 @@ def subgenre_display_string(song):
     `musicbrainz_genre` holds up to three tags, most-tagged first; this takes
     the first one that is actually a subgenre. Blank when none of them is
     (MusicBrainz has no tags at all for a couple of songs), same convention
-    as the Dance column."""
+    as the Rec column."""
     for part in str(song.get("musicbrainz_genre", "") or "").split(";"):
         tag = part.strip()
         if not tag or tag.lower() in NON_SUBGENRE_TAGS or YEAR_OR_DECADE_TAG.search(tag):
@@ -753,10 +748,10 @@ def genre_subgenre_display_string(song):
 # build_setlist.py's SET/ENCORES tables and apply_substitution.py's
 # regenerated tables render from these, so the header can't drift out of
 # sync with format_md_row()'s cells.
-TABLE_COLUMNS = ["#", "Title", "Artist", "Genre", "Decade", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Dance", "Intro"]
+TABLE_COLUMNS = ["#", "Title", "Artist", "Genre", "Decade", "Key", "BPM", "Length", "Lead Vocal", "Energy", "Rec", "Intro"]
 # The request list (last page): just what's needed to start a song on the
-# spot, plus Rec, a "YT" link to the recording — see render_request_list_lines().
-REQUEST_TABLE_COLUMNS = ["#", "Title", "Artist", "Key", "BPM", "Intro", "Rec"]
+# spot — see render_request_list_lines().
+REQUEST_TABLE_COLUMNS = ["#", "Title", "Artist", "Key", "BPM", "Intro"]
 TABLE_HEADER = "| " + " | ".join(TABLE_COLUMNS) + " |"
 TABLE_DIVIDER = "|" + "|".join(["---"] * len(TABLE_COLUMNS)) + "|"
 
@@ -816,7 +811,7 @@ def format_md_row(song, idx, marker="", shade_start=False):
     Cell order must match TABLE_COLUMNS above."""
     v_string = vocal_display_string(song)
     energy = energy_display_string(song)
-    dance = dance_display_string(song)
+    rec = rec_display_string(song)
     shade = song.get("shade")
     shade_bits = ""
     if shade:
@@ -827,7 +822,7 @@ def format_md_row(song, idx, marker="", shade_start=False):
     # BPM" in SKILL.md). Print the cell blank, never the literal "None" —
     # apply_substitution.py reads this table back and has to parse it.
     bpm = "" if song.get("bpm") in (None, "") else song["bpm"]
-    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {genre} | {decade} | {song['key']} | {bpm} | {song['length']} | {v_string} | {energy} | {dance} | {song['intro_notes']} |"
+    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {genre} | {decade} | {song['key']} | {bpm} | {song['length']} | {v_string} | {energy} | {rec} | {song['intro_notes']} |"
 
 
 def shade_starts(songs):

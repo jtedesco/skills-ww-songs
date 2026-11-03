@@ -241,7 +241,7 @@ def parse_markdown_report(stdout_str):
             
         # Capture the song-table header so the rows below can be read by
         # column NAME rather than position. build_setlist.py's TABLE_COLUMNS
-        # is the only definition of that layout and it does change (Dance and
+        # is the only definition of that layout and it does change (Rec and
         # Genre were both added after this parser was written) — a positional
         # read breaks silently, or loudly-but-confusingly, every time it does.
         if line.startswith("| # |"):
