@@ -960,6 +960,108 @@ def test_rules():
     return all_pass
 
 
+def test_cut_avoids_segue_chains():
+    """The emergency cut stays off segue chains whenever the rules allow.
+    Regression: pacing could fill a set's whole cut window with chains (Peg ->
+    Second Chance -> Brown Eyed Girl -> Hey Jealousy), so about 7% of solver
+    runs printed a chain song as the cut, and the picker had nothing else to
+    choose. Deterministic: fixed orders, and a seeded solver run whose scoring
+    is rigged so an old-style solver would always keep the bad candidate."""
+    import contextlib, io, random
+    from check_setlist import cut_window
+    print("\nTesting Emergency Cut vs. Segue Chains...")
+    all_pass = True
+
+    def check(name, ok, detail=""):
+        nonlocal all_pass
+        log_test(name, ok, detail)
+        all_pass = all_pass and ok
+
+    with open(DB_PATH, newline="", encoding="utf-8") as f:
+        groups = build_setlist.get_segue_groups(list(csv.DictReader(f)))
+    chain_titles = {t.lower() for g in groups for t in g}
+    check("Brown Eyed Girl is a chain member", "brown eyed girl" in chain_titles)
+
+    def picked(titles, closers=()):
+        songs = [{"title": t, "opener": "No", "closer": "Yes" if t in closers else "No"} for t in titles]
+        tagged = build_setlist.tag_emergency_cuts([songs], groups)[0]
+        return [s["title"] for s in tagged if s["emergency_cut"]]
+
+    front = ["A", "B", "C", "D", "E"]
+    # 1. The picker, on fixed running orders (n=10, window is #6-#9).
+    check("Picker skips Brown Eyed Girl for an earlier non-chain song",
+          picked(front + ["F", "G", "Brown Eyed Girl", "Hey Jealousy", "Closer"]) == ["G"])
+    check("Picker takes the second-to-last song before a chain song",
+          picked(front + ["Peg", "Second Chance", "Brown Eyed Girl", "F", "Closer"]) == ["F"])
+    check("Picker takes a closer-flagged song before a chain song",
+          picked(front + ["Peg", "Second Chance", "F", "Hey Jealousy", "Closer"], closers=["F"]) == ["F"])
+    only_chains = front + ["Peg", "Second Chance", "Brown Eyed Girl", "Hey Jealousy", "Closer"]
+    check("Set with only chains in its cut window is flagged as having no slot",
+          not build_setlist.has_cut_slot([{"title": t} for t in only_chains], chain_titles))
+
+    # 2. The solver, up to the pick (nothing is written). The rigged score
+    # prefers exactly the candidates the solver must not choose.
+    def no_slot(set_songs):
+        return all(set_songs[i]["title"].lower() in chain_titles for i in cut_window(len(set_songs)))
+
+    class Picked(Exception):
+        pass
+
+    def solve():
+        """Run the real solver on one seed; return (chosen sets, how many bad candidates it saw)."""
+        latest = {}
+        seen = {"bad": 0}
+        real_sim, real_score, real_tag = (build_setlist.simulate_all_scheduled,
+                                          build_setlist.get_vocalist_score, build_setlist.tag_emergency_cuts)
+
+        def spy_sim(sets_songs, *a, **kw):
+            latest["sets"] = sets_songs
+            return real_sim(sets_songs, *a, **kw)
+
+        def rigged_score(songs, targets):
+            if any(no_slot(s) for s in latest["sets"]):
+                seen["bad"] += 1
+                return 0.0
+            return 1.0
+
+        def stop_at_pick(sets_songs, segue_groups):
+            latest["chosen"] = sets_songs
+            raise Picked
+
+        real_argv = sys.argv
+        build_setlist.simulate_all_scheduled = spy_sim
+        build_setlist.get_vocalist_score = rigged_score
+        build_setlist.tag_emergency_cuts = stop_at_pick
+        sys.argv = ["build_setlist.py", "--duration", "3.0", "--breaks", "acoustic"]
+        random.seed(1)
+        try:
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                build_setlist.main()
+        except Picked:
+            pass
+        finally:
+            sys.argv = real_argv
+            build_setlist.simulate_all_scheduled = real_sim
+            build_setlist.get_vocalist_score = real_score
+            build_setlist.tag_emergency_cuts = real_tag
+        return latest.get("chosen"), seen["bad"]
+
+    chosen, bad_seen = solve()
+    check("Solver generates chain-only back halves (so this test is live)", bad_seen > 0)
+    check("Solver rejects a chain-only back half even when it scores best",
+          bool(chosen) and not any(no_slot(s) for s in chosen))
+
+    # 3. A pool that can't avoid it still gets a setlist rather than an error.
+    real_slot = build_setlist.has_cut_slot
+    build_setlist.has_cut_slot = lambda *a: False
+    try:
+        chosen, _ = solve()
+    finally:
+        build_setlist.has_cut_slot = real_slot
+    check("Solver still returns a setlist when no candidate has a legal cut", bool(chosen))
+    return all_pass
+
+
 def main():
     print("=============================================================")
     print("WANNABE WEEKENDERS SETLIST BUILDER AUTOMATED TEST SUITE")
@@ -981,6 +1083,7 @@ def main():
     form_ok = test_form_notes() and test_starters()
     season_ok = test_seasonal()
     rules_ok = test_rules()
+    cut_chain_ok = test_cut_avoids_segue_chains()
 
     print("\n=============================================================")
     print("TEST SUITE SUMMARY")
@@ -997,9 +1100,10 @@ def main():
     print(f"Floor Sheet Cues + Form Notes:          {'PASS' if form_ok else 'FAIL'}")
     print(f"Seasonal Songs:                         {'PASS' if season_ok else 'FAIL'}")
     print(f"Setlist Rules (check_setlist.py):       {'PASS' if rules_ok else 'FAIL'}")
+    print(f"Emergency Cut vs. Segue Chains:         {'PASS' if cut_chain_ok else 'FAIL'}")
     print("=============================================================")
 
-    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok and s8_ok and form_ok and season_ok and rules_ok:
+    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok and s8_ok and form_ok and season_ok and rules_ok and cut_chain_ok:
         print("\nALL TESTS PASSED SUCCESSFULLY! ✅")
         sys.exit(0)
     else:
