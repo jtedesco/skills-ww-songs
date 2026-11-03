@@ -868,6 +868,29 @@ def test_starters():
     return all_pass
 
 
+def test_detailed_sets():
+    """Detailed sets: the PDF leaves out the SET N / ENCORES sections by
+    default and prints them only when asked, and every other page stays."""
+    print("\nTesting detailed sets in the PDF...")
+    import render_pdf
+    html = ("<h1>Gig</h1><h2>SET 1</h2><table>set table</table><h2>ENCORES</h2><table>encore table</table>"
+            "<h2>FLOOR SHEET</h2><h3>SET 1</h3><p>floor song</p><h2>REQUEST LIST</h2><table>requests</table>")
+    default = render_pdf.wrap_set_blocks(html)
+    detailed = render_pdf.wrap_set_blocks(html, detailed_sets=True)
+    checks = [
+        ("Set tables left out by default", "set table" not in default),
+        ("Encore table left out by default", "encore table" not in default),
+        ("Floor sheet keeps its set headings", "<h3>SET 1</h3><p>floor song</p>" in default),
+        ("Request list still prints", "requests" in default),
+        ("Set tables print when asked", "set table" in detailed and "encore table" in detailed),
+    ]
+    all_pass = True
+    for name, ok in checks:
+        log_test(name, ok)
+        all_pass = all_pass and ok
+    return all_pass
+
+
 def test_seasonal():
     """Seasonal songs: a song with a `seasonal` value is only schedulable for
     a gig dated in that season (build_setlist.SEASON_MONTHS), a song without
@@ -1080,7 +1103,7 @@ def main():
     s6_ok = test_scenario_6()
     s7_ok = test_scenario_7()
     s8_ok = test_scenario_8()
-    form_ok = test_form_notes() and test_starters()
+    form_ok = test_form_notes() and test_starters() and test_detailed_sets()
     season_ok = test_seasonal()
     rules_ok = test_rules()
     cut_chain_ok = test_cut_avoids_segue_chains()

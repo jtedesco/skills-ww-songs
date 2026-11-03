@@ -399,11 +399,14 @@ def apply_shading(html):
     return SHADE_RE.sub("", html)
 
 
-def wrap_set_blocks(html):
+def wrap_set_blocks(html, detailed_sets=False):
     """Wrap each 'SET N' / 'ENCORES' / 'GIG SUMMARY' <h2> heading and
     everything up to the next h2 (its table, duration line, and following
     acoustic break, for SET/ENCORES) in a single div so the whole thing
-    moves together to a fresh page instead of splitting. FLOOR SHEET and
+    moves together to a fresh page instead of splitting. SET/ENCORES sections
+    only print with detailed_sets: the .md always keeps them, because
+    apply_substitution.py parses them, but the floor sheet is what gets read
+    at a gig and already carries the running order. FLOOR SHEET and
     GIG SUMMARY get the same forced page break plus a class that lays each
     out in two columns (see CSS): large type for the floor sheet, and for
     the summary a long repertoire table that wraps from the left column into
@@ -428,7 +431,8 @@ def wrap_set_blocks(html):
         elif heading_text.upper() == "GIG SUMMARY":
             out.append(f'<div class="set-block summary-page">{heading}{content}</div>')
         elif re.match(r"^SET\b", heading_text, re.I) or heading_text.upper() == "ENCORES":
-            out.append(f'<div class="set-block">{heading}{content}</div>')
+            if detailed_sets:
+                out.append(f'<div class="set-block">{heading}{content}</div>')
         else:
             out.append(heading + content)
     return "".join(out)
@@ -516,7 +520,7 @@ def find_chrome():
     sys.exit(1)
 
 
-def render(md_path, pdf_path=None):
+def render(md_path, pdf_path=None, detailed_sets=False):
     with open(md_path, encoding="utf-8") as f:
         md_text = f.read()
 
@@ -531,7 +535,7 @@ def render(md_path, pdf_path=None):
     # rows, so a row that already carries a class would be dropped.
     body_html = style_repertoire_table(body_html)
     body_html = keep_genre_parts_together(body_html)
-    body_html = wrap_set_blocks(body_html)
+    body_html = wrap_set_blocks(body_html, detailed_sets=detailed_sets)
     chrome = find_chrome()
     body_html = fit_floor_sheet_forms(body_html, chrome)
     html = f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></head><body>{body_html}</body></html>"
@@ -557,6 +561,8 @@ def main():
     parser.add_argument("md_file", nargs="?", help="Path to a setlist .md file")
     parser.add_argument("--all", action="store_true",
                         help="Render every .md file under setlists/ (recursively)")
+    parser.add_argument("--detailed-sets", action="store_true",
+                        help="Also print the detailed set tables, which are left out by default")
     args = parser.parse_args()
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -572,7 +578,7 @@ def main():
         parser.error("Provide a .md file path or use --all")
 
     for md_path in md_files:
-        pdf_path = render(md_path)
+        pdf_path = render(md_path, detailed_sets=args.detailed_sets)
         print(f"✅ {pdf_path}")
 
 
