@@ -839,6 +839,35 @@ def test_form_notes():
     return all_pass
 
 
+def test_starters():
+    """Starter prefix: a song with a `starts` value prints a small [Name]
+    before its number, a song without one prints nothing, and a song naming
+    someone who's out drops the prefix rather than cue a person who isn't there."""
+    print("\nTesting Starter prefixes on the floor sheet...")
+    songs = [
+        {"title": "Brandy", "key": "E", "bpm": 126, "intro_notes": "Keys intro", "starts": "Jon"},
+        {"title": "Valerie", "key": "E", "bpm": 106, "intro_notes": "Bass and drums", "starts": "Debo + Alex"},
+        {"title": "Take It Easy", "key": "G", "bpm": 139, "intro_notes": "Acoustic guitar intro", "starts": "Martin"},
+        {"title": "Peg", "key": "G", "bpm": 116, "intro_notes": "Written intro", "starts": ""},
+        {"title": "Lights", "key": "D", "bpm": 103, "intro_notes": "Unison", "starts": "Martin or Jon"},
+    ]
+    lines = build_setlist.render_floor_sheet_lines([("SET 1", songs)], missing=["Martin"])
+    line = lambda title: next(l for l in lines if title in l)
+    checks = [
+        ("Starter prints before the song number",
+         line("Brandy").startswith('**<span class="starter">[Jon] </span>1. Brandy**')),
+        ("Two starters print together", "[Debo + Alex]" in line("Valerie")),
+        ("No prefix for someone who's out", "starter" not in line("Take It Easy")),
+        ("No prefix without a starts value", "starter" not in line("Peg")),
+        ("Fallback starter prints when the first is out", "[Jon]" in line("Lights")),
+    ]
+    all_pass = True
+    for name, ok in checks:
+        log_test(name, ok)
+        all_pass = all_pass and ok
+    return all_pass
+
+
 def test_seasonal():
     """Seasonal songs: a song with a `seasonal` value is only schedulable for
     a gig dated in that season (build_setlist.SEASON_MONTHS), a song without
@@ -949,7 +978,7 @@ def main():
     s6_ok = test_scenario_6()
     s7_ok = test_scenario_7()
     s8_ok = test_scenario_8()
-    form_ok = test_form_notes()
+    form_ok = test_form_notes() and test_starters()
     season_ok = test_seasonal()
     rules_ok = test_rules()
 

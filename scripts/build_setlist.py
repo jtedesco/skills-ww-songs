@@ -494,7 +494,7 @@ def floor_intro_cue(intro):
     return intro[:cut] + " intro" + intro[cut:]
 
 
-def render_floor_sheet_lines(blocks, display_title=None, form_notes=None):
+def render_floor_sheet_lines(blocks, display_title=None, form_notes=None, starts=None, missing=()):
     """A single large-font page of the whole running order, meant to be torn
     off and taped to the stage floor — read at a glance from standing height,
     not studied. Deliberately carries only what's useful mid-song-change:
@@ -533,6 +533,12 @@ def render_floor_sheet_lines(blocks, display_title=None, form_notes=None):
     <span class="form">, which is what lets render_pdf.py drop every form
     line again if they would push this page onto a second one.
 
+    `starts` resolves who starts a song, from songs_metadata.csv's `starts`
+    column, printed as a small [Name] before the song's number. Same resolver
+    arrangement as `display_title`. "David or Jon" prints the first of them not
+    in `missing`. A song with no value prints no prefix, and neither does one
+    naming only someone in `missing`, who won't be there to start it.
+
     This page is REGENERATED from the final song list on every revision, the
     same as the GIG SUMMARY page — never hand-edit it in the .md, since
     apply_substitution.py truncates and rebuilds it (see TRAILING_HEADINGS).
@@ -541,6 +547,8 @@ def render_floor_sheet_lines(blocks, display_title=None, form_notes=None):
         display_title = lambda song: (song.get("floor_sheet_title") or "").strip() or song["title"]
     if form_notes is None:
         form_notes = lambda song: (song.get("form_notes") or "").strip()
+    if starts is None:
+        starts = lambda song: (song.get("starts") or "").strip()
     lines = [FLOOR_SHEET_HEADING, ""]
     # Legend, only when something is actually marked. This page gets torn off
     # and read on its own, away from the set tables that spell out the 🛑
@@ -567,7 +575,12 @@ def render_floor_sheet_lines(blocks, display_title=None, form_notes=None):
             # tables use, so render_pdf.py shades this page off one rule. No
             # visible label here: the block name is already printed once in
             # the set table, and every character on this page costs type size.
-            line = f"**{idx}. {display_title(song)}{cut}** {key} · {bpm_str}"
+            who = next((w for w in starts(song).split(" or ")
+                        if w and not any(re.search(rf"\b{re.escape(name)}\b", w) for name in missing)), "")
+            # The space stays inside the span, at the prefix's size: a title-
+            # sized one costs enough width to wrap a long title.
+            prefix = f'<span class="starter">[{html.escape(who, quote=False)}] </span>' if who else ""
+            line = f"**{prefix}{idx}. {display_title(song)}{cut}** {key} · {bpm_str}"
             if intro:
                 # Explicit <em>, not *...*: an intro note can itself carry
                 # markup (a bold "[Vamp]"-style tag), and "***[Vamp]***" —
@@ -1790,7 +1803,8 @@ def main():
         floor_blocks.append(("ENCORES", encores))
 
     md()
-    for line in render_floor_sheet_lines(floor_blocks):
+    missing_names = [name for name, out in (("Martin", args.martin_out), ("David", args.david_out)) if out]
+    for line in render_floor_sheet_lines(floor_blocks, missing=missing_names):
         md(line)
 
     md()

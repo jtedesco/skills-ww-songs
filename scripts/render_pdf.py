@@ -119,6 +119,9 @@ CSS = """
      nested in the <em>, so it must not pick up display:block / 15.5pt. */
   .floor-sheet p > strong { display: block; font-size: 15.5pt; font-weight: 700;
                             line-height: 1.12; }
+  /* Who starts the song: a small [Name] before the number, so it doesn't
+     compete with the title or push a long one onto a second line. */
+  .floor-sheet p > strong .starter { font-size: 9pt; font-weight: 600; color: #444; }
   .floor-sheet p em { font-style: normal; color: #444; font-size: 10pt; }
   .floor-sheet p em strong { display: inline; font-size: inherit; font-weight: 700;
                              color: #1a1a1a; }

@@ -541,6 +541,8 @@ All "who's missing" and event-detail info lives here — do not restate it in th
     - **It can never cost the page.** `render_pdf.py`'s `fit_floor_sheet_forms()` prints the floor sheet on its own, with and without its form lines; if the lines are what push it past one page, they're stripped from the PDF and a warning is printed. The `.md` keeps them, so they come back the moment the gig has room. Verified on the 37-song Empire sheet with a form line on every song: the lines drop and the PDF stays at 6 pages. The check only runs when a form line exists, so a gig without one pays nothing.
     - **The line goes before the shade marker**, which must stay last on the line (see Shaded blocks). The text is HTML-escaped, since it's free text going into raw HTML. `add_song.py` doesn't prompt for it; add form notes by hand when the band writes one down.
 
+  - **Who starts the song — a small `[Name]` before the number.** `songs_metadata.csv`'s `starts` column holds it, e.g. `Jon`, `JJ + Jon`, `Guitars`, or `David or Jon` (the first of them who's at the gig), and it prints on the floor sheet only. Song-level, so it lives in the CSV, read through a `starts` resolver like `form_notes`. Blank prints no prefix, so leave it blank rather than guess: most songs list both JJ and Martin on electric, so a guitar intro doesn't say who plays it. A song naming only someone in the gig's `Missing:` line also drops its prefix. Subs aren't handled, so a gig with Josh on drums still prints `[Alex]`.
+
   <a id="measuring-floor-sheet-titles"></a>
   **Measuring which titles wrap** (repeat this after adding a long-titled song, or after any change to the floor-sheet type size — eyeballing a thumbnail is not reliable):
 

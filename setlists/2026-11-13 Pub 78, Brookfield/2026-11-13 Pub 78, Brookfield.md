@@ -57,7 +57,7 @@
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | 1 | **Pink Pony Club** | Chappell Roan | Synth-Pop | 2020s | E | 130 | 4:30 | Lauren (J, D) | Low→Medium | [YT](https://music.youtube.com/watch?v=R_iTpfSCIVk) | Piano (B7) intro |
 | 2 | **We Didn't Start the Fire** | Billy Joel | Classic Rock / Piano Rock | 1980s | G | 145 | 4:49 | Lauren | High |  | Drums and keys |
-| 3 | **Hit Me with Your Best Shot** | Pat Benatar | Classic Rock / Pop Rock | 1980s | E | 127 | 2:52 | Lauren | High | [YT](https://music.youtube.com/watch?v=aU5aDqLUvug) |  |
+| 3 | **Hit Me with Your Best Shot** | Pat Benatar | Classic Rock / Pop Rock | 1980s | E | 127 | 2:52 | Lauren | High | [YT](https://music.youtube.com/watch?v=aU5aDqLUvug) | Guitar intro |
 | 4 | **Reeling in the Years** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | A | 136 | 4:30 | Jon (L, D) | Medium | [YT](https://music.youtube.com/watch?v=91XTZ92zs2w) | Guitar hook starts (no segue) |
 | 5 | **Don't Stop** | Fleetwood Mac | Classic Rock / Soft Rock | 1970s | E | 119 | 3:13 | Lauren | Medium→High | [YT](https://music.youtube.com/watch?v=0hGhl7ki3HM) | SEGUE Piano |
 | 6 | **Brandy** 🎨 *[Girls' Names]*<!--shade:Girls' Names--> | Looking Glass | Yacht Rock / Pop Rock | 1970s | E | 126 | 3:00 | Jon (L) | Low | [YT](https://music.youtube.com/watch?v=CFhFyvk0yS8) | Keys intro |
@@ -83,79 +83,79 @@
 
 ### SET 1
 
-**1. Working for the Weekend** Bm · 147 — <em>Cowbell starts</em>
+**<span class="starter">[Alex] </span>1. Working for the Weekend** Bm · 147 — <em>Cowbell starts</em>
 
-**2. The Middle** D · 162 — <em>Guitar riff, starts on F#</em>
+**<span class="starter">[Martin] </span>2. The Middle** D · 162 — <em>Guitar riff, starts on F#</em>
 
-**3. Free Ride** D · 104 — <em>guitar riff intro</em>
+**<span class="starter">[JJ] </span>3. Free Ride** D · 104 — <em>guitar riff intro</em>
 
-**4. Listen to the Music** E · 105 — <em>Guitar riff intro</em>
+**<span class="starter">[JJ] </span>4. Listen to the Music** E · 105 — <em>Guitar riff intro</em>
 
-**5. EWTRW** D · 112 — <em>Keys intro</em>
+**<span class="starter">[Jon] </span>5. EWTRW** D · 112 — <em>Keys intro</em>
 
-**6. Miss You** Am · 110 — <em>Jon starts (no segue)</em>
+**<span class="starter">[Jon] </span>6. Miss You** Am · 110 — <em>Jon starts (no segue)</em>
 
-**7. Me and Bobby McGee** G->A · 94 — <em>Guitar on G chord intro</em><!--shade:Gritty-->
+**<span class="starter">[Martin] </span>7. Me and Bobby McGee** G->A · 94 — <em>Guitar on G chord intro</em><!--shade:Gritty-->
 
-**8. I Hate Myself for Loving You** E · 118 — <em>drums intro</em><!--shade:Gritty-->
+**<span class="starter">[Alex] </span>8. I Hate Myself for Loving You** E · 118 — <em>drums intro</em><!--shade:Gritty-->
 
-**9. Gold on the Ceiling** G · 130 — <em>guitar intro, heavy keys</em><!--shade:Gritty-->
+**<span class="starter">[Martin] </span>9. Gold on the Ceiling** G · 130 — <em>guitar intro, heavy keys</em><!--shade:Gritty-->
 
-**10. Zombie** G · 83 — <em>All together intro (bass+drums+gtr)</em><!--shade:Gritty-->
+**<span class="starter">[All] </span>10. Zombie** G · 83 — <em>All together intro (bass+drums+gtr)</em><!--shade:Gritty-->
 
-**11. Peg** G · 116 — <em>Written intro</em>
+**<span class="starter">[Alex] </span>11. Peg** G · 116 — <em>Written intro</em>
 
-**12. Dreams** C · 120 — <em>Drums fill intro</em>
+**<span class="starter">[Alex] </span>12. Dreams** C · 120 — <em>Drums fill intro</em>
 
-**13. Lights** D · 103 — <em>Guitar + piano unison intro</em>
+**<span class="starter">[JJ + Jon] </span>13. Lights** D · 103 — <em>Guitar + piano unison intro</em>
 
-**14. Keep Your Hands to Yourself** A · 120 — <em>guitar intro, A riff</em> <span class="form">V · Gtr mini-solo (M) · V · Sax (J) · V · Gtr solo (JJ) · V again · Last line slows</span>
+**<span class="starter">[David] </span>14. Keep Your Hands to Yourself** A · 120 — <em>guitar intro, A riff</em> <span class="form">V · Gtr mini-solo (M) · V · Sax (J) · V · Gtr solo (JJ) · V again · Last line slows</span>
 
-**15. Hook [X]** A · 116 — <em>Sax intro</em> <span class="form">Sax intro · V · V · C · V · V · C · Sax · Gtr · Rap · C · Out</span>
+**<span class="starter">[Jon] </span>15. Hook [X]** A · 116 — <em>Sax intro</em> <span class="form">Sax intro · V · V · C · V · V · C · Sax · Gtr · Rap · C · Out</span>
 
-**16. Kid Charlemagne** C7 · 116 — <em>Keys intro</em>
+**<span class="starter">[Jon] </span>16. Kid Charlemagne** C7 · 116 — <em>Keys intro</em>
 
-**17. Ride Like the Wind** Eb · 125 — <em>Percussion + keys intro</em>
+**<span class="starter">[Jon] </span>17. Ride Like the Wind** Eb · 125 — <em>Percussion + keys intro</em>
 
-**18. Don’t Stop Believing** E · 118 — <em>Piano riff intro</em>
+**<span class="starter">[Jon] </span>18. Don’t Stop Believing** E · 118 — <em>Piano riff intro</em>
 
 ### SET 2
 
-**1. Pink Pony Club** E · 130 — <em>Piano (B7) intro</em>
+**<span class="starter">[Jon] </span>1. Pink Pony Club** E · 130 — <em>Piano (B7) intro</em>
 
-**2. We Didn't Start the Fire** G · 145 — <em>Drums and keys intro</em>
+**<span class="starter">[Alex] </span>2. We Didn't Start the Fire** G · 145 — <em>Drums and keys intro</em>
 
-**3. Hit Me with Your Best Shot** E · 127
+**<span class="starter">[JJ] </span>3. Hit Me with Your Best Shot** E · 127 — <em>Guitar intro</em>
 
-**4. Reeling in the Years** A · 136 — <em>Guitar hook starts (no segue)</em>
+**<span class="starter">[JJ] </span>4. Reeling in the Years** A · 136 — <em>Guitar hook starts (no segue)</em>
 
-**5. Don't Stop** E · 119 — <em>SEGUE Piano</em> <span class="form">V C V C · Gtr solo (M) · V · C (stop) · C · Sax (J) · C · Oohs ×3 · “Don’t stop” a cappella</span>
+**<span class="starter">[Jon] </span>5. Don't Stop** E · 119 — <em>SEGUE Piano</em> <span class="form">V C V C · Gtr solo (M) · V · C (stop) · C · Sax (J) · C · Oohs ×3 · “Don’t stop” a cappella</span>
 
-**6. Brandy** E · 126 — <em>Keys intro</em><!--shade:Girls' Names-->
+**<span class="starter">[Jon] </span>6. Brandy** E · 126 — <em>Keys intro</em><!--shade:Girls' Names-->
 
-**7. American Girl** D · 114 — <em>Guitar hook intro</em><!--shade:Girls' Names-->
+**<span class="starter">[Guitars] </span>7. American Girl** D · 114 — <em>Guitar hook intro</em><!--shade:Girls' Names-->
 
-**8. Jenny (867-5309)** F#m · 136 — <em>Guitar riff intro. Stage banter about phone numbers</em><!--shade:Girls' Names-->
+**<span class="starter">[JJ] </span>8. Jenny (867-5309)** F#m · 136 — <em>Guitar riff intro. Stage banter about phone numbers</em><!--shade:Girls' Names-->
 
-**9. Valerie** E · 106 — <em>Bass and drums intro</em><!--shade:Girls' Names-->
+**<span class="starter">[Debo + Alex] </span>9. Valerie** E · 106 — <em>Bass and drums intro</em><!--shade:Girls' Names-->
 
-**10. Brown Eyed Girl** G · 120 — <em>Jon starts</em><!--shade:Girls' Names-->
+**<span class="starter">[Jon] </span>10. Brown Eyed Girl** G · 120 — <em>Jon starts</em><!--shade:Girls' Names-->
 
-**11. Hey Jealousy** D · 153 — <em>SEGUE Jon piano, Martin to electric</em>
+**<span class="starter">[Jon] </span>11. Hey Jealousy** D · 153 — <em>SEGUE Jon piano, Martin to electric</em>
 
-**12. Piano Man** C · 89 — <em>Keys intro</em>
+**<span class="starter">[Jon] </span>12. Piano Man** C · 89 — <em>Keys intro</em>
 
-**13. Ventura Highway** G · 125 — <em>3 guitars intro, counted off by David</em>
+**<span class="starter">[David] </span>13. Ventura Highway** G · 125 — <em>3 guitars intro, counted off by David</em>
 
-**14. Respect** C · 115 — <em>Alex counts us in, start together</em>
+**<span class="starter">[Alex] </span>14. Respect** C · 115 — <em>Alex counts us in, start together</em>
 
-**15. Take It Easy [X]** G · 139 — <em>Acoustic guitar intro</em>
+**<span class="starter">[Martin] </span>15. Take It Easy [X]** G · 139 — <em>Acoustic guitar intro</em>
 
-**16. You May Be Right** A · 150 — <em>Glass + guitar intro</em>
+**<span class="starter">[Jon] </span>16. You May Be Right** A · 150 — <em>Glass + guitar intro</em>
 
-**17. Born to Run** E · 147 — <em>Drums + everyone starts</em>
+**<span class="starter">[Alex] </span>17. Born to Run** E · 147 — <em>Drums + everyone starts</em>
 
-**18. Roll with the Changes** C · 134 — <em>Drum + keys in time intro — stage banter, thank yous</em>
+**<span class="starter">[Alex] </span>18. Roll with the Changes** C · 134 — <em>Drum + keys in time intro — stage banter, thank yous</em>
 
 
 ## REQUEST LIST
