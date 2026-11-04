@@ -44,7 +44,7 @@
 | 12 | **Dreams** | Fleetwood Mac | Classic Rock / Soft Rock | 1970s | C | 120 | 4:00 | Lauren (J, M) | Low | [YT](https://music.youtube.com/watch?v=CM1-cJBpiWQ) | Drums fill |
 | 13 | **Lights** | Journey | Classic Rock / AOR | 1970s | D | 103 | 3:00 | Lauren | Low→Medium | [YT](https://music.youtube.com/watch?v=BPazVAtD-xQ) | Guitar + piano unison |
 | 14 | **Keep Your Hands to Yourself** | Georgia Satellites | American Trad Rock | 1980s | A | 120 | 3:30 | David (L) | Medium | [YT](https://music.youtube.com/watch?v=cPtw_Cd3zTk) | guitar, A riff |
-| 15 | **Hook** 🛑 **[EMERGENCY CUT]** | Blues Traveler | Blues Rock | 1990s | A | 116 | 5:00 | Lauren (D, J) | Medium | [YT](https://music.youtube.com/watch?v=pni_IBkQcoE) | Sax intro |
+| 15 | **Hook** 🛑 **[EMERGENCY CUT]** | Blues Traveler | Blues Rock | 1990s | A | 116 | 5:00 | Lauren (D, J) | Medium | [YT](https://music.youtube.com/watch?v=pni_IBkQcoE) | Guitar intro + sax solo |
 | 16 | **Kid Charlemagne** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | C7 | 116 | 4:32 | Jon (L, D, M) | Medium | [YT](https://music.youtube.com/watch?v=b00h8iKaklQ) | Keys |
 | 17 | **Ride Like the Wind** | Christopher Cross | Yacht Rock / Soft Rock | 1980s | Eb | 125 | 5:12 | Lauren | Medium | [YT](https://music.youtube.com/watch?v=Wd9rToNGTxk) | Percussion + keys |
 | 18 | **Don’t Stop Believing** 🔴 *[Closer]* | Journey | Classic Rock / AOR | 1980s | E | 118 | 4:00 | Lauren (J, D) | High | [YT](https://music.youtube.com/watch?v=PIFUWHvSixw) | Piano riff |
@@ -60,7 +60,7 @@
 | 3 | **Hit Me with Your Best Shot** | Pat Benatar | Classic Rock / Pop Rock | 1980s | E | 127 | 2:52 | Lauren | High | [YT](https://music.youtube.com/watch?v=aU5aDqLUvug) | Guitar intro |
 | 4 | **Reeling in the Years** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | A | 136 | 4:30 | Jon (L, D) | Medium | [YT](https://music.youtube.com/watch?v=91XTZ92zs2w) | Guitar hook starts (no segue) |
 | 5 | **Don't Stop** | Fleetwood Mac | Classic Rock / Soft Rock | 1970s | E | 119 | 3:13 | Lauren | Medium→High | [YT](https://music.youtube.com/watch?v=0hGhl7ki3HM) | SEGUE Piano |
-| 6 | **Brandy** 🎨 *[Girls' Names]*<!--shade:Girls' Names--> | Looking Glass | Yacht Rock / Pop Rock | 1970s | E | 126 | 3:00 | Jon (L) | Low | [YT](https://music.youtube.com/watch?v=CFhFyvk0yS8) | Keys intro |
+| 6 | **Brandy** 🎨 *[Girls' Names]*<!--shade:Girls' Names--> | Looking Glass | Yacht Rock / Pop Rock | 1970s | E | 126 | 3:00 | Jon (L) | Low | [YT](https://music.youtube.com/watch?v=CFhFyvk0yS8) | Guitar intro |
 | 7 | **American Girl**<!--shade:Girls' Names--> | Tom Petty | Singer-Songwriter | 1970s | D | 114 | 3:30 | Martin (L) | High | [YT](https://music.youtube.com/watch?v=J7bAeH7iJFc) | Guitar hook |
 | 8 | **Jenny (867-5309)**<!--shade:Girls' Names--> | Tommy Tutone | Classic Rock | 1980s | F#m | 136 | 4:00 | Jon (D, L, M) | High | [YT](https://music.youtube.com/watch?v=tHL2XeuA6Yg) | Guitar riff. Stage banter about phone numbers |
 | 9 | **Valerie**<!--shade:Girls' Names--> | Amy Winehouse | Contemporary R&B | 2000s | E | 106 | 3:30 | Lauren | Medium | [YT](https://music.youtube.com/watch?v=-WrSLR5oEao) | Bass and drums |
@@ -111,7 +111,7 @@
 
 **<span class="starter">[David] </span>14. Keep Your Hands** A · 120 — <em>guitar intro, A riff</em> <span class="form">V · Gtr mini-solo (M) · V · Sax (J) · V · Gtr solo (JJ) · V again · Last line slows</span>
 
-**<span class="starter">[Martin] </span>15. Hook [X]** A · 116 — <em>Sax intro</em> <span class="form">Sax intro · V · V · C · V · V · C · Sax · Gtr · Rap · C · Out</span>
+**<span class="starter">[Martin] </span>15. Hook [X]** A · 116 — <em>Guitar intro + sax solo</em> <span class="form">V · V · C · V · V · C · Sax · Gtr · Rap · C · Out</span>
 
 **<span class="starter">[Jon] </span>16. Kid Charlemagne** C7 · 116 — <em>Keys intro</em>
 
@@ -131,7 +131,7 @@
 
 **<span class="starter">[Jon] </span>5. Don't Stop** E · 119 — <em>SEGUE Piano</em> <span class="form">V C V C · Gtr solo (M) · V · C (stop) · C · Sax (J) · C · Oohs ×3 · “Don’t stop” a cappella</span>
 
-**<span class="starter">[Martin] </span>6. Brandy** E · 126 — <em>Keys intro</em><!--shade:Girls' Names-->
+**<span class="starter">[Martin] </span>6. Brandy** E · 126 — <em>Guitar intro</em><!--shade:Girls' Names-->
 
 **<span class="starter">[Guitars] </span>7. American Girl** D · 114 — <em>Guitar hook intro</em><!--shade:Girls' Names-->
 
