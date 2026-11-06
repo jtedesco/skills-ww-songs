@@ -48,6 +48,7 @@ from build_setlist import (
     TRANSITION_BUFFER_SECONDS,
     parse_shade_label, assign_shade_block, shade_starts, strip_shade_markers,
     in_season, cut_without,
+    vocal_targets, format_set_vocal_balance, SET_VOCAL_BALANCE_ROW,
 )
 
 # Any of these starting a line marks the beginning of the always-regenerated
@@ -822,10 +823,14 @@ def main():
     absent_flags = check_absent_member_notes(
         [s for songs in songs_by_section for s in songs], missing_names)
     header_lines = upsert_playlist_bullet(header_lines)
-    header_lines = upsert_constraint_rows(header_lines, {
+    row_updates = {
         "Pacing Flow": format_pacing_flow_status(energy_drops),
         "Absent-Member Note Check": format_absent_member_status(absent_flags, missing_names),
-    })
+    }
+    if len(main_set_indices) > 1:
+        row_updates[SET_VOCAL_BALANCE_ROW] = format_set_vocal_balance(
+            [songs_by_section[i] for i in main_set_indices], vocal_targets(martin_out, david_out))
+    header_lines = upsert_constraint_rows(header_lines, row_updates)
 
     break_songs = extract_break_songs(sections)
     md_content = render_md(header_lines, sections, songs_by_section, all_songs, by_title, break_songs, target_duration)

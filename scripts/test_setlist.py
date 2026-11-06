@@ -1148,6 +1148,65 @@ def test_cut_avoids_segue_chains():
     return all_pass
 
 
+def test_set_vocal_balance():
+    """Each set's lead split counts toward the solver's score, below the whole
+    gig's, and the report prints it as the "Set Vocal Balance" row. The fixed
+    case is Pub 78 (2026-11-13) before and after its themed blocks were
+    swapped: same 36 songs and gig-wide split, but Lauren went from 11 of Set
+    1's 18 to 9 of 18 in each set."""
+    print("\nTesting Set Vocal Balance...")
+    all_pass = True
+
+    def check(name, ok, detail=""):
+        nonlocal all_pass
+        log_test(name, ok, detail)
+        all_pass = all_pass and ok
+
+    def leads(**counts):
+        return [{"lead_vocals": v} for v, n in counts.items() for _ in range(n)]
+
+    targets = build_setlist.vocal_targets()
+    check("Full-band targets sum to 1", abs(sum(targets.values()) - 1) < 1e-9)
+    no_david = build_setlist.vocal_targets(david_out=True)
+    check("An absent vocalist's target is 0, the rest rescaled",
+          no_david["David"] == 0 and abs(sum(no_david.values()) - 1) < 1e-9
+          and abs(no_david["Lauren"] - 0.5 / 0.9) < 1e-9, str(no_david))
+
+    before = [leads(Lauren=11, Jon=5, Martin=1, David=1), leads(Lauren=7, Jon=7, Martin=3, David=1)]
+    after = [leads(Lauren=9, Jon=6, Martin=2, David=1), leads(Lauren=9, Jon=6, Martin=2, David=1)]
+    flat = lambda sets: [s for ss in sets for s in ss]
+    check("Pub 78 before/after have the same gig-wide score (so the test isolates the set term)",
+          build_setlist.get_vocalist_score(flat(before), targets)
+          == build_setlist.get_vocalist_score(flat(after), targets))
+    check("Evenly split sets score better than lopsided ones",
+          build_setlist.get_balance_score(after, targets) < build_setlist.get_balance_score(before, targets))
+    # Lower priority: a better gig-wide split still wins over better set splits.
+    gig_better = [leads(Lauren=12, Jon=4, Martin=1, David=1), leads(Lauren=6, Jon=7, Martin=3, David=2)]
+    gig_worse = [leads(Lauren=11, Jon=5, Martin=1, David=1), leads(Lauren=11, Jon=5, Martin=1, David=1)]
+    check("(setup) the first candidate has the better gig-wide split",
+          build_setlist.get_vocalist_score(flat(gig_better), targets)
+          < build_setlist.get_vocalist_score(flat(gig_worse), targets))
+    check("Gig-wide balance outranks per-set balance",
+          build_setlist.get_balance_score(gig_better, targets) < build_setlist.get_balance_score(gig_worse, targets))
+    one = [leads(Lauren=9, Jon=6, Martin=2, David=1)]
+    check("A one-set gig ranks by its own split alone",
+          build_setlist.get_balance_score(one, targets)
+          == build_setlist.get_vocalist_score(one[0], targets) * (1 + build_setlist.SET_BALANCE_WEIGHT))
+
+    row = build_setlist.format_set_vocal_balance(before, targets)
+    check("Lopsided sets are flagged, naming who and where",
+          row.startswith("⚠️") and "Lauren 61% of Set 1" in row, row)
+    row = build_setlist.format_set_vocal_balance(after, targets)
+    check("Even sets are satisfied, with each set's counts",
+          row == "✅ Satisfied (Set 1: Lauren 9 · Jon 6 · Martin 2 · David 1. "
+                 "Set 2: Lauren 9 · Jon 6 · Martin 2 · David 1)", row)
+
+    res = run_scenario(["--duration", "3.0", "--sets", "2", "--breaks", "silent"])
+    check("A two-set build prints the Set Vocal Balance row",
+          bool(res) and "| Set Vocal Balance |" in res["stdout"])
+    return all_pass
+
+
 def main():
     print("=============================================================")
     print("WANNABE WEEKENDERS SETLIST BUILDER AUTOMATED TEST SUITE")
@@ -1175,6 +1234,7 @@ def main():
     season_ok = test_seasonal()
     rules_ok = test_rules()
     cut_chain_ok = test_cut_avoids_segue_chains()
+    set_vocals_ok = test_set_vocal_balance()
 
     print("\n=============================================================")
     print("TEST SUITE SUMMARY")
@@ -1193,9 +1253,10 @@ def main():
     print(f"Seasonal Songs:                         {'PASS' if season_ok else 'FAIL'}")
     print(f"Setlist Rules (check_setlist.py):       {'PASS' if rules_ok else 'FAIL'}")
     print(f"Emergency Cut vs. Segue Chains:         {'PASS' if cut_chain_ok else 'FAIL'}")
+    print(f"Set Vocal Balance:                      {'PASS' if set_vocals_ok else 'FAIL'}")
     print("=============================================================")
 
-    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok and s8_ok and form_ok and season_ok and rules_ok and cut_chain_ok:
+    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok and s8_ok and form_ok and season_ok and rules_ok and cut_chain_ok and set_vocals_ok:
         print("\nALL TESTS PASSED SUCCESSFULLY! ✅")
         sys.exit(0)
     else:

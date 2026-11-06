@@ -1201,8 +1201,6 @@ def main():
         print(f"Error: --include song(s) not found in filtered pool: {missing_includes}", file=sys.stderr)
         sys.exit(1)
 
-    # Target lead vocals percentages (proportional distribution if out)
-    base_vocal_pcts = {"Lauren": 0.5, "Jon": 0.3, "David": 0.1, "Martin": 0.1}
     remaining_vocalists = ["Lauren", "Jon"]
     if not args.martin_out: remaining_vocalists.append("Martin")
     if not args.david_out: remaining_vocalists.append("David")
@@ -1213,14 +1211,8 @@ def main():
     eligible_leads = {s["lead_vocals"] for s in available_songs}
     inclusion_required_vocalists = [v for v in remaining_vocalists if v in eligible_leads]
 
-    
-    sum_rem_targets = sum(base_vocal_pcts[v] for v in remaining_vocalists)
-    target_vocal_pcts = {}
-    for v in ["Lauren", "Jon", "David", "Martin"]:
-        if v in remaining_vocalists:
-            target_vocal_pcts[v] = base_vocal_pcts[v] / sum_rem_targets
-        else:
-            target_vocal_pcts[v] = 0.0
+
+    target_vocal_pcts = vocal_targets(args.martin_out, args.david_out)
             
     # Solver loop
     best_candidate = None
@@ -1481,7 +1473,7 @@ def main():
             # candidate with a legal cut in every set beats one without, however
             # the vocals score; one without is kept only as a last resort, so a
             # pool that can't avoid it still gets a setlist (and a rule-check error).
-            score = get_vocalist_score(all_songs_in_sets, target_vocal_pcts)
+            score = get_balance_score(candidate_sets_songs, target_vocal_pcts)
             rank = (not all(has_cut_slot(s, segue_titles) for s in candidate_sets_songs), score)
             if rank < best_rank:
                 best_rank = rank
@@ -1677,6 +1669,9 @@ def main():
         [s for ss in sets_songs for s in ss] + encores, missing_names)
     constraints_satisfied_summary["Absent-Member Note Check"] = format_absent_member_status(
         absent_flags, missing_names)
+    if num_sets > 1:
+        constraints_satisfied_summary[SET_VOCAL_BALANCE_ROW] = format_set_vocal_balance(
+            sets_songs, target_vocal_pcts)
 
     filter_details = []
     if args.genre: filter_details.append(f"Genre: {args.genre}")
@@ -1950,6 +1945,61 @@ def tag_emergency_cuts(sets_songs, segue_groups):
         updated_sets.append(updated_set)
         
     return updated_sets
+
+# Lead-vocal shares the solver aims for, with a full band. vocal_targets()
+# rescales them over whoever is present.
+BASE_VOCAL_PCTS = {"Lauren": 0.5, "Jon": 0.3, "Martin": 0.1, "David": 0.1}
+# How much each set's own split counts next to the whole gig's. Below 1: the
+# gig-wide split comes first, and a set that drifts (Pub 78 had Lauren on 11
+# of Set 1's 18) is the tiebreaker the solver leans on after that.
+SET_BALANCE_WEIGHT = 0.5
+# The report flags a set where a vocalist's share is this far off target.
+SET_BALANCE_TOLERANCE = 0.10
+SET_VOCAL_BALANCE_ROW = "Set Vocal Balance"
+
+
+def vocal_targets(martin_out=False, david_out=False):
+    """{vocalist: target share of leads}; an absent vocalist's share is 0 and
+    the rest are scaled up proportionally."""
+    present = [v for v in BASE_VOCAL_PCTS
+               if not (v == "Martin" and martin_out) and not (v == "David" and david_out)]
+    total = sum(BASE_VOCAL_PCTS[v] for v in present)
+    return {v: (BASE_VOCAL_PCTS[v] / total if v in present else 0.0) for v in BASE_VOCAL_PCTS}
+
+
+def get_balance_score(sets_songs, targets):
+    """The solver's vocals score (lower is better): how far the whole gig's
+    lead split is from `targets`, plus SET_BALANCE_WEIGHT times how far each
+    set's own split is, averaged over the sets. A one-set gig scores as before."""
+    gig = get_vocalist_score([s for ss in sets_songs for s in ss], targets)
+    per_set = [get_vocalist_score(ss, targets) for ss in sets_songs if ss]
+    if not per_set:
+        return gig
+    return gig + SET_BALANCE_WEIGHT * sum(per_set) / len(per_set)
+
+
+def format_set_vocal_balance(sets_songs, targets):
+    """Status cell for the "Set Vocal Balance" row: each set's lead counts,
+    and ⚠️ if anyone's share of a set is more than SET_BALANCE_TOLERANCE off
+    their target. Used by build_setlist.py and apply_substitution.py."""
+    parts, off = [], []
+    for i, ss in enumerate(sets_songs, 1):
+        counts = {}
+        for s in ss:
+            counts[s["lead_vocals"]] = counts.get(s["lead_vocals"], 0) + 1
+        order = [v for v in targets if targets[v] > 0 or counts.get(v)]
+        order += sorted(v for v in counts if v not in order)
+        parts.append(f"Set {i}: " + " · ".join(f"{v} {counts.get(v, 0)}" for v in order))
+        n = len(ss) or 1
+        for v in order:
+            share = counts.get(v, 0) / n
+            if abs(share - targets.get(v, 0.0)) > SET_BALANCE_TOLERANCE:
+                off.append(f"{v} {share:.0%} of Set {i}")
+    detail = ". ".join(parts)
+    if off:
+        return f"⚠️ Uneven ({detail}. Off target: {', '.join(off)})"
+    return f"✅ Satisfied ({detail})"
+
 
 def get_vocalist_score(songs_list, targets):
     counts = {}
