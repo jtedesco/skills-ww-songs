@@ -1,14 +1,31 @@
 #!/usr/bin/env python3
+import atexit
 import csv
 import os
+import shutil
 import subprocess
 import sys
 import re
+import tempfile
 
 # Paths
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(SCRIPT_DIR, "..", "songs_metadata.csv")
 BUILDER_PATH = os.path.join(SCRIPT_DIR, "build_setlist.py")
+
+# Drive sandbox. A builder run with --date/--location publishes its PDF to the
+# band's shared Drive folder (sync_pdf_to_drive), and the band sees anything
+# that lands there. So before anything imports or runs the builder, point
+# WW_SETLISTS_DIR at a throwaway folder and clear WW_DRIVE_REMOTE, so no rclone
+# remote is used either. This overrides whatever the shell had set. Every builder
+# subprocess inherits os.environ, so this covers the subprocesses too.
+# test_drive_sandbox() checks that it held, and main() stops before any builder
+# run if it didn't.
+REAL_SHARED_DRIVE_DIR = os.path.expanduser("~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists")
+TEST_SETLISTS_DIR = tempfile.mkdtemp(prefix="ww_test_drive_")
+atexit.register(shutil.rmtree, TEST_SETLISTS_DIR, ignore_errors=True)
+os.environ["WW_SETLISTS_DIR"] = TEST_SETLISTS_DIR
+os.environ.pop("WW_DRIVE_REMOTE", None)
 
 # The scenarios run the builder as a subprocess on purpose — importing it here
 # is only to reuse its definition of the yacht pool and its transition budget,
@@ -46,6 +63,49 @@ def log_test(name, success, message=""):
     if message and not success:
         print(f"      Details: {message}")
     return success
+
+
+def test_drive_sandbox():
+    """The Drive sandbox holds: the builder, both imported here and as a
+    subprocess the way the scenarios run it, would publish to the throwaway
+    folder and not to the band's shared Drive folder or an rclone remote."""
+    print("Testing Drive Sandbox (no publish to the band's folder)...")
+    all_pass = True
+
+    def check(name, ok, detail=""):
+        nonlocal all_pass
+        log_test(name, ok, detail)
+        all_pass = all_pass and ok
+
+    def is_real(path):
+        return os.path.realpath(path) == os.path.realpath(REAL_SHARED_DRIVE_DIR)
+
+    sandbox = os.path.realpath(TEST_SETLISTS_DIR)
+    check("Sandbox is not the band's real Drive folder", not is_real(sandbox), sandbox)
+
+    # In-process (the module was imported after the sandbox was set up).
+    target = build_setlist._pick_drive_backend(build_setlist.SHARED_DRIVE_DIR)
+    check("Imported builder publishes to the sandbox",
+          target == ("fs", build_setlist.SHARED_DRIVE_DIR) and os.path.realpath(target[1]) == sandbox,
+          f"Sync target: {target}")
+    check("Imported builder has no rclone remote", build_setlist.RCLONE_REMOTE == "",
+          f"RCLONE_REMOTE={build_setlist.RCLONE_REMOTE!r}")
+
+    # As a subprocess, which is how every scenario runs the builder.
+    probe = ("import build_setlist as b; "
+             "print(repr((b._pick_drive_backend(b.SHARED_DRIVE_DIR), b.RCLONE_REMOTE)))")
+    res = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, cwd=SCRIPT_DIR)
+    try:
+        import ast
+        sub_target, sub_remote = ast.literal_eval(res.stdout.strip().splitlines()[-1])
+    except (ValueError, SyntaxError, IndexError):
+        sub_target, sub_remote = None, None
+    check("Builder subprocess publishes to the sandbox",
+          bool(sub_target) and sub_target[0] == "fs" and os.path.realpath(sub_target[1]) == sandbox
+          and not is_real(sub_target[1]),
+          f"Sync target: {sub_target}; stderr: {res.stderr.strip()[-300:]}")
+    check("Builder subprocess has no rclone remote", sub_remote == "", f"RCLONE_REMOTE={sub_remote!r}")
+    return all_pass
 
 # -------------------------------------------------------------
 # 1. Database Integrity Tests
@@ -685,22 +745,25 @@ def test_scenario_6():
         all_pass = False
         log_test("File output: canonical .md written to setlists/<gig>/", False, f"Expected: {md_file}")
 
+    # Drive sync: an unversioned filename lands at the Drive root (see
+    # sync_pdf_to_drive). It must land in the sandbox, never the band's folder.
+    # Nothing here deletes from the real folder: the test must not touch it at all.
+    synced_name = f"{expected_stem}.pdf"
     if os.path.exists(pdf_file):
+        ok = os.path.exists(os.path.join(TEST_SETLISTS_DIR, synced_name))
+        all_pass = all_pass and ok
+        log_test("Drive sync: PDF published to the test sandbox", ok,
+                 f"Expected {synced_name} in {TEST_SETLISTS_DIR}")
         os.remove(pdf_file)  # clean up test artifact (PDF rendering is best-effort)
+    else:
+        print("      (PDF not rendered on this machine; sandbox publish not checked)")
+    leaked = os.path.exists(os.path.join(REAL_SHARED_DRIVE_DIR, synced_name))
+    all_pass = all_pass and not leaked
+    log_test("Drive sync: nothing published to the band's real Drive folder", not leaked,
+             f"Found {synced_name} in {REAL_SHARED_DRIVE_DIR}")
     if os.path.isdir(gig_dir) and not os.listdir(gig_dir):
         os.rmdir(gig_dir)
-
-    # Drive sync artifacts: an unversioned filename lands at the Drive root
-    # (see sync_pdf_to_drive).
-    shared_drive_dir = os.path.expanduser(
-        os.environ.get("WW_SETLISTS_DIR", "~/Google Drive/Shared Drives/Wannabe Weekenders/Setlists"))
-    for stale in (os.path.join(shared_drive_dir, expected_stem, f"{expected_stem}.pdf"),
-                  os.path.join(shared_drive_dir, expected_stem + ".pdf")):
-        if os.path.exists(stale):
-            os.remove(stale)
-    stale_dir = os.path.join(shared_drive_dir, expected_stem)
-    if os.path.isdir(stale_dir) and not os.listdir(stale_dir):
-        os.rmdir(stale_dir)
+    # The sandbox copy itself is removed with TEST_SETLISTS_DIR at exit.
 
     # 4. Segue ordering: Funkytown -> Miss You -> Reeling in the Years -> Don't Stop
     all_songs_flat = [s for set_songs in res["sets"] for s in set_songs]
@@ -1089,7 +1152,12 @@ def main():
     print("=============================================================")
     print("WANNABE WEEKENDERS SETLIST BUILDER AUTOMATED TEST SUITE")
     print("=============================================================\n")
-    
+
+    # First, before any builder run that could publish a PDF.
+    if not test_drive_sandbox():
+        print("\nDrive sandbox check failed, so no builder runs were started. ❌")
+        sys.exit(1)
+
     db_ok = test_database_integrity()
     
     print("\n-------------------------------------------------------------")
@@ -1111,6 +1179,7 @@ def main():
     print("\n=============================================================")
     print("TEST SUITE SUMMARY")
     print("=============================================================")
+    print("Drive Sandbox:                          PASS")
     print(f"Database Integrity:                     {'PASS' if db_ok else 'FAIL'}")
     print(f"Scenario 1 (Yacht):                     {'PASS' if s1_ok else 'FAIL'}")
     print(f"Scenario 2 (2hr):                       {'PASS' if s2_ok else 'FAIL'}")
