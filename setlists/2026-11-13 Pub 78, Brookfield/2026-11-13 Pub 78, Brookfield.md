@@ -150,7 +150,7 @@
 
 **<span class="starter">[Martin] </span>13. Take It Easy [X]** G · 139 — <em>Acoustic guitar intro</em>
 
-**<span class="starter">[Debo + Alex] </span>14. You Oughta Know** F#m · 105 — <em>Mellow bass+drums intro, electric piano fills</em>
+**<span class="starter">[Jon] </span>14. You Oughta Know** F#m · 105 — <em>Mellow bass+drums intro, electric piano fills</em>
 
 **<span class="starter">[Jon] </span>15. You May Be Right** A · 150 — <em>Glass + guitar intro</em>
 
