@@ -1,7 +1,7 @@
 # 2026-11-13 - Pub 78, Brookfield
 
 - **Gig Type:** Bar
-- **Duration:** 8:00–11:00 PM — 2 sets (89:06 / 86:16 scheduled) + 10 min break
+- **Duration:** 8:00–11:00 PM — 2 sets (89:06 / 87:46 scheduled) + 10 min break
 - **Missing:** None
 - **Breaks:** Silent (1 × 10 min)
 - **Playlists:** [Active](https://music.youtube.com/playlist?list=PLZ3S5L7LdV3A) · [In Progress](https://music.youtube.com/playlist?list=PLVKD0nIHzHbg) · [Archived](https://music.youtube.com/playlist?list=PLHYj7O1YT8Xw)
@@ -12,20 +12,20 @@
 | Show Opener (Working for the Weekend) | ✅ Satisfied |
 | Show Closer (Roll with the Changes) | ✅ Satisfied |
 | Set 1 Closer (Don't Stop Believing) | ✅ Satisfied (moved up from Set 2 by request) |
-| New Material | ✅ Satisfied (*Kid Charlemagne* S1 #17, *We Didn't Start the Fire* S2 #2, *You May Be Right* S2 #15) |
-| Equal Set Lengths | ✅ Satisfied (89:06 / 86:16 — 2:50 spread) |
+| New Material | ✅ Satisfied (*Kid Charlemagne* S1 #17, *We Didn't Start the Fire* S2 #2, *You May Be Right* S2 #14) |
+| Equal Set Lengths | ✅ Satisfied (89:06 / 87:46 — 1:20 spread) |
 | Gig-Ready Songs Only | ✅ Satisfied (all 36 scheduled songs are gig-ready) |
-| Dance Peak (danceable late in each set) | ✅ Satisfied (each set closes on three danceable in a row — *Kid Charlemagne* → *Ride Like the Wind* → *Don't Stop Believing*; *You May Be Right* → *Born to Run* → *Roll with the Changes*) |
+| Dance Peak (danceable late in each set) | ⚠️ Partially Satisfied (Set 1 closes on three danceable in a row — *Kid Charlemagne* → *Ride Like the Wind* → *Don't Stop Believing*. Set 2 closes on two — *Born to Run* → *Roll with the Changes*; *You Oughta Know*, S2 #15 by request, isn't danceable) |
 | Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, Set 2 #1–#3 and #6–#8. Set 1 stays at 2) |
-| Lauren Vocal Health | ✅ Satisfied (Set 1 has none. Set 2's four are at least 2 apart — *Me and Bobby McGee* #7, *Zombie* #10, *Respect* #13, *Roll with the Changes* #17. She leads 18 of 36 — 50.0%) |
+| Lauren Vocal Health | ⚠️ Partially Satisfied (Set 1 has none. Set 2 has four — *Me and Bobby McGee* #7, *Zombie* #10, *You Oughta Know* #15, *Roll with the Changes* #17; the last two are only 1 apart, with *Born to Run* between, placed by request. She leads 18 of 36 — 50.0%) |
 | Segue Integrity | ✅ Satisfied (*Miss You* → *Reeling in the Years* → *Don't Stop*, Set 2 #4–#6; *Brown Eyed Girl* → *Hey Jealousy*, Set 1 #10–#11, moved with the Girls' Names block. *Funkytown* isn't scheduled, so *Miss You* starts on its own) |
-| Target Duration | ⚠️ Over Target (175:22 of sets plus the 10-min break is 185:22 against the 180-min block — 5:22 over. Cutting *Hook* (S1 #16) lands at 179:22; also cutting *Take It Easy* (S2 #14) lands at 174:52) |
+| Target Duration | ⚠️ Over Target (176:52 of sets plus the 10-min break is 186:52 against the 180-min block — 6:52 over. Cutting *Hook* (S1 #16) lands at 180:52, still 0:52 over; also cutting *Take It Easy* (S2 #13) lands at 176:22) |
 | Vocalist Inclusion | ✅ Satisfied (Lauren, Jon, Martin and David all lead — David on *Keep Your Hands to Yourself*, S1 #15, and *Ventura Highway*, S2 #12) |
-| Pacing Flow | ⚠️ 1 energy drop(s): Don't Stop → Me and Bobby McGee (#6→#7, SET 2) |
+| Pacing Flow | ⚠️ 2 energy drop(s): Don't Stop → Me and Bobby McGee (#6→#7, SET 2); You May Be Right → You Oughta Know (#14→#15, SET 2) |
 | Absent-Member Note Check | ✅ Satisfied (full band) |
 | Set Vocal Balance | ✅ Satisfied (Set 1: Lauren 9 · Jon 6 · Martin 3 · David 1. Set 2: Lauren 9 · Jon 6 · Martin 1 · David 1) |
 
-**Totals:** 36 songs · 141:22 music · 34:00 transitions (60s/song) · 10:00 break · **185:22 total** (Target: 180:00)
+**Totals:** 36 songs · 142:52 music · 34:00 transitions (60s/song) · 10:00 break · **186:52 total** (Target: 180:00)
 **Lead vocals:** Lauren 18 (50%) · Jon 12 (33%) · Martin 4 (11%) · David 2 (6%)
 
 ## SET 1
@@ -69,13 +69,13 @@
 | 10 | **Zombie**<!--shade:Gritty--> | The Cranberries | Alternative Rock | 1990s | G | 83 | 5:00 | Lauren | Medium | [YT](https://music.youtube.com/watch?v=yGxHDmHoqXc) | All together (bass+drums+gtr) |
 | 11 | **Piano Man** | Billy Joel | Classic Rock / Piano Rock | 1970s | C | 89 | 5:30 | Jon (L) | Low→Medium | [YT](https://music.youtube.com/watch?v=LLbew85exp0) | Keys intro |
 | 12 | **Ventura Highway** | America | Yacht Rock / Soft Rock | 1970s | G | 125 | 3:30 | David (J, L) | Medium | [YT](https://music.youtube.com/watch?v=tnV7dTXlXxs) | 3 guitars, counted off by David |
-| 13 | **Respect** | Aretha Franklin | Motown | 1960s | C | 115 | 2:30 | Lauren | Medium→High | [YT](https://music.youtube.com/watch?v=9iayJ8u4Qew) | Alex counts us in, start together |
-| 14 | **Take It Easy** 🛑 **[EMERGENCY CUT]** | Eagles | Classic Rock / Country Rock | 1970s | G | 139 | 3:30 | Jon (L, D) | Medium | [YT](https://music.youtube.com/watch?v=32Oc2d_3yEk) | Acoustic guitar intro |
-| 15 | **You May Be Right** | Billy Joel | Classic Rock / Pop Rock | 1980s | A | 150 | 4:15 | Jon | High | [YT](https://music.youtube.com/watch?v=Jpt57dZ2CpE) | Glass + guitar intro |
+| 13 | **Take It Easy** 🛑 **[EMERGENCY CUT]** | Eagles | Classic Rock / Country Rock | 1970s | G | 139 | 3:30 | Jon (L, D) | Medium | [YT](https://music.youtube.com/watch?v=32Oc2d_3yEk) | Acoustic guitar intro |
+| 14 | **You May Be Right** | Billy Joel | Classic Rock / Pop Rock | 1980s | A | 150 | 4:15 | Jon | High | [YT](https://music.youtube.com/watch?v=Jpt57dZ2CpE) | Glass + guitar intro |
+| 15 | **You Oughta Know** | Alanis Morissette | Alternative Rock | 1990s | F#m | 105 | 4:00 | Lauren | Low→High | [YT](https://music.youtube.com/watch?v=iWFE1pekWyI) | Mellow bass+drums, electric piano fills |
 | 16 | **Born to Run** | Bruce Springsteen | Singer-Songwriter | 1970s | E | 147 | 4:30 | Martin (L) | High | [YT](https://music.youtube.com/watch?v=Wu4_zVxmufY) | Drums + everyone starts |
 | 17 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | Classic Rock / Soft Rock | 1970s | C | 134 | 5:30 | Lauren (J, D) | High | [YT](https://music.youtube.com/watch?v=m1ml05Ty5Ao) | Drum + keys in time — stage banter, thank yous |
 
-**Set 2 Music Duration**: 70:16 | **Transitions**: 16:00 | **Total**: 86:16
+**Set 2 Music Duration**: 71:46 | **Transitions**: 16:00 | **Total**: 87:46
 ----------------------------------------
 
 ## FLOOR SHEET
@@ -148,11 +148,11 @@
 
 **<span class="starter">[Guitars] </span>12. Ventura Highway** G · 125 — <em>3 guitars intro, counted off by David</em>
 
-**<span class="starter">[Alex] </span>13. Respect** C · 115 — <em>Alex counts us in, start together</em>
+**<span class="starter">[Martin] </span>13. Take It Easy [X]** G · 139 — <em>Acoustic guitar intro</em>
 
-**<span class="starter">[Martin] </span>14. Take It Easy [X]** G · 139 — <em>Acoustic guitar intro</em>
+**<span class="starter">[Jon] </span>14. You May Be Right** A · 150 — <em>Glass + guitar intro</em>
 
-**<span class="starter">[Jon] </span>15. You May Be Right** A · 150 — <em>Glass + guitar intro</em>
+**<span class="starter">[Debo + Alex] </span>15. You Oughta Know** F#m · 105 — <em>Mellow bass+drums intro, electric piano fills</em>
 
 **<span class="starter">[Alex] </span>16. Born to Run** E · 147 — <em>Drums + everyone starts</em>
 
@@ -173,10 +173,10 @@
 | 6 | **Funkytown** | Lipps, Inc. | C | 122 | Bass + drums |
 | 7 | **Landslide** | Stevie Nicks | C | 76 | guitar |
 | 8 | **Ooh La La** | Faces | D | 133 | guitar |
-| 9 | **Rikki Don't Lose That Number** | Steely Dan | D | 122 | David starts w/ marimba (or keys straight in) |
-| 10 | **Rock This Town** | Stray Cats | D | 200 | JJ starts |
-| 11 | **Second Chance** | Shinedown | Cm | 140 | SEGUE (Cmaj7 to Cm) Jon (keys) |
-| 12 | **Superstition** | Stevie Wonder | E | 100 | drums |
-| 13 | **The Chain** | Fleetwood Mac | Em | 152 | Drums (4 on the floor) |
-| 14 | **Wish You Were Here** | Pink Floyd | G | 60 | guitar |
-| 15 | **You Oughta Know** | Alanis Morissette | F#m | 105 | Mellow bass+drums, electric piano fills |
+| 9 | **Respect** | Aretha Franklin | C | 115 | Alex counts us in, start together |
+| 10 | **Rikki Don't Lose That Number** | Steely Dan | D | 122 | David starts w/ marimba (or keys straight in) |
+| 11 | **Rock This Town** | Stray Cats | D | 200 | JJ starts |
+| 12 | **Second Chance** | Shinedown | Cm | 140 | SEGUE (Cmaj7 to Cm) Jon (keys) |
+| 13 | **Superstition** | Stevie Wonder | E | 100 | drums |
+| 14 | **The Chain** | Fleetwood Mac | Em | 152 | Drums (4 on the floor) |
+| 15 | **Wish You Were Here** | Pink Floyd | G | 60 | guitar |
