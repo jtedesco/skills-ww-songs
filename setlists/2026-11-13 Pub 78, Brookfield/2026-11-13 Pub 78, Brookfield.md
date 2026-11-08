@@ -12,16 +12,16 @@
 | Show Opener (Working for the Weekend) | ✅ Satisfied |
 | Show Closer (Roll with the Changes) | ✅ Satisfied |
 | Set 1 Closer (Don't Stop Believing) | ✅ Satisfied (moved up from Set 2 by request) |
-| New Material | ✅ Satisfied (*Kid Charlemagne* S1 #17, *We Didn't Start the Fire* S2 #2, *You May Be Right* S2 #14) |
+| New Material | ✅ Satisfied (*Kid Charlemagne* S1 #17, *We Didn't Start the Fire* S2 #2, *You May Be Right* S2 #15) |
 | Equal Set Lengths | ✅ Satisfied (89:06 / 87:46 — 1:20 spread) |
 | Gig-Ready Songs Only | ✅ Satisfied (all 36 scheduled songs are gig-ready) |
-| Dance Peak (danceable late in each set) | ⚠️ Partially Satisfied (Set 1 closes on three danceable in a row — *Kid Charlemagne* → *Ride Like the Wind* → *Don't Stop Believing*. Set 2 closes on two — *Born to Run* → *Roll with the Changes*; *You Oughta Know*, S2 #15 by request, isn't danceable) |
+| Dance Peak (danceable late in each set) | ✅ Satisfied (each set closes on three danceable in a row — *Kid Charlemagne* → *Ride Like the Wind* → *Don't Stop Believing*; *You May Be Right* → *Born to Run* → *Roll with the Changes*) |
 | Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, Set 2 #1–#3 and #6–#8. Set 1 stays at 2) |
-| Lauren Vocal Health | ⚠️ Partially Satisfied (Set 1 has none. Set 2 has four — *Me and Bobby McGee* #7, *Zombie* #10, *You Oughta Know* #15, *Roll with the Changes* #17; the last two are only 1 apart, with *Born to Run* between, placed by request. She leads 18 of 36 — 50.0%) |
+| Lauren Vocal Health | ✅ Satisfied (Set 1 has none. Set 2's four are at least 2 apart — *Me and Bobby McGee* #7, *Zombie* #10, *You Oughta Know* #14, *Roll with the Changes* #17. She leads 18 of 36 — 50.0%) |
 | Segue Integrity | ✅ Satisfied (*Miss You* → *Reeling in the Years* → *Don't Stop*, Set 2 #4–#6; *Brown Eyed Girl* → *Hey Jealousy*, Set 1 #10–#11, moved with the Girls' Names block. *Funkytown* isn't scheduled, so *Miss You* starts on its own) |
 | Target Duration | ⚠️ Over Target (176:52 of sets plus the 10-min break is 186:52 against the 180-min block — 6:52 over. Cutting *Hook* (S1 #16) lands at 180:52, still 0:52 over; also cutting *Take It Easy* (S2 #13) lands at 176:22) |
 | Vocalist Inclusion | ✅ Satisfied (Lauren, Jon, Martin and David all lead — David on *Keep Your Hands to Yourself*, S1 #15, and *Ventura Highway*, S2 #12) |
-| Pacing Flow | ⚠️ 2 energy drop(s): Don't Stop → Me and Bobby McGee (#6→#7, SET 2); You May Be Right → You Oughta Know (#14→#15, SET 2) |
+| Pacing Flow | ⚠️ 1 energy drop(s): Don't Stop → Me and Bobby McGee (#6→#7, SET 2) |
 | Absent-Member Note Check | ✅ Satisfied (full band) |
 | Set Vocal Balance | ✅ Satisfied (Set 1: Lauren 9 · Jon 6 · Martin 3 · David 1. Set 2: Lauren 9 · Jon 6 · Martin 1 · David 1) |
 
@@ -70,8 +70,8 @@
 | 11 | **Piano Man** | Billy Joel | Classic Rock / Piano Rock | 1970s | C | 89 | 5:30 | Jon (L) | Low→Medium | [YT](https://music.youtube.com/watch?v=LLbew85exp0) | Keys intro |
 | 12 | **Ventura Highway** | America | Yacht Rock / Soft Rock | 1970s | G | 125 | 3:30 | David (J, L) | Medium | [YT](https://music.youtube.com/watch?v=tnV7dTXlXxs) | 3 guitars, counted off by David |
 | 13 | **Take It Easy** 🛑 **[EMERGENCY CUT]** | Eagles | Classic Rock / Country Rock | 1970s | G | 139 | 3:30 | Jon (L, D) | Medium | [YT](https://music.youtube.com/watch?v=32Oc2d_3yEk) | Acoustic guitar intro |
-| 14 | **You May Be Right** | Billy Joel | Classic Rock / Pop Rock | 1980s | A | 150 | 4:15 | Jon | High | [YT](https://music.youtube.com/watch?v=Jpt57dZ2CpE) | Glass + guitar intro |
-| 15 | **You Oughta Know** | Alanis Morissette | Alternative Rock | 1990s | F#m | 105 | 4:00 | Lauren | Low→High | [YT](https://music.youtube.com/watch?v=iWFE1pekWyI) | Mellow bass+drums, electric piano fills |
+| 14 | **You Oughta Know** | Alanis Morissette | Alternative Rock | 1990s | F#m | 105 | 4:00 | Lauren | Low→High | [YT](https://music.youtube.com/watch?v=iWFE1pekWyI) | Mellow bass+drums, electric piano fills |
+| 15 | **You May Be Right** | Billy Joel | Classic Rock / Pop Rock | 1980s | A | 150 | 4:15 | Jon | High | [YT](https://music.youtube.com/watch?v=Jpt57dZ2CpE) | Glass + guitar intro |
 | 16 | **Born to Run** | Bruce Springsteen | Singer-Songwriter | 1970s | E | 147 | 4:30 | Martin (L) | High | [YT](https://music.youtube.com/watch?v=Wu4_zVxmufY) | Drums + everyone starts |
 | 17 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | Classic Rock / Soft Rock | 1970s | C | 134 | 5:30 | Lauren (J, D) | High | [YT](https://music.youtube.com/watch?v=m1ml05Ty5Ao) | Drum + keys in time — stage banter, thank yous |
 
@@ -150,9 +150,9 @@
 
 **<span class="starter">[Martin] </span>13. Take It Easy [X]** G · 139 — <em>Acoustic guitar intro</em>
 
-**<span class="starter">[Jon] </span>14. You May Be Right** A · 150 — <em>Glass + guitar intro</em>
+**<span class="starter">[Debo + Alex] </span>14. You Oughta Know** F#m · 105 — <em>Mellow bass+drums intro, electric piano fills</em>
 
-**<span class="starter">[Debo + Alex] </span>15. You Oughta Know** F#m · 105 — <em>Mellow bass+drums intro, electric piano fills</em>
+**<span class="starter">[Jon] </span>15. You May Be Right** A · 150 — <em>Glass + guitar intro</em>
 
 **<span class="starter">[Alex] </span>16. Born to Run** E · 147 — <em>Drums + everyone starts</em>
 
