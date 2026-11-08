@@ -215,7 +215,21 @@ Setlists/
 - Repo filenames carry no version suffix, so every sync now takes the **unversioned** path: a straight copy to `<stem>.pdf` at the root. Git holds the history the archive folder used to.
 - The per-gig archive subfolders are what the numbered era left behind. `sync_pdf_to_drive()` still handles a `<stem> vN.pdf` argument (archive the copy, guard the canonical against a stale overwrite with `↩️ Canonical left at vN`) so those old files can still be re-published, but nothing writes new ones. Don't reintroduce the suffix to get a Drive archive — that's what git is for.
 
-This is a plain filesystem copy (`shutil.copy2`) into the folder synced by the Google Drive Desktop app — **never use the Google Drive MCP connector for this, for any file type, even small ones.** This was tried and explicitly ruled out by the user ("forget the MCP approach altogether"), for good reason: the connector has no chunked/resumable upload, so pushing even a moderate-size binary (like a PDF) through it means base64-encoding the whole thing into a single tool call, which blows past any single-call token budget (a ~300KB PDF is ~400K base64 characters ≈ ~400K tokens). It also has no permission-write tool, so "anyone with the link" sharing can't be automated either way. The local-copy approach sidesteps all of this.
+This is a plain filesystem copy (`shutil.copy2`) into the folder synced by the Google Drive Desktop app — **never use the Google Drive MCP connector for this, for any file type, even small ones.** This was tried and explicitly ruled out by the user ("forget the MCP approach altogether"), for good reason: the connector has no chunked/resumable upload, so pushing even a moderate-size binary (like a PDF) through it means base64-encoding the whole thing into a single tool call, which blows past any single-call token budget (a ~300KB PDF is ~400K base64 characters ≈ ~400K tokens). The local-copy approach sidesteps all of this. (The connector *is* used for one thing: setting "anyone with the link" sharing on the already-synced file — see below.)
+
+### Shareable Permalink (always send it)
+
+The band shares setlists by link, so after every setlist build or revision the final message must include a public permalink to the canonical Drive PDF:
+
+1. Find the file's Drive ID with the Drive connector's `search_files`: `title contains '<YYYY-MM-DD Location>' and mimeType = 'application/pdf'`, and pick the one at the `Setlists/` root (not an archive subfolder). A freshly synced file can take a few seconds to show up — retry once.
+2. Call `share_file` with `permissionId: "anyoneWithLink"`, `role: "reader"`. This is the user's standing instruction for setlist PDFs, so don't ask first — but share only that file, never the folder or the Shared Drive.
+3. Put the returned `https://drive.google.com/file/d/<id>/view` link in the final message, ready to paste to the band.
+
+Revisions overwrite `<stem>.pdf` in place, so Drive keeps the file ID and the link the band already has stays current — another reason never to delete-and-recreate or reintroduce `vN` names.
+
+### Venue Addresses
+
+When anything needs a venue's street address (a setlist header, a gig summary, travel notes), look it up with a web search (`<Venue> <city> IL address`) instead of asking the user, take the address multiple listings agree on, and present it for confirmation with its source. If sources disagree or the venue has several locations, show the candidates and ask which one.
 
 ### Publishing from a cloud session (no mounted Drive)
 
