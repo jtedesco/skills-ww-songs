@@ -47,6 +47,7 @@ from build_setlist import (
     playlist_links_bullet, PLAYLIST_BULLET_PREFIX,
     TRANSITION_BUFFER_SECONDS,
     parse_shade_label, assign_shade_block, shade_starts, strip_shade_markers,
+    parse_tag_label,
     in_season, cut_without,
     vocal_targets, format_set_vocal_balance, SET_VOCAL_BALANCE_ROW,
 )
@@ -297,6 +298,7 @@ def parse_md(md_path):
                         "intro_notes": _cell(cells, col, "Intro"),
                         "emergency_cut": "EMERGENCY CUT" in title_cell,
                         "shade": parse_shade_label(title_cell),
+                        "tag": parse_tag_label(title_cell),
                     })
                 else:
                     table_end = j
@@ -722,6 +724,11 @@ def main():
                         help="Shade the run of songs from FIRST to LAST (inclusive) as one named block, in both the set table and the floor sheet (repeatable). Both endpoints must be in the same set.")
     parser.add_argument("--unshade", action="append", default=[], metavar="LABEL",
                         help="Remove a shaded block by its label (repeatable).")
+    parser.add_argument("--tag", nargs=2, action="append", default=[], metavar=("TITLE", "LABEL"),
+                        help="Print [LABEL] after TITLE on the set table and the floor sheet, e.g. "
+                             "--tag Valerie 'Band Intros'. Per-gig; replaces any tag the song already has (repeatable).")
+    parser.add_argument("--untag", action="append", default=[], metavar="TITLE",
+                        help="Remove a song's title tag (repeatable).")
     parser.add_argument("--no-emergency-cut", action="store_true",
                         help="Drop every EMERGENCY CUT mark and stop picking one for this gig. "
                              "Recorded in the header, so later revisions keep it.")
@@ -736,8 +743,8 @@ def main():
     # tail (floor sheet, gig summary) onto a setlist written before that
     # section existed — re-setting a song to the length it already has.
     if not (args.swap or args.remove or args.add or args.set_length or args.refresh_intro_notes
-            or args.shade or args.unshade or args.no_emergency_cut):
-        print("Error: nothing to do — pass at least one --swap, --remove, --add, --set-length, --shade, --unshade, --no-emergency-cut, or --refresh-intro-notes", file=sys.stderr)
+            or args.shade or args.unshade or args.tag or args.untag or args.no_emergency_cut):
+        print("Error: nothing to do — pass at least one --swap, --remove, --add, --set-length, --shade, --unshade, --tag, --untag, --no-emergency-cut, or --refresh-intro-notes", file=sys.stderr)
         sys.exit(1)
 
     md_path = args.md_path
@@ -781,6 +788,15 @@ def main():
             print(f"Error: --shade endpoints {first_t!r}/{last_t!r} are not both in one section",
                   file=sys.stderr)
             sys.exit(1)
+
+    for title, label in [(t, l) for t, l in args.tag] + [(t, None) for t in args.untag]:
+        row = next((r for sec in sections for r in sec["rows"]
+                    if normalize_title(r["title"]) == normalize_title(title)), None)
+        if row is None:
+            flag = "--tag" if label else "--untag"
+            print(f"Error: {flag} song not found in setlist: {title!r}", file=sys.stderr)
+            sys.exit(1)
+        row["tag"] = label.strip().strip("[]").strip() if label else None
 
     songs_by_section = [sec["rows"] for sec in sections]
 

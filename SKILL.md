@@ -586,6 +586,7 @@ All "who's missing" and event-detail info lives here — do not restate it in th
   - **Shading must out-specify the `tr:nth-child(even)` zebra striping**, which it does on class count. If you restyle rows, check a shaded row that happens to be even still reads as shaded.
   - **Per-gig editorial, so it lives in the setlist `.md`, never `songs_metadata.csv`** — same rule as the `[Vamp]` intro tag. A block that made sense for one night would otherwise reappear on every setlist generated thereafter.
   - **Re-check the floor sheet's page count after adding one.** The shaded entries carry 1px of vertical padding each, deliberately minimal; a block on an already-tight sheet can tip it to two pages.
+- **Title tags**: a per-gig suffix after one song's title, printed bold on the set table and inside the bold title on the floor sheet, the way `[X]` marks the emergency cut — e.g. `Valerie [Band Intros]` for where the band gets introduced. `apply_substitution.py --tag "Valerie" "Band Intros"` adds one (repeatable; replaces any tag the song already has), `--untag "Valerie"` removes it. Carried as a `<!--tag:LABEL-->` marker in the `.md` title cell, so it rides along with the song through reorders and later revisions. Per-gig, like shading: it lives in the setlist `.md`, never `songs_metadata.csv`. It widens the floor-sheet title, so keep it short and re-check that page still fits on one sheet.
 
 > **Note**: Vocalist target percentages are used internally by the solver but are **not** published in the report.
 

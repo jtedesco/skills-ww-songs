@@ -39,7 +39,7 @@
 | 6 | **Brandy** 🎨 *[Girls' Names]*<!--shade:Girls' Names--> | Looking Glass | Yacht Rock / Pop Rock | 1970s | E | 126 | 3:00 | Jon (L) | Low | [YT](https://music.youtube.com/watch?v=CFhFyvk0yS8) | Guitar intro |
 | 7 | **American Girl**<!--shade:Girls' Names--> | Tom Petty | Singer-Songwriter | 1970s | D | 114 | 3:30 | Martin (L) | High | [YT](https://music.youtube.com/watch?v=J7bAeH7iJFc) | Guitar hook |
 | 8 | **Jenny (867-5309)**<!--shade:Girls' Names--> | Tommy Tutone | Classic Rock | 1980s | F#m | 136 | 4:00 | Jon (D, L, M) | High | [YT](https://music.youtube.com/watch?v=tHL2XeuA6Yg) | Guitar riff. Stage banter about phone numbers |
-| 9 | **Valerie**<!--shade:Girls' Names--> | Amy Winehouse | Contemporary R&B | 2000s | E | 106 | 3:30 | Lauren | Medium | [YT](https://music.youtube.com/watch?v=-WrSLR5oEao) | Bass and drums |
+| 9 | **Valerie** **[Band Intros]**<!--tag:Band Intros--><!--shade:Girls' Names--> | Amy Winehouse | Contemporary R&B | 2000s | E | 106 | 3:30 | Lauren | Medium | [YT](https://music.youtube.com/watch?v=-WrSLR5oEao) | Bass and drums |
 | 10 | **Brown Eyed Girl**<!--shade:Girls' Names--> | Van Morrison | Classic Rock / Singer-Songwriter | 1960s | G | 120 | 3:00 | Jon (L) | Low | [YT](https://music.youtube.com/watch?v=nEQmbFWnQeE) | Jon starts |
 | 11 | **Hey Jealousy** | Gin Blossoms | Alternative Rock | 1990s | D | 153 | 4:00 | Martin (J, L, D) | Medium | [YT](https://music.youtube.com/watch?v=EARps6chiMA) | SEGUE Jon piano, Martin to electric |
 | 12 | **Peg** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | G | 116 | 4:00 | Jon (L) | Medium | [YT](https://music.youtube.com/watch?v=u_pt3khMRFs) | Written intro |
@@ -100,7 +100,7 @@
 
 **<span class="starter">[JJ] </span>8. Jenny (867-5309)** F#m · 136 — <em>Guitar riff intro. Stage banter about phone numbers</em><!--shade:Girls' Names-->
 
-**<span class="starter">[Debo + Alex] </span>9. Valerie** E · 106 — <em>Bass and drums intro</em><!--shade:Girls' Names-->
+**<span class="starter">[Debo + Alex] </span>9. Valerie [Band Intros]** E · 106 — <em>Bass and drums intro</em><!--shade:Girls' Names-->
 
 **<span class="starter">[Jon] </span>10. Brown Eyed Girl** G · 120 — <em>Jon starts</em><!--shade:Girls' Names-->
 

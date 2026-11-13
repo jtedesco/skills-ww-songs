@@ -571,6 +571,7 @@ def render_floor_sheet_lines(blocks, display_title=None, form_notes=None, starts
             # to still fit one page, and the title is what actually gets read
             # from standing height — so the title keeps the budget.
             cut = " [X]" if song.get("emergency_cut") else ""
+            tag = f" [{song['tag']}]" if song.get("tag") else ""
             # Shaded blocks carry the same <!--shade:LABEL--> marker the set
             # tables use, so render_pdf.py shades this page off one rule. No
             # visible label here: the block name is already printed once in
@@ -580,7 +581,7 @@ def render_floor_sheet_lines(blocks, display_title=None, form_notes=None, starts
             # The space stays inside the span, at the prefix's size: a title-
             # sized one costs enough width to wrap a long title.
             prefix = f'<span class="starter">[{html.escape(who, quote=False)}] </span>' if who else ""
-            line = f"**{prefix}{idx}. {display_title(song)}{cut}** {key} · {bpm_str}"
+            line = f"**{prefix}{idx}. {display_title(song)}{tag}{cut}** {key} · {bpm_str}"
             if intro:
                 # Explicit <em>, not *...*: an intro note can itself carry
                 # markup (a bold "[Vamp]"-style tag), and "***[Vamp]***" —
@@ -796,6 +797,24 @@ def strip_shade_markers(text):
     return SHADE_MARKER_RE.sub("", text)
 
 
+# A per-gig tag printed as a suffix to a song's title — 'Valerie [Band
+# Intros]' — on both the set table and the floor sheet, the way [X] marks the
+# emergency cut. Per-gig like shading (one night's staging, never a property
+# of the song), so it lives in the setlist .md: a <!--tag:LABEL--> marker in
+# the title cell, which apply_substitution.py reads back and rewrites.
+TAG_MARKER_RE = re.compile(r"<!--tag:(.*?)-->")
+
+
+def tag_marker(label):
+    return f"<!--tag:{label}-->"
+
+
+def parse_tag_label(cell):
+    """Read a song's title tag back off a printed title cell, or None."""
+    m = TAG_MARKER_RE.search(cell)
+    return m.group(1).strip() if m else None
+
+
 def assign_shade_block(songs, first_title, last_title, label):
     """Tag songs[first..last] as one shaded block. Returns the number tagged.
 
@@ -829,13 +848,15 @@ def format_md_row(song, idx, marker="", shade_start=False):
     shade_bits = ""
     if shade:
         shade_bits = (f" 🎨 *[{shade}]*" if shade_start else "") + shade_marker(shade)
+    tag = song.get("tag")
+    tag_bits = f" **[{tag}]**{tag_marker(tag)}" if tag else ""
     genre = genre_subgenre_display_string(song)
     decade = decade_display_string(song)
     # A not-yet-gig-ready song can have no BPM (see "NEVER guess a key or
     # BPM" in SKILL.md). Print the cell blank, never the literal "None" —
     # apply_substitution.py reads this table back and has to parse it.
     bpm = "" if song.get("bpm") in (None, "") else song["bpm"]
-    return f"| {idx+1} | **{song['title']}**{marker}{shade_bits} | {song['artist']} | {genre} | {decade} | {song['key']} | {bpm} | {song['length']} | {v_string} | {energy} | {rec} | {song['intro_notes']} |"
+    return f"| {idx+1} | **{song['title']}**{tag_bits}{marker}{shade_bits} | {song['artist']} | {genre} | {decade} | {song['key']} | {bpm} | {song['length']} | {v_string} | {energy} | {rec} | {song['intro_notes']} |"
 
 
 def shade_starts(songs):

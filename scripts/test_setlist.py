@@ -1207,6 +1207,56 @@ def test_set_vocal_balance():
     return all_pass
 
 
+def test_title_tags():
+    """A per-gig title tag ('Valerie [Band Intros]') prints after the title on
+    the set table and the floor sheet, survives a later revision, and comes off
+    with --untag. Run on a scratch copy of the Pub 78 setlist."""
+    print("\nTesting Title Tags...")
+    all_pass = True
+
+    def check(name, ok, detail=""):
+        nonlocal all_pass
+        log_test(name, ok, detail)
+        all_pass = all_pass and ok
+
+    src = os.path.join(SCRIPT_DIR, "..", "setlists", "2026-11-13 Pub 78, Brookfield",
+                       "2026-11-13 Pub 78, Brookfield.md")
+    work = tempfile.mkdtemp(prefix="ww_test_tag_")
+    md = os.path.join(work, "2026-11-13 Pub 78, Brookfield.md")
+    shutil.copy(src, md)
+    sub = os.path.join(SCRIPT_DIR, "apply_substitution.py")
+
+    def run(*a):
+        return subprocess.run([sys.executable, sub, md, *a], capture_output=True, text=True)
+
+    def lines_for(title):
+        text = open(md, encoding="utf-8").read()
+        row = next((l for l in text.split("\n") if l.startswith("| ") and f"**{title}**" in l), "")
+        floor = next((l for l in text.split("\n") if f". {title}" in l and l.startswith("**<span")), "")
+        return row, floor
+
+    try:
+        run("--untag", "Valerie")  # in case the committed copy already has one
+        res = run("--tag", "Valerie", "[Band Intros]")
+        check("--tag runs", res.returncode == 0, res.stderr[-300:])
+        row, floor = lines_for("Valerie")
+        check("Set table prints the tag after the title",
+              "**Valerie** **[Band Intros]**<!--tag:Band Intros-->" in row, row[:120])
+        check("Floor sheet prints the tag inside the bold title",
+              ". Valerie [Band Intros]**" in floor, floor[:120])
+        run("--set-length", "Miss You", "4:00")
+        row, floor = lines_for("Valerie")
+        check("Tag survives a later revision", "[Band Intros]" in row and "[Band Intros]" in floor)
+        run("--untag", "Valerie")
+        row, floor = lines_for("Valerie")
+        check("--untag removes it", "Band Intros" not in row and "Band Intros" not in floor)
+        res = run("--tag", "Not A Song", "X")
+        check("--tag on a song not in the setlist is an error", res.returncode != 0)
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+    return all_pass
+
+
 def main():
     print("=============================================================")
     print("WANNABE WEEKENDERS SETLIST BUILDER AUTOMATED TEST SUITE")
@@ -1235,6 +1285,7 @@ def main():
     rules_ok = test_rules()
     cut_chain_ok = test_cut_avoids_segue_chains()
     set_vocals_ok = test_set_vocal_balance()
+    tags_ok = test_title_tags()
 
     print("\n=============================================================")
     print("TEST SUITE SUMMARY")
@@ -1254,9 +1305,10 @@ def main():
     print(f"Setlist Rules (check_setlist.py):       {'PASS' if rules_ok else 'FAIL'}")
     print(f"Emergency Cut vs. Segue Chains:         {'PASS' if cut_chain_ok else 'FAIL'}")
     print(f"Set Vocal Balance:                      {'PASS' if set_vocals_ok else 'FAIL'}")
+    print(f"Title Tags:                             {'PASS' if tags_ok else 'FAIL'}")
     print("=============================================================")
 
-    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok and s8_ok and form_ok and season_ok and rules_ok and cut_chain_ok and set_vocals_ok:
+    if db_ok and s1_ok and s2_ok and s3_ok and s4_ok and s5_ok and s6_ok and s7_ok and s8_ok and form_ok and season_ok and rules_ok and cut_chain_ok and set_vocals_ok and tags_ok:
         print("\nALL TESTS PASSED SUCCESSFULLY! ✅")
         sys.exit(0)
     else:
