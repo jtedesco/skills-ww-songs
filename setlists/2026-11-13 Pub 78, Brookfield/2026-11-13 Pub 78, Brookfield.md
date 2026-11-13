@@ -19,8 +19,8 @@
 | Vocalist Balance | ✅ Satisfied (max 3 in a row — Lauren, Set 2 #1–#3 and #6–#8. Set 1 stays at 2) |
 | Lauren Vocal Health | ✅ Satisfied (Set 1 has none. Set 2's four are at least 2 apart — *Me and Bobby McGee* #7, *Zombie* #10, *You Oughta Know* #14, *Roll with the Changes* #17. She leads 18 of 36 — 50.0%) |
 | Segue Integrity | ✅ Satisfied (*Miss You* → *Reeling in the Years* → *Don't Stop*, Set 2 #4–#6; *Brown Eyed Girl* → *Hey Jealousy*, Set 1 #10–#11, moved with the Girls' Names block. *Funkytown* isn't scheduled, so *Miss You* starts on its own) |
-| Target Duration | ⚠️ Over Target (176:52 of sets plus the 10-min break is 186:52 against the 180-min block — 6:52 over. Cutting *Hook* (S1 #16) lands at 180:52, still 0:52 over; also cutting *Take It Easy* (S2 #13) lands at 176:22) |
-| Vocalist Inclusion | ✅ Satisfied (Lauren, Jon, Martin and David all lead — David on *Keep Your Hands to Yourself*, S1 #15, and *Ventura Highway*, S2 #12) |
+| Target Duration | ⚠️ Over Target (176:52 of sets plus the 10-min break is 186:52 against the 180-min block — 6:52 over. Cutting *Hook* (S1 #16) lands at 180:52, still 0:52 over; also cutting *Take It Easy* (S2 #12) lands at 176:22) |
+| Vocalist Inclusion | ✅ Satisfied (Lauren, Jon, Martin and David all lead — David on *Keep Your Hands to Yourself*, S1 #15, and *Ventura Highway*, S2 #13) |
 | Pacing Flow | ⚠️ 1 energy drop(s): Don't Stop → Me and Bobby McGee (#6→#7, SET 2) |
 | Absent-Member Note Check | ✅ Satisfied (full band) |
 | Set Vocal Balance | ✅ Satisfied (Set 1: Lauren 9 · Jon 6 · Martin 3 · David 1. Set 2: Lauren 9 · Jon 6 · Martin 1 · David 1) |
@@ -42,7 +42,7 @@
 | 9 | **Valerie** **[Band Intros]**<!--tag:Band Intros--><!--shade:Girls' Names--> | Amy Winehouse | Contemporary R&B | 2000s | E | 106 | 3:30 | Lauren | Medium | [YT](https://music.youtube.com/watch?v=-WrSLR5oEao) | Bass and drums |
 | 10 | **Brown Eyed Girl**<!--shade:Girls' Names--> | Van Morrison | Classic Rock / Singer-Songwriter | 1960s | G | 120 | 3:00 | Jon (L) | Low | [YT](https://music.youtube.com/watch?v=nEQmbFWnQeE) | Jon starts |
 | 11 | **Hey Jealousy** | Gin Blossoms | Alternative Rock | 1990s | D | 153 | 4:00 | Martin (J, L, D) | Medium | [YT](https://music.youtube.com/watch?v=EARps6chiMA) | SEGUE Jon piano, Martin to electric |
-| 12 | **Peg** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | G | 116 | 4:00 | Jon (L) | Medium | [YT](https://music.youtube.com/watch?v=u_pt3khMRFs) | Written intro |
+| 12 | **Peg** | Steely Dan | Yacht Rock / Jazz Rock | 1970s | G | 116 | 4:00 | Jon (L) | Medium | [YT](https://music.youtube.com/watch?v=u_pt3khMRFs) | Recorded intro |
 | 13 | **Dreams** | Fleetwood Mac | Classic Rock / Soft Rock | 1970s | C | 120 | 4:00 | Lauren (J, M) | Low | [YT](https://music.youtube.com/watch?v=CM1-cJBpiWQ) | Drums fill |
 | 14 | **Lights** | Journey | Classic Rock / AOR | 1970s | D | 103 | 3:00 | Lauren | Low→Medium | [YT](https://music.youtube.com/watch?v=BPazVAtD-xQ) | Guitar + piano unison |
 | 15 | **Keep Your Hands to Yourself** | Georgia Satellites | American Trad Rock | 1980s | A | 120 | 3:30 | David (L) | Medium | [YT](https://music.youtube.com/watch?v=cPtw_Cd3zTk) | guitar, A riff |
@@ -66,35 +66,35 @@
 | 7 | **Me and Bobby McGee** 🎨 *[Gritty]*<!--shade:Gritty--> | Janis Joplin | Blues Rock | 1970s | G->A | 94 | 4:30 | Lauren | Low→High | [YT](https://music.youtube.com/watch?v=-ggFIeg5u1M) | Guitar on G chord |
 | 8 | **I Hate Myself for Loving You**<!--shade:Gritty--> | Joan Jett & the Blackhearts | Album Rock | 1980s | E | 118 | 4:07 | Lauren | High | [YT](https://music.youtube.com/watch?v=V6m7b5xJq7Y) | drums |
 | 9 | **Gold on the Ceiling**<!--shade:Gritty--> | Black Keys, The | Alternative Rock | 2010s | G | 130 | 3:30 | Jon (L, M) | High | [YT](https://music.youtube.com/watch?v=8tPsaSPraks) | guitar intro, heavy keys |
-| 10 | **Zombie**<!--shade:Gritty--> | The Cranberries | Alternative Rock | 1990s | G | 83 | 5:00 | Lauren | Medium | [YT](https://music.youtube.com/watch?v=yGxHDmHoqXc) | All together (bass+drums+gtr) |
+| 10 | **Zombie**<!--shade:Gritty--> | The Cranberries | Alternative Rock | 1990s | G | 83 | 5:00 | Lauren | Medium | [YT](https://music.youtube.com/watch?v=yGxHDmHoqXc) | Recorded guitar intro |
 | 11 | **Piano Man** | Billy Joel | Classic Rock / Piano Rock | 1970s | C | 89 | 5:30 | Jon (L) | Low→Medium | [YT](https://music.youtube.com/watch?v=LLbew85exp0) | Keys intro |
-| 12 | **Ventura Highway** | America | Yacht Rock / Soft Rock | 1970s | G | 125 | 3:30 | David (J, L) | Medium | [YT](https://music.youtube.com/watch?v=tnV7dTXlXxs) | 3 guitars, counted off by David |
-| 13 | **Take It Easy** 🛑 **[EMERGENCY CUT]** | Eagles | Classic Rock / Country Rock | 1970s | G | 139 | 3:30 | Jon (L, D) | Medium | [YT](https://music.youtube.com/watch?v=32Oc2d_3yEk) | Acoustic guitar intro |
+| 12 | **Take It Easy** 🛑 **[EMERGENCY CUT]** | Eagles | Classic Rock / Country Rock | 1970s | G | 139 | 3:30 | Jon (L, D) | Medium | [YT](https://music.youtube.com/watch?v=32Oc2d_3yEk) | Acoustic guitar intro |
+| 13 | **Ventura Highway** | America | Yacht Rock / Soft Rock | 1970s | G | 125 | 3:30 | David (J, L) | Medium | [YT](https://music.youtube.com/watch?v=tnV7dTXlXxs) | 3 guitars, counted off by David |
 | 14 | **You Oughta Know** | Alanis Morissette | Alternative Rock | 1990s | F#m | 105 | 4:00 | Lauren | Low→High | [YT](https://music.youtube.com/watch?v=iWFE1pekWyI) | Mellow bass+drums, electric piano fills |
 | 15 | **You May Be Right** | Billy Joel | Classic Rock / Pop Rock | 1980s | A | 150 | 4:15 | Jon | High | [YT](https://music.youtube.com/watch?v=Jpt57dZ2CpE) | Glass + guitar intro |
 | 16 | **Born to Run** | Bruce Springsteen | Singer-Songwriter | 1970s | E | 147 | 4:30 | Martin (L) | High | [YT](https://music.youtube.com/watch?v=Wu4_zVxmufY) | Drums + everyone starts |
-| 17 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | Classic Rock / Soft Rock | 1970s | C | 134 | 5:30 | Lauren (J, D) | High | [YT](https://music.youtube.com/watch?v=m1ml05Ty5Ao) | Drum + keys in time — stage banter, thank yous |
+| 17 | **Roll with the Changes** 🔴 *[Closer]* | REO Speedwagon | Classic Rock / Soft Rock | 1970s | C | 94 | 5:30 | Lauren (J, D) | High | [YT](https://music.youtube.com/watch?v=m1ml05Ty5Ao) | Drum + keys in time — stage banter, thank yous |
 
 **Set 2 Music Duration**: 71:46 | **Transitions**: 16:00 | **Total**: 87:46
 ----------------------------------------
 
 ## FLOOR SHEET
 
-*[X] = emergency cut — drop this one first if running long.*
+*[X] = emergency cut — drop this one first if running long. \* = vampable intro.*
 
 ### SET 1
 
-**<span class="starter">[Alex] </span>1. Working for the Weekend** Bm · 147 — <em>Cowbell starts</em>
+**<span class="starter">[Count] </span>1. Working for the Weekend** Bm · 147 — <em>Cowbell starts</em>
 
 **<span class="starter">[Martin] </span>2. The Middle** D · 162 — <em>Guitar riff, starts on F#</em>
 
 **<span class="starter">[JJ] </span>3. Free Ride** D · 104 — <em>guitar riff intro</em>
 
-**<span class="starter">[JJ] </span>4. Listen to the Music** E · 105 — <em>Guitar riff intro</em>
+**<span class="starter">[JJ] </span>4. Listen to the Music\*** E · 105 — <em>Guitar riff intro</em>
 
-**<span class="starter">[Alex] </span>5. EWTRW** D · 112 — <em>Keys intro</em>
+**<span class="starter">[Count] </span>5. EWTRW** D · 112 — <em>Keys intro</em>
 
-**<span class="starter">[Martin] </span>6. Brandy** E · 126 — <em>Guitar intro</em><!--shade:Girls' Names-->
+**<span class="starter">[Martin] </span>6. Brandy\*** E · 126 — <em>Guitar intro</em><!--shade:Girls' Names-->
 
 **<span class="starter">[Guitars] </span>7. American Girl** D · 114 — <em>Guitar hook intro</em><!--shade:Girls' Names-->
 
@@ -106,17 +106,17 @@
 
 **<span class="starter">[Jon] </span>11. Hey Jealousy** D · 153 — <em>SEGUE Jon piano, Martin to electric</em>
 
-**<span class="starter">[Alex] </span>12. Peg** G · 116 — <em>Written intro</em>
+**<span class="starter">[Count] </span>12. Peg** G · 116 — <em>Recorded intro</em>
 
-**<span class="starter">[Alex] </span>13. Dreams** C · 120 — <em>Drums fill intro</em>
+**<span class="starter">[Count] </span>13. Dreams\*** C · 120 — <em>Drums fill intro</em>
 
-**<span class="starter">[Alex] </span>14. Lights** D · 103 — <em>Guitar + piano unison intro</em>
+**<span class="starter">[Count] </span>14. Lights** D · 103 — <em>Guitar + piano unison intro</em>
 
 **<span class="starter">[David] </span>15. Keep Your Hands** A · 120 — <em>guitar intro, A riff</em> <span class="form">V · Gtr mini-solo (M) · V · Sax (J) · V · Gtr solo (JJ) · V again · Last line slows</span>
 
 **<span class="starter">[Martin] </span>16. Hook [X]** A · 116 — <em>Guitar intro + sax solo</em> <span class="form">V · V · C · V · V · C · Sax · Gtr · Rap · C · Out</span>
 
-**<span class="starter">[Alex] </span>17. Kid Charlemagne** C7 · 116 — <em>Keys intro</em>
+**<span class="starter">[Count] </span>17. Kid Charlemagne** C7 · 116 — <em>Keys intro</em>
 
 **<span class="starter">[Alex] </span>18. Ride Like the Wind** Eb · 125 — <em>Percussion + keys intro</em>
 
@@ -128,35 +128,35 @@
 
 **<span class="starter">[Jon + Alex] </span>2. We Didn't Start the Fire** G · 145 — <em>Drums and keys intro</em>
 
-**<span class="starter">[Alex] </span>3. Hit Me with Your Best Shot** E · 127 — <em>Guitar intro</em>
+**<span class="starter">[Count] </span>3. Hit Me with Your Best Shot** E · 127 — <em>Guitar intro</em>
 
-**<span class="starter">[Jon] </span>4. Miss You** Am · 110 — <em>Jon starts (no segue)</em>
+**<span class="starter">[Jon] </span>4. Miss You\*** Am · 110 — <em>Jon starts (no segue)</em>
 
 **<span class="starter">[JJ] </span>5. Reeling in the Years** A · 136 — <em>SEGUE (E7 Resolve) Guitar hook starts</em>
 
-**<span class="starter">[Jon] </span>6. Don't Stop** E · 119 — <em>SEGUE Piano</em> <span class="form">V C V C · Gtr solo (M) · V · C (stop) · C · Sax (J) · C · Oohs ×3 · “Don’t stop” a cappella</span>
+**<span class="starter">[Jon] </span>6. Don't Stop** E · 119 — <em>SEGUE Piano</em> <span class="form">V C V C · Gtr solo (M) · V · C · C (stop) · Sax (J) · C · Oohs ×3 · “Don’t stop” a cappella</span>
 
-**<span class="starter">[Martin] </span>7. Me and Bobby McGee** G->A · 94 — <em>Guitar on G chord intro</em><!--shade:Gritty-->
+**<span class="starter">[Martin] </span>7. Me and Bobby McGee\*** G->A · 94 — <em>Guitar on G chord intro</em><!--shade:Gritty-->
 
 **<span class="starter">[Alex] </span>8. I Hate Myself for Loving You** E · 118 — <em>drums intro</em><!--shade:Gritty-->
 
 **<span class="starter">[Martin] </span>9. Gold on the Ceiling** G · 130 — <em>guitar intro, heavy keys</em><!--shade:Gritty-->
 
-**<span class="starter">[Martin] </span>10. Zombie** G · 83 — <em>All together intro (bass+drums+gtr)</em><!--shade:Gritty-->
+**<span class="starter">[Martin] </span>10. Zombie\*** G · 83 — <em>Recorded guitar intro</em><!--shade:Gritty-->
 
 **<span class="starter">[Jon] </span>11. Piano Man** C · 89 — <em>Keys intro</em>
 
-**<span class="starter">[Guitars] </span>12. Ventura Highway** G · 125 — <em>3 guitars intro, counted off by David</em>
+**<span class="starter">[Martin] </span>12. Take It Easy\* [X]** G · 139 — <em>Acoustic guitar intro</em>
 
-**<span class="starter">[Martin] </span>13. Take It Easy [X]** G · 139 — <em>Acoustic guitar intro</em>
+**<span class="starter">[Guitars] </span>13. Ventura Highway** G · 125 — <em>3 guitars intro, counted off by David</em>
 
-**<span class="starter">[Jon] </span>14. You Oughta Know** F#m · 105 — <em>Mellow bass+drums intro, electric piano fills</em>
+**<span class="starter">[Jon] </span>14. You Oughta Know\*** F#m · 105 — <em>Mellow bass+drums intro, electric piano fills</em>
 
 **<span class="starter">[Jon] </span>15. You May Be Right** A · 150 — <em>Glass + guitar intro</em>
 
-**<span class="starter">[Alex] </span>16. Born to Run** E · 147 — <em>Drums + everyone starts</em>
+**<span class="starter">[Count] </span>16. Born to Run** E · 147 — <em>Drums + everyone starts</em>
 
-**<span class="starter">[Alex] </span>17. Roll with the Changes** C · 134 — <em>Drum + keys in time intro — stage banter, thank yous</em>
+**<span class="starter">[Count] </span>17. Roll with the Changes** C · 94 — <em>Drum + keys in time intro — stage banter, thank yous</em> <span class="form">Lauren conducts the ending</span>
 
 
 ## REQUEST LIST

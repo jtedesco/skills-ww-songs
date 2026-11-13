@@ -494,7 +494,8 @@ def floor_intro_cue(intro):
     return intro[:cut] + " intro" + intro[cut:]
 
 
-def render_floor_sheet_lines(blocks, display_title=None, form_notes=None, starts=None, missing=()):
+def render_floor_sheet_lines(blocks, display_title=None, form_notes=None, starts=None, missing=(),
+                             vampable=None):
     """A single large-font page of the whole running order, meant to be torn
     off and taped to the stage floor — read at a glance from standing height,
     not studied. Deliberately carries only what's useful mid-song-change:
@@ -539,6 +540,11 @@ def render_floor_sheet_lines(blocks, display_title=None, form_notes=None, starts
     in `missing`. A song with no value prints no prefix, and neither does one
     naming only someone in `missing`, who won't be there to start it.
 
+    `vampable` says whether a song's intro can be vamped (looped while the
+    band talks or waits), from songs_metadata.csv's `vampable` column ("Yes").
+    A vampable song prints an asterisk after its title, explained in the
+    legend. Same resolver arrangement as `display_title`.
+
     This page is REGENERATED from the final song list on every revision, the
     same as the GIG SUMMARY page — never hand-edit it in the .md, since
     apply_substitution.py truncates and rebuilds it (see TRAILING_HEADINGS).
@@ -549,12 +555,21 @@ def render_floor_sheet_lines(blocks, display_title=None, form_notes=None, starts
         form_notes = lambda song: (song.get("form_notes") or "").strip()
     if starts is None:
         starts = lambda song: (song.get("starts") or "").strip()
+    if vampable is None:
+        vampable = lambda song: (song.get("vampable") or "").strip().lower() == "yes"
     lines = [FLOOR_SHEET_HEADING, ""]
     # Legend, only when something is actually marked. This page gets torn off
     # and read on its own, away from the set tables that spell out the 🛑
     # EMERGENCY CUT convention, so [X] needs to say what it means here.
-    if any(song.get("emergency_cut") for _, songs in blocks for song in songs):
-        lines.append("*[X] = emergency cut — drop this one first if running long.*")
+    # The asterisk gets the same treatment: one line, only when it's used.
+    all_songs = [song for _, songs in blocks for song in songs]
+    legend = []
+    if any(song.get("emergency_cut") for song in all_songs):
+        legend.append("[X] = emergency cut — drop this one first if running long.")
+    if any(vampable(song) for song in all_songs):
+        legend.append("\\* = vampable intro.")
+    if legend:
+        lines.append("*" + " ".join(legend) + "*")
         lines.append("")
     for label, songs in blocks:
         if not songs:
@@ -572,6 +587,8 @@ def render_floor_sheet_lines(blocks, display_title=None, form_notes=None, starts
             # from standing height — so the title keeps the budget.
             cut = " [X]" if song.get("emergency_cut") else ""
             tag = f" [{song['tag']}]" if song.get("tag") else ""
+            # Escaped, or markdown would read it as emphasis inside the bold.
+            vamp = "\\*" if vampable(song) else ""
             # Shaded blocks carry the same <!--shade:LABEL--> marker the set
             # tables use, so render_pdf.py shades this page off one rule. No
             # visible label here: the block name is already printed once in
@@ -581,7 +598,7 @@ def render_floor_sheet_lines(blocks, display_title=None, form_notes=None, starts
             # The space stays inside the span, at the prefix's size: a title-
             # sized one costs enough width to wrap a long title.
             prefix = f'<span class="starter">[{html.escape(who, quote=False)}] </span>' if who else ""
-            line = f"**{prefix}{idx}. {display_title(song)}{tag}{cut}** {key} · {bpm_str}"
+            line = f"**{prefix}{idx}. {display_title(song)}{vamp}{tag}{cut}** {key} · {bpm_str}"
             if intro:
                 # Explicit <em>, not *...*: an intro note can itself carry
                 # markup (a bold "[Vamp]"-style tag), and "***[Vamp]***" —

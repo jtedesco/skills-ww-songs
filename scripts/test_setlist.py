@@ -931,6 +931,41 @@ def test_starters():
     return all_pass
 
 
+def test_vampable():
+    """A song marked vampable in songs_metadata.csv prints an escaped asterisk
+    after its title on the floor sheet, and the legend explains it, but only
+    when some song on the sheet has one."""
+    print("\nTesting Vampable asterisks on the floor sheet...")
+    import markdown
+    songs = [
+        {"title": "Brandy", "key": "E", "bpm": 126, "intro_notes": "Guitar intro", "vampable": "Yes"},
+        {"title": "Peg", "key": "G", "bpm": 116, "intro_notes": "Recorded intro", "vampable": ""},
+        {"title": "Take It Easy", "key": "G", "bpm": 139, "intro_notes": "Acoustic guitar intro",
+         "vampable": "Yes", "emergency_cut": True},
+    ]
+    lines = build_setlist.render_floor_sheet_lines([("SET 1", songs)])
+    line = lambda title: next(l for l in lines if f". {title}" in l)
+    plain = build_setlist.render_floor_sheet_lines([("SET 1", [songs[1]])])
+    with open(DB_PATH, newline="", encoding="utf-8") as f:
+        db = {r["title"]: r for r in csv.DictReader(f)}
+    checks = [
+        ("Vampable song gets an asterisk after its title", "1. Brandy\\***" in line("Brandy")),
+        ("Asterisk comes before the [X]", "3. Take It Easy\\* [X]**" in line("Take It Easy")),
+        ("Non-vampable song has none", "\\*" not in line("Peg")),
+        ("Legend explains the asterisk", any("\\* = vampable intro." in l for l in lines)),
+        ("No legend line when nothing is vampable or cut", not any("vampable" in l for l in plain)),
+        ("Asterisk renders as a literal * inside the bold title",
+         "<strong>1. Brandy*</strong>" in markdown.markdown(line("Brandy"))),
+        ("Database marks Zombie vampable and Peg not",
+         db["Zombie"].get("vampable") == "Yes" and db["Peg"].get("vampable", "") == ""),
+    ]
+    all_pass = True
+    for name, ok in checks:
+        log_test(name, ok)
+        all_pass = all_pass and ok
+    return all_pass
+
+
 def test_detailed_sets():
     """Detailed sets: the PDF leaves out the SET N / ENCORES sections by
     default and prints them only when asked, and every other page stays."""
@@ -1280,7 +1315,7 @@ def main():
     s6_ok = test_scenario_6()
     s7_ok = test_scenario_7()
     s8_ok = test_scenario_8()
-    form_ok = test_form_notes() and test_starters() and test_detailed_sets()
+    form_ok = test_form_notes() and test_starters() and test_vampable() and test_detailed_sets()
     season_ok = test_seasonal()
     rules_ok = test_rules()
     cut_chain_ok = test_cut_avoids_segue_chains()

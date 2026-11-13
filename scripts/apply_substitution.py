@@ -629,7 +629,7 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
             floor_blocks.append((brk_label or "BREAK (Acoustic)", brk))
 
     # Song dicts here were parsed out of the printed table, which has no
-    # floor_sheet_title, form_notes or starts column — resolve them from the database.
+    # floor_sheet_title, form_notes, starts or vampable column — resolve them from the database.
     def floor_title(song):
         db = by_title.get(normalize_title(song["title"])) or {}
         return (db.get("floor_sheet_title") or "").strip() or song["title"]
@@ -642,9 +642,14 @@ def render_md(header_lines, sections, songs_by_section, all_songs, by_title, bre
         db = by_title.get(normalize_title(song["title"])) or {}
         return (db.get("starts") or "").strip()
 
+    def floor_vampable(song):
+        db = by_title.get(normalize_title(song["title"])) or {}
+        return (db.get("vampable") or "").strip().lower() == "yes"
+
     out.append("")
     out.extend(render_floor_sheet_lines(floor_blocks, display_title=floor_title,
                                         form_notes=floor_form, starts=floor_starts,
+                                        vampable=floor_vampable,
                                         missing=parse_missing_names(header_lines)))
 
     out.append("")
